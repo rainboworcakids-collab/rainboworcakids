@@ -1,0 +1,125 @@
+<!-- app/index.html -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RainbowOrcaKids - เรียนรู้อย่างสร้างสรรค์</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="font-sarabun">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <!-- Hero Section -->
+    <div class="hero-gradient text-white min-h-screen flex items-center">
+        <div class="container mx-auto px-4 py-16 text-center">
+            <div class="max-w-4xl mx-auto">
+                <i class="fas fa-rainbow text-6xl mb-6"></i>
+                <h1 class="text-5xl md:text-6xl font-bold mb-6">RainbowOrcaKids</h1>
+                <p class="text-xl md:text-2xl mb-8 opacity-90">แพลตฟอร์มการเรียนรู้สร้างสรรค์สำหรับเด็ก</p>
+                
+                <div class="flex flex-col md:flex-row gap-4 justify-center mb-12">
+                    <a href="login_supabase.html" class="bg-white text-purple-700 px-8 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>เริ่มต้นใช้งาน
+                    </a>
+                    <a href="missions.html" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-white hover:text-purple-700 transition duration-300">
+                        <i class="fas fa-eye mr-2"></i>ดูตัวอย่างภารกิจ
+                    </a>
+                </div>
+                
+                <!-- Features -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+                    <div class="bg-white bg-opacity-10 p-6 rounded-xl backdrop-blur-sm">
+                        <i class="fas fa-graduation-cap text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">เรียนรู้ผ่านภารกิจ</h3>
+                        <p>ภารกิจสร้างสรรค์ที่กระตุ้นการเรียนรู้และพัฒนาทักษะ</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 p-6 rounded-xl backdrop-blur-sm">
+                        <i class="fas fa-egg text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">ระบบรางวัลไข่</h3>
+                        <p>สะสมไข่จากการทำภารกิจเพื่อปลดล็อกรางวัลพิเศษ</p>
+                    </div>
+                    <div class="bg-white bg-opacity-10 p-6 rounded-xl backdrop-blur-sm">
+                        <i class="fas fa-users text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold mb-2">ชุมชนสร้างสรรค์</h3>
+                        <p>แบ่งปันผลงานและแรงบันดาลใจกับเพื่อนๆ</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="mb-2">RainbowOrcaKids © 2024 - แพลตฟอร์มการเรียนรู้สร้างสรรค์สำหรับเด็ก</p>
+            <p class="text-gray-400">Version 5.2 | สถานะ: Phase 2 กำลังดำเนินการ</p>
+            <div class="mt-4">
+                <a href="../roadmap/index.html" class="text-purple-300 hover:text-white mr-4">
+                    <i class="fas fa-sitemap mr-1"></i>Project Roadmap
+                </a>
+                <!-- Debug mode link -->
+                <a href="?debug=true" class="text-yellow-300 hover:text-yellow-100 text-sm">
+                    <i class="fas fa-bug mr-1"></i>Debug Mode
+                </a>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Main Scripts (โหลดเสมอ) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/nav.js"></script>
+ 
+    <script src="js/auth_status_manager.js"></script>
+    
+    <!-- Debug Manager (โหลดเสมอ แต่จะทำงานเฉพาะเมื่อเปิด debug mode) -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        // สำหรับหน้า landing ไม่ต้องตรวจสอบการล็อกอิน
+        console.log("Welcome to RainbowOrcaKids!");
+        
+        // ตรวจสอบว่าอยู่ในแอปหรือไม่
+        if (window.location.pathname.includes('/app/')) {
+            document.body.classList.add('in-app');
+        }
+        
+        // Keyboard shortcut สำหรับ debug mode
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.altKey && e.key === 'D') {
+                e.preventDefault();
+                const currentUrl = new URL(window.location.href);
+                if (currentUrl.searchParams.has('debug')) {
+                    currentUrl.searchParams.delete('debug');
+                } else {
+                    currentUrl.searchParams.set('debug', 'true');
+                }
+                window.location.href = currentUrl.toString();
+            }
+        });
+    </script>
+</body>
+</html>
