@@ -1,0 +1,446 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+.container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: auto;
+}
+
+h1 {
+    color: #0056b3; /* สีน้ำเงินหลัก */
+    text-align: left; /* ปรับให้ชิดซ้ายเพื่อเลื่อนไปด้านขวาของรูป */
+    margin-bottom: 20px;
+    margin-left: 145px; /* เพิ่มระยะห่างจากซ้ายเพื่อไม่ให้ทับรูป */
+	font-size: 1.875rem
+}
+
+h2 {
+    color: #0056b3; /* สีน้ำเงินหลัก */
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 25px;
+	font-size: 1.5rem
+}
+h3 {
+    color: #5956b3; /* สีม่วงอมน้ำเงิน */
+    margin-top: 20px;
+    font-size: 1.9em;
+}
+h4 {
+    color: #b90056;   /* แดงเลือกหมู */
+    font-size: 1.6em;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+h5 {
+    color: #006916;    /* เขียวเข้ม */
+    font-size: 1.6em; /* ทำให้ใหญ่กว่า li strong และมีสี */
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+ul li {
+    margin-bottom: 5px;
+}
+
+.analysis-section {
+    background-color: #e9e9ff; /* สีม่วงอ่อน */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.number-container {
+    position: relative;
+    margin: 5px 0;
+    min-height: 60px; /* ปรับความสูงให้เหมาะสม */
+}
+
+.modern-number-overlay {
+    position: absolute;
+    top: 0;
+    left: 10px; /* ชิดซ้าย */
+    width: auto;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 100;
+    opacity: 0.9; /* ความทึบ */
+}
+
+
+.modern-number {
+    width: 80px; /* ขนาดเล็กลงเพื่อให้สองตัวเลขวางคู่กัน */
+    height: 80px;
+    object-fit: contain;
+    animation: float 3s ease-in-out infinite;
+}
+
+.modern-number.number-front {
+    z-index: 2; /* รูปเลข 6 อยู่ด้านหน้า */
+}
+
+.modern-number.number-back {
+    margin-left: -20px; /* เลื่อนเลข 3 ไปทางขวาให้อยู่ข้างหลังเลข 6 */
+    z-index: 1; /* รูปเลข 3 อยู่ด้านหลัง */
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* เพิ่มสไตล์สำหรับส่วนหัวใหม่ */
+.page-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #eee;
+}
+
+.header-logo {
+    margin-right: 15px;
+}
+
+.small-logo {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.small-logo:hover {
+    transform: scale(1.05);
+}
+
+/* ปรับขนาดและตำแหน่งสำหรับหน้าจอขนาดเล็ก */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-logo {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+        margin-left: 0; /* ปรับให้ชิดซ้ายในหน้าจอเล็ก */
+    }
+}
+
+/* หัวข้อรวมของคุณสมบัติและเส้นขอบ */
+.leadership-traits,  .challenges, .Compatibility-section , .conflict-section ,.note-section {
+    background-color: #e9f7ff; /* สีฟ้าอ่อน */
+    border-left: 5px solid #0056b3; /* เส้นสีน้ำเงิน */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.career-paths {
+   background-color: #e9fff7; /* สีฟ้าอ่อน */
+    border-left: 5px solid #0056b3; /* เส้นสีน้ำเงิน */
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+
+.challenges {
+    background-color: #ffe9e9; /* สีแดงอ่อนสำหรับความท้าทาย */
+    border-left-color: #cc0000;
+}
+
+/* ส่วนความเข้ากันได้ */
+.Compatibility-section {
+    background-color: #f7fff7; /* สีเขียวอ่อน */
+    border-left-color: #28a745; /* เส้นสีเขียว */
+}
+/* ส่วนความขัดแย้ง */
+.conflict-section {
+    background-color: #ffe9e9; /* สีแดงอ่อน */
+    border-left-color: #dc3545; /* เส้นสีแดง */
+}
+
+/* ส่วนสรุปและข้อคิด */
+.note-section {
+    background-color: #e0e0e0; /* สีเทาอ่อน */
+    border-left-color: #010101; /* เส้นสีดำ */
+}
+
+.citation {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 20px;
+    text-align: right;
+}
+p {
+    margin-bottom: 10px;
+}
+
+/* สไตล์สำหรับปุ่มลิงก์พัฒนาความสัมพันธ์ */
+.development-button {
+    display: inline-block;
+    padding: 10px 15px;
+    margin-top: 15px;
+    background-color: #007bff;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.development-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* สไตล์สำหรับ sub-section ที่แสดงปัญหาจากการไม่ยอมรับ (สีแดง) */
+.sub-challenge-section {
+    background-color: #ffe9e9; /* สีแดงอ่อน */
+    border-left: 3px solid #dc3545; /* เส้นสีแดง */
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 0.95em; /* ทำให้ขนาดตัวอักษรเล็กลงเล็กน้อย */
+}
+.sub-challenge-section strong {
+    color: #dc3545; /* เน้นข้อความหัวข้อใน sub-section สีแดง */
+}
+
+/* สไตล์สำหรับ sub-section ที่แสดงศักยภาพหากเกิดการยอมรับ (สีเขียว) */
+.sub-harmony-section {
+    background-color: #f7fff7; /* สีเขียวอ่อน */
+    border-left: 3px solid #28a745; /* เส้นสีเขียว */
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    font-size: 0.95em; /* ทำให้ขนาดตัวอักษรเล็กลงเล็กน้อย */
+}
+.sub-harmony-section strong {
+    color: #28a745; /* เน้นข้อความหัวข้อใน sub-section สีเขียว */
+}
+
+/* ซ่อนปุ่มเมื่อพิมพ์ PDF */
+@media print {
+    .development-button {
+        display: none;
+    }
+}
+
+/* ===== สไตล์ใหม่สำหรับเนื้อหา "ทักษะแห่งยุคใหม่" ===== */
+
+.modern-skills-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-skills-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+    background-size: cover;
+}
+
+.modern-skills-section h2 {
+    color: white;
+    font-size: 2.2rem;
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 3px solid rgba(255,255,255,0.3);
+    padding-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+.modern-skills-section h3 {
+    color: #ffd700;
+    font-size: 1.6rem;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-left: 4px solid #ffd700;
+    padding-left: 12px;
+    position: relative;
+}
+
+.modern-skills-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.modern-skills-section ul li {
+    background: rgba(255,255,255,0.1);
+    margin-bottom: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ffd700;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.modern-skills-section ul li:hover {
+    background: rgba(255,255,255,0.2);
+    transform: translateX(5px);
+}
+
+.modern-skills-section ul li strong {
+    color: #ffd700;
+    font-size: 1.1em;
+}
+
+/* สไตล์สำหรับส่วนย่อยภายในเนื้อหาใหม่ */
+.core-skills,
+.practical-skills,
+.self-development,
+.digital-skills,
+.action-plan {
+    background: rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+}
+
+/* ===== สไตล์ปรับเนื้อหาเดิมให้เป็นเนื้อหาเสริม ===== */
+
+.leadership-traits,
+.challenges,
+.career-paths {
+    background-color: #f8f9fa;
+    border-left: 3px solid #6c757d;
+    padding: 12px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.leadership-traits:hover,
+.challenges:hover,
+.career-paths:hover {
+    opacity: 1;
+    background-color: #e9ecef;
+}
+
+.leadership-traits h2,
+.challenges h2,
+.career-paths h2 {
+    color: #6c757d;
+    font-size: 1.3rem;
+    border-bottom: 1px dashed #6c757d;
+}
+
+.leadership-traits p,
+.challenges p,
+.career-paths p {
+    font-size: 0.95em;
+    color: #495057;
+}
+
+.leadership-traits ul,
+.challenges ul,
+.career-paths ul {
+    font-size: 0.9em;
+}
+
+/* การจัดลำดับใหม่ - เนื้อหาใหม่อยู่ด้านบน */
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.modern-skills-section {
+    order: 1;
+}
+
+.leadership-traits {
+    order: 2;
+}
+
+.challenges {
+    order: 3;
+}
+
+.career-paths {
+    order: 4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .modern-skills-section {
+        padding: 20px 15px;
+    }
+    
+    .modern-skills-section h2 {
+        font-size: 1.8rem;
+    }
+    
+    .modern-skills-section h3 {
+        font-size: 1.4rem;
+    }
+    
+    .modern-skills-section ul li {
+        padding: 12px;
+    }
+}
+
+/* Animation สำหรับเนื้อหาใหม่ */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-skills-section {
+    animation: slideInUp 0.8s ease-out;
+}
+
+.core-skills,
+.practical-skills,
+.self-development,
+.digital-skills,
+.action-plan {
+    animation: slideInUp 0.8s ease-out 0.2s both;
+}
