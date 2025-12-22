@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>🔍 ทดสอบ Search ภาษาไทย</title>
+<style>
+body { font-family: sans-serif; padding: 15px; background: #f0f2f5; }
+.container { background: white; padding: 15px; border-radius: 8px; max-width: 500px; margin: auto; }
+input, button, pre { width: 100%; padding: 10px; margin: 10px 0; box-sizing: border-box; }
+button { background: #1a73e8; color: white; border: none; font-weight: bold; cursor: pointer; }
+pre { background: #000; color: #0f0; white-space: pre-wrap; word-wrap: break-word; min-height: 150px; }
+.result-item { background: #e8f0fe; padding: 10px; margin: 5px 0; border-radius: 4px; }
+.result-item h4 { margin: 0; color: #1a73e8; font-size: 16px; }
+.result-item p { margin: 5px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h2>🔍 ทดสอบ Search ภาษาไทย</h2>
+
+<label>Supabase ANON Key:</label>
+<input type="password" id="anonKey" value="sb_publishable_tDw0VvUdJsLrETh25IKCRA_VG-telwP" >
+ 
+<label>คำค้นหา (ภาษาไทย):</label>
+<input type="text" id="query" placeholder="เช่น มนุษย, ผู้นำ, สังคม">
+
+<button onclick="search()">🔍 ค้นหา</button>
+
+<pre id="result">กดปุ่มเพื่อเริ่มค้นหา</pre>
+<div id="resultsList"></div>
+</div>
+
+<script>
+async function search() {
+  const key = document.getElementById('anonKey').value.trim();
+  const query = document.getElementById('query').value.trim();
+
+  if (!key || !query) {
+    alert('❌ กรุณาใส่ ANON Key และคำค้นหา');
+    return;
+  }
+
+  document.getElementById('result').textContent = `⏳ กำลังค้นหา "${query}"...`;
+  document.getElementById('resultsList').innerHTML = '';
+
+  try {
+    const res = await fetch('https://oibubvhuiuurkxhnefsw.supabase.co/functions/v1/search-numerology', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`
+      },
+      body: JSON.stringify({ query: query, type: 'Destiny' })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${JSON.stringify(data)}`);
+    }
+
+    document.getElementById('result').textContent = `✅ พบ ${data.count} ผลลัพธ์`;
+
+    if (data.count === 0) {
+      document.getElementById('result').textContent += '\n\n⚠️ ไม่เจอผลลัพธ์ ลองคำอื่น เช่น "มนุษย", "ผู้นำ"';
+    }
+
+    // แสดงผล
+    data.results.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'result-item';
+      div.innerHTML = `
+        <h4>${item.title}</h4>
+        <p><strong>เลข:</strong> ${item.root_number}</p>
+        <p>${item.summary}</p>
+        <p><a href="https://rainboworcakids-collab.github.io${item.html_path}" target="_blank">ดูเต็ม →</a></p>
+      `;
+      document.getElementById('resultsList').appendChild(div);
+    });
+
+  } catch (err) {
+    document.getElementById('result').textContent = `❌ Error:\n${err.message}\n\n💡 ตรวจสอบ:\n1. Function ชื่อ search-numerology สถานะ Active?\n2. ANON Key ถูกต้อง?\n3. รัน SQL test ในฐานข้อมูลเจอไหม?`;
+  }
+}
+</script>
+</body>
+</html>
