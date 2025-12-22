@@ -1,0 +1,406 @@
+/* PsychomatrixStyle.css - รวมสไตล์ทั้งหมด */
+/* ================================================= */
+/* ส่วนที่ 1: สไตล์พื้นฐาน (จาก PsychomatrixStyle.css) */
+/* ================================================= */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f9fafb;
+}
+
+h1 {
+    color: #0056b3; /* สีน้ำเงินหลัก */
+    text-align: left; /* ปรับให้ชิดซ้ายเพื่อเลื่อนไปด้านขวาของรูป */
+    margin-bottom: 20px;
+    margin-left: 145px; /* เพิ่มระยะห่างจากซ้ายเพื่อไม่ให้ทับรูป */
+}
+
+
+/* ================================================= */
+/* ส่วนที่ 2: สไตล์ตารางและตารางพิธากอรัส (PsychomatrixStyle.css) */
+/* ================================================= */
+.numerology-table {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border: 3px solid #1e40af;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.numerology-table th, .numerology-table td {
+    padding: 12px;
+    text-align: center;
+    border: 1px solid #374151;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.numerology-table th {
+    background-color: #1e40af;
+    color: #ffffff;
+    font-weight: 700;
+    padding: 15px;
+    font-size: 18px;
+}
+
+.numerology-table td {
+    background-color: #f3f4f6;
+    color: #111827;
+    padding: 15px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+td:hover .numerology-link {
+    color: #FFFF00; /* Yellow, matching tw-text-yellow-500 */
+}
+
+.tabcontent {
+            display: none;
+            height: auto;
+            min-height: 200px; /* ความสูงขั้นต่ำเพื่อป้องกันการยุบตัว */
+            overflow: auto; /* เพิ่ม scroll หากเนื้อหายาวเกิน */
+            width: 100%;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+.pythagorean-square-page {
+    width: 90%;
+    margin: 30px auto;
+    background-color: #fcfcff;
+    padding: 15px;
+    border: 3px solid #c3c3c3;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}	
+	
+
+.pythagorean-square {
+    display: grid;
+    grid-template-columns: repeat(4, 90px);
+    grid-template-rows: repeat(4, 90px);
+    gap: 8px;
+    max-width: 385px;
+    margin: 30px auto;
+    background-color: #ffffff;
+    padding: 15px;
+    border: 3px solid #1e40af;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.square-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    border: 2px solid #374151;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    color: #111827;
+    transition: transform 0.2s;
+}
+
+.square-cell:hover {
+    transform: scale(1.05);
+}
+
+.square-cell span {
+    font-size: 16px;
+    font-weight: 500;
+    margin-left: 6px;
+    color: #4b5563;
+}
+
+/* ================================================= */
+/* ส่วนที่ 3: สไตล์สีตัวเลข (PsychomatrixStyle.css) */
+/* ================================================= */
+.number-1 { color: #ff0000; background-color: #ffe0e0; }
+.number-2 { color: #f97316; background-color: #f9eae6; }
+.number-3 { color: #cccc8f; background-color: #fffeea; }
+.number-4 { color: #22c55e; background-color: #d2f5ee; }
+.number-5 { color: #3b82f6; background-color: #dbeffa; }
+.number-6 { color: #06b6d4; background-color: #d6fdfe; }
+.number-7 { color: #7b4ce6; background-color: #dfcfef }
+.number-8 { color: #ec4899; background-color: #feeaff; }
+.number-9 { color: #facc15; background-color: #fffeea; }
+
+
+/* สีสำหรบ ธาตุ  */
+@charset "UTF-8";
+.ไฟหยาง { color: #ff6600; background-color: #fff0e6;  } /*  สีส้มแทนความร้อนแรงและพลังสร้างสรรค์ */
+.ไฟหยิน { color: #ff6600;  background-color: #fff0e6; } 
+.น้ำหยาง { color: #1e90ff;  background-color: #e6f2ff; } /* สีฟ้าสดใสแทนการไหลลื่นของปัญญา */
+.น้ำหยิน { color: #1e90ff; background-color: #e6f2ff;  } 
+.ลมหยาง { color: #d8bfd8; background-color: #fffff5;  } /* สีเหลืองอ่อนแทนความคิดสร้างสรรค์ */
+.ลมหยิน { color: #d8bfd8;  background-color: #fdfdf0; } 
+.ดินหยาง { color: #daa520; background-color: #fdf5e6;  } /* สีทองแทนความมั่นคงที่เจิดจ้า */
+.ดินหยิน {  color: #daa520;  background-color: #fdf5e6; } 
+
+/* ================================================= */
+/* ส่วนที่ 4: สไตล์จาก styles.css */
+/* ================================================= */
+/* ปรับปรุงให้เข้ากับระบบใหม่ */
+.Container {
+    max-width: 950px;
+    margin: -20px auto;
+    padding: 10px;
+    background-color: #f1f1ff;
+}
+
+.printable {
+    max-width: 950px;
+    margin: 20px auto;
+    padding: 20px;
+    background: white;
+}
+
+.time-field {
+    max-width: 60px;
+}
+
+/* ส่วนเพิ่มเติมจาก styles.css */
+.bg-blue-800 {
+    background-color: #1e40af;
+}
+
+.bg-blue-50 {
+    background-color: #eff6ff;
+}
+
+.border-blue-200 {
+    border-color: #bfdbfe;
+}
+
+.text-blue-200 {
+    color: #bfdbfe;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.shadow-lg {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ปรับปรุงปุ่มจาก styles.css */
+button[type="submit"] {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+}
+
+button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(79, 70, 229, 0.4);
+}
+
+/* ================================================= */
+/* ส่วนที่ 5: สไตล์การพิมพ์ (จาก styles.css) */
+/* ================================================= */
+@media print {
+    body { 
+        padding: 0; 
+        background: white;
+    }
+    .no-print { 
+        display: none; 
+    }
+    .numerology-table, .pythagorean-square {
+        box-shadow: none;
+        border: 1px solid #000 !important;
+    }
+    
+    /* ปรับปรุงสีสำหรับการพิมพ์ */
+    .number-1, .number-2, .number-3, 
+    .number-4, .number-5, .number-6,
+    .number-7, .number-8, .number-9, 
+	.ไฟหยาง, .ไฟหยิน, .น้ำหยาง, .น้ำหยิน, 
+	.ลมหยาง, .ลมหยิน, .ดินหยาง, .ดินหยิน {
+        color: #000 !important;
+        background-color: #fff !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* ================================================= */
+/* ส่วนที่ 6: สไตล์เพิ่มเติมจากระบบเก่า */
+/* ================================================= */
+/* เพิ่มสไตล์สำหรับส่วนแสดงผล */
+.section {
+    margin-bottom: 25px;
+    padding: 20px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.section1 {
+    margin-bottom: 10px;
+	padding-top: 5px;	
+    padding-left: 20px;
+	padding-right: 20px;
+	padding-bottom: 1px;
+    border-radius: 10px;
+    background: #fff1f2;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.section2 {
+    margin-bottom: 10px;
+	padding-top: 5px;
+    padding-left: 20px;	
+	padding-right: 20px;
+	padding-bottom: 1px;
+    border-radius: 10px;
+    background: #f1f2ff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.section3 {
+    margin-bottom: 10px;
+	padding-top: 5px;
+    padding-left: 20px;	
+	padding-right: 20px;
+	padding-bottom: 1px;
+    border-radius: 10px;
+    background: #f6fef8;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.highlight {
+    background: #f9f9a7;
+    padding: 5px 10px;
+    border-radius: 4px;
+    display: inline-block;
+	font-size: 32px;
+    font-weight: bold;
+}
+
+/* สไตล์สำหรับ Psychomatrix Container */
+.psychomatrix-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* สไตล์สำหรับตาราง Psychomatrix */
+.psychomatrix-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 10px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.psychomatrix-cell {
+    aspect-ratio: 1/1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.psychomatrix-cell:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.psychomatrix-cell .digit {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.psychomatrix-cell .count {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.psychomatrix-cell.highlight {
+    border-color: #e74c3c;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.3);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+}
+
+/* ปรับปรุงการแสดงผลช่องปฏิทิน */
+#PersonalMonthNumberCalendar {
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+#PersonalMonthNumberCalendar table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 2px solid #1e40af;
+}
+
+#PersonalMonthNumberCalendar th {
+    background-color: #1e40af;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #374151;
+    font-weight: bold;
+    height: 40px;
+}
+
+#PersonalMonthNumberCalendar td {
+    border: 1px solid #374151;
+    padding: 0;
+    height: 80px;
+    width: 14.28%; /* ให้แต่ละช่องมีขนาดเท่ากัน */
+    vertical-align: middle;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+#PersonalMonthNumberCalendar td .date-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+#PersonalMonthNumberCalendar td .date-number {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#PersonalMonthNumberCalendar td:hover {
+    transform: scale(1.02);
+    box-shadow: inset 0 0 0 2px #1e40af;
+}
+
+#PersonalMonthNumberCalendar td.today {
+    border: 2px solid #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
