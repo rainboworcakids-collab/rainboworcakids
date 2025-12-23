@@ -6,8 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const THAI_STOP_WORDS = ['และ', 'ของ', 'ที่', 'ใน', 'เป็น', 'ได้', 'มี', 'การ', 'กับ', 'แต่', 'ซึ่ง', 'จะ', 'ให้', 'จาก', 'โดย', 'ทั้ง', 'นี้', 'ก่อน', 'หรือ']
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -23,12 +21,9 @@ serve(async (req) => {
     // Parse content
     const parsed = parseHTML(html)
     const lifePath = calculateLifePath(parsed.root_number)
-    const searchVector = generateTSVector(html, parsed, lifePath)
-    
-    // ✅ สร้าง html_path แบบมาตรฐาน
     const htmlPath = generateStandardPath(file_url)
 
-    // Update DB
+    // Update DB (ลบ search_vector ออก)
     const supabase = createClient(
       Deno.env.get('RAINBOW_URL')!,
       Deno.env.get('RAINBOW_ANON_KEY')!
@@ -42,10 +37,10 @@ serve(async (req) => {
         root_number: parsed.root_number,
         title: parsed.title,
         summary: parsed.summary,
-        search_vector: searchVector,
-        html_path: htmlPath  // ✅ ใช้ path มาตรฐาน
+        html_path: htmlPath
+        // ลบ search_vector ออก
       }, { onConflict: 'id' })
-      .select('id,title,summary,html_path')
+      .select('id,title,summary')
       .single()
 
     if (error) throw error
@@ -56,7 +51,6 @@ serve(async (req) => {
       metadata: {
         root_number: parsed.root_number,
         life_path: lifePath,
-        search_terms: searchVector.split(' ').length,
         html_path: htmlPath
       }
     }), {
@@ -64,6 +58,7 @@ serve(async (req) => {
       status: 200
     })
   } catch (err) {
+    console.error('💥 Error:', err.message) // ✅ เพิ่ม log
     return new Response(JSON.stringify({ error: err.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500
@@ -71,27 +66,7 @@ serve(async (req) => {
   }
 })
 
-// ✅ สร้าง path มาตรฐาน
-function generateStandardPath(fileUrl: string): string {
-  // ตัวอย่าง input: https://raw.githubusercontent.com/.../main/PsychomatrixContents/Destiny10.html
-  // ต้องการ output: /rainboworcakids/PsychomatrixContents/Destiny10.html
-  
-  try {
-    const url = new URL(fileUrl)
-    const paths = url.pathname.split('/')
-    
-    // หาโฟลเดอร์ PsychomatrixContents และชื่อไฟล์
-    const psychomatrixIndex = paths.findIndex(p => p === 'PsychomatrixContents')
-    if (psychomatrixIndex === -1) throw new Error('Path not contain PsychomatrixContents')
-    
-    const filename = paths.slice(psychomatrixIndex).join('/')
-    return `/rainboworcakids/${filename}`
-  } catch (e) {
-    // Fallback ถ้าเกิด error
-    return fileUrl.replace('https://raw.githubusercontent.com', '').replace('/main', '')
-  }
-}
-
+// ✅ คำนวณ Life Path Number จาก PHP
 function calculateLifePath(num: number): number {
   let sum = num
   while (sum >= 10) {
@@ -100,6 +75,7 @@ function calculateLifePath(num: number): number {
   return sum
 }
 
+// ✅ Parse HTML ดึงข้อมูล
 function parseHTML(html: string) {
   const title = html.match(/<title>(.*?)<\/title>/i)?.[1]?.replace(/<.*?>/g, '').trim() || ''
   const num = parseInt(title.match(/เลขศาสตร์ (\d+)/)?.[1] || '0')
@@ -107,28 +83,16 @@ function parseHTML(html: string) {
   return { title, root_number: num, summary: p.substring(0, 500) }
 }
 
-function generateTSVector(html: string, parsed: any, lifePath: number): string {
-  const titleText = html.match(/<title>(.*?)<\/title>/i)?.[1]?.replace(/<.*?>/g, ' ') || ''
-  const h1Text = html.match(/<h1>(.*?)<\/h1>/i)?.[1]?.replace(/<.*?>/g, ' ') || ''
-  const bodyText = html.replace(/<.*?>/g, ' ')
-  
-  const fullText = (titleText + ' ' + h1Text + ' ' + bodyText).trim()
-  const tokens = fullText.split(/\s+/).filter(w => 
-    w.length > 1 && /[\u0E00-\u0E7F]/.test(w) && !THAI_STOP_WORDS.includes(w)
-  )
-  
-  const wordPositions = {}
-  tokens.forEach((token, index) => {
-    if (!wordPositions[token]) wordPositions[token] = []
-    wordPositions[token].push(index + 1)
-  })
-  
-  let tsvector = `'${parsed.root_number}':${lifePath}`
-  
-  for (const [word, positions] of Object.entries(wordPositions)) {
-    const limitedPositions = positions.slice(0, 5)
-    tsvector += ` '${word}':${limitedPositions.join(',')}`
+// ✅ สร้าง html_path มาตรฐาน
+function generateStandardPath(fileUrl: string): string {
+  try {
+    const url = new URL(fileUrl)
+    const paths = url.pathname.split('/')
+    const psychomatrixIndex = paths.findIndex(p => p === 'PsychomatrixContents')
+    if (psychomatrixIndex === -1) throw new Error('Path not contain PsychomatrixContents')
+    const filename = paths.slice(psychomatrixIndex).join('/')
+    return `/rainboworcakids/${filename}`
+  } catch (e) {
+    return fileUrl.replace('https://raw.githubusercontent.com', '').replace('/main', '')
   }
-  
-  return tsvector.substring(0, 10000)
 }
