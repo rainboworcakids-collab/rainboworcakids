@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Sync - Numerology Content</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        button:active {
+            background: #5a67d8;
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .status.loading {
+            display: block;
+            background: #fef5e7;
+            color: #c05621;
+            text-align: center;
+        }
+        .status.success {
+            display: block;
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .status.error {
+            display: block;
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+        .result {
+            margin-top: 15px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+        }
+        .result h3 {
+            color: #2d3748;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .result pre {
+            font-size: 0.8rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .debug-info {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Sync Numerology Content</h1>
+        
+        <div class="input-group">
+            <label for="fileUrl">GitHub Raw URL:</label>
+
+            <input type="text" id="fileUrl" value="https://raw.githubusercontent.com/rainboworcakids-collab/rainboworcakids/refs/heads/main/PsychomatrixContents/Destiny10.html" />
+        </div>
+
+        <div class="input-group">
+            <label for="supabaseUrl">Supabase URL:</label>
+            <input type="text" id="supabaseUrl" value="https://oibubvhuiuurkxhnefsw.supabase.co" readonly />
+        </div>
+
+        <div class="input-group">
+            <label for="anonKey">Supabase ANON KEY:</label>
+            <input type="password" id="anonKey" value="sb_publishable_tDw0VvUdJsLrETh25IKCRA_VG-telwP" >
+
+            <small style="color: #e53e3e; display: block; margin-top: 5px;">
+                ⚠️ ใส่ Anon Key จาก Supabase > Settings > API
+            </small>
+        </div>
+
+        <button id="syncBtn" onclick="handleSync()">🚀 Sync Content</button>
+
+        <div id="status" class="status"></div>
+        
+        <div id="result" class="result">
+            <h3>✅ Sync Success!</h3>
+            <pre id="resultData"></pre>
+            <div class="debug-info" id="debugInfo"></div>
+        </div>
+    </div>
+
+    <script>
+        async function handleSync() {
+            const fileUrl = document.getElementById('fileUrl').value.trim();
+            const supabaseUrl = document.getElementById('supabaseUrl').value.trim();
+            const anonKey = document.getElementById('anonKey').value.trim();
+            
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+            const resultData = document.getElementById('resultData');
+            const debugInfo = document.getElementById('debugInfo');
+            const syncBtn = document.getElementById('syncBtn');
+
+            // Validation
+            if (!fileUrl) {
+                showStatus('❌ Please enter GitHub Raw URL', 'error');
+                return;
+            }
+            if (!fileUrl.includes('raw.githubusercontent.com')) {
+                showStatus('❌ URL must be raw.githubusercontent.com', 'error');
+                return;
+            }
+            if (!anonKey) {
+                showStatus('❌ Please enter Supabase ANON KEY', 'error');
+                return;
+            }
+
+            // Reset UI
+            resultDiv.style.display = 'none';
+            showStatus('⏳ Syncing... Please wait', 'loading');
+            syncBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${supabaseUrl}/functions/v1/sync-numerology-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${anonKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ file_url: fileUrl })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${result.error || 'Unknown error'}`);
+                }
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Success
+                hideStatus();
+                showResult(result);
+                showStatus('✅ Sync completed successfully!', 'success');
+
+            } catch (error) {
+                showStatus(`❌ Sync failed: ${error.message}`, 'error');
+                console.error('Sync error:', error);
+            } finally {
+                syncBtn.disabled = false;
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function hideStatus() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'none';
+        }
+
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            const resultData = document.getElementById('resultData');
+            const debugInfo = document.getElementById('debugInfo');
+            
+            resultData.textContent = JSON.stringify(data.data || data, null, 2);
+            
+            const processed = data.processed || {};
+            debugInfo.innerHTML = `
+                <strong>Processed:</strong><br>
+                Title: ${processed.title_length || 0} chars<br>
+                Summary: ${processed.summary_length || 0} chars<br>
+                Search Terms: ${processed.search_terms || 0} keywords
+            `;
+            
+            resultDiv.style.display = 'block';
+        }
+
+        // Auto-load Anon Key from localStorage (if exists)
+        window.onload = function() {
+            const savedKey = localStorage.getItem('supabase_anon_key');
+            if (savedKey) {
+                document.getElementById('anonKey').value = savedKey;
+            }
+        };
+
+        // Save Anon Key when changed (optional convenience)
+        document.getElementById('anonKey').addEventListener('change', function(e) {
+            localStorage.setItem('supabase_anon_key', e.target.value);
+        });
+    </script>
+</body>
+</html>
