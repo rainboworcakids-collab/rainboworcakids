@@ -429,4 +429,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial population
     populateSearchSelect();
+
+    // ==================== สร้าง 20 Fields สำหรับ Surrounding Data ====================
+    generateSurroundingFields();
+
+    function generateSurroundingFields() {
+        const container = document.getElementById('surroundingFieldsContainer');
+        if (!container) {
+            console.error('Error: surroundingFieldsContainer not found!');
+            return;
+        }
+        
+        container.innerHTML = ''; // Clear ทุกครั้งที่โหลด
+        
+        for (let i = 1; i <= 20; i++) {
+            const fieldNumber = String(i).padStart(2, '0');
+            const div = document.createElement('div');
+            div.className = 'mb-4'; // Add margin
+            div.innerHTML = `
+                <label for="modal_surrounding_${fieldNumber}" class="block text-sm font-medium text-gray-700 mb-2">
+                    ข้อมูลรอบตัว #${fieldNumber}:
+                </label>
+                <input type="text" id="modal_surrounding_${fieldNumber}" 
+                       name="surrounding_${fieldNumber}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
+                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            `;
+            container.appendChild(div);
+        }
+        
+        console.log('✅ Generated 20 surrounding fields');
+    }
+
+
 });
