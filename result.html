@@ -3,224 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis - RainbowOrcaKids</title>
+    <title>Psychomatrix Result - RainbowOrcaKids</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Chart.js for Pinnacle Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     
-    <!-- Favicon -->
-    <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
-    
-    <script>
-        // ป้องกันการกด Enter ส่งฟอร์มโดยไม่ตั้งใจ
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                    e.preventDefault();
-                }
-            });
-        });
-    </script>
+    <style>
+        /* Tab System */
+        .tablink {
+            background-color: #eee;
+            color: #aaa;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            font-size: 17px;
+            width: 50%;
+            transition: all 0.3s ease;
+        }
+        .tablink:hover {
+            background-color: green;
+            color: yellow;
+            transform: translateY(-2px);
+        }
+        .tablink.active {
+            background-color: #1e40af;
+            color: white;
+        }
+        .tabcontent {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Result Card */
+        .result-card {
+            background: linear-gradient(135deg, #f1f2ff 0%, #e9e9ff 100%);
+            border-left: 4px solid #1e40af;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Loading Spinner */
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+        
+        /* Error Message */
+        .error-message {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        /* Success Message */
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen tw-p-4">
     
-    <!-- Main Container -->
-    <div class="Container">
-        <!-- Analysis Form -->
-        <form id="psychomatrixForm" class="no-print max-w-2xl mx-auto bg-white p-6 rounded shadow-lg mt-6">
-            
-            <!-- Section 1: Birth Date -->
-            <div class="section1 mb-6 p-4 rounded-lg">	
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-3">📅 ข้อมูลวันเกิด (Birth Date)</label>
-                    <div class="flex flex-wrap gap-3">
-                        <!-- Day -->
-                        <div class="flex-1 min-w-20 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">วันที่</label>
-                            <select name="birth_day" class="p-2 w-full border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <!-- JavaScript will populate options -->
-                            </select>
-                        </div>
-                        <!-- Month -->
-                        <div class="flex-1 min-w-20 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">เดือน</label>
-                            <select name="birth_month" class="p-2 w-full border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <!-- JavaScript will populate options -->
-                            </select>
-                        </div>
-                        <!-- Century + Year -->
-                        <div class="flex-1 min-w-32 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">ปี ค.ศ.</label>
-                            <div class="flex gap-1">
-                                <select name="birth_century" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="19">19</option>
-                                    <option value="20" selected>20</option>
-                                </select>
-                                <select name="birth_year" class="p-2 flex-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
-                                </select>
-                            </div>
-                        </div>
-                        <!-- Time -->
-                        <div class="flex-1 min-w-32 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">เวลาเกิด</label>
-                            <div class="flex items-center gap-1">
-                                <select name="birth_hour" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
-                                </select>	
-                                <span class="text-gray-500">:</span>
-                                <select name="birth_minute" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>		
-            
-            <!-- Section 2: ID Card -->
-            <div class="section2 mb-6 p-4 rounded-lg">	
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🪪 เลขบัตรประชาชน (ID Card Number)</label>
-                    <input type="text" name="id_card" placeholder="1103705060128" maxlength="13"
-                           class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           pattern="\d{13}" title="กรุณากรอกเลข 13 หลักเท่านั้น">
-                    <p class="text-xs text-gray-500 mt-1">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค</p>
-                </div>
-            </div>		
-            
-            <!-- Section 3: Full Name -->
-            <div class="section3 mb-6 p-4 rounded-lg">		
-                <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">✍️ ชื่อ-สกุลภาษาอังกฤษ (Full Name)</label>
-                    <input type="text" name="full_name" placeholder="Thanadej Hwangsutham"
-                           class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <p class="text-xs text-gray-500 mt-1">สามารถกรอกชื่อภาษาไทยได้ ระบบจะแปลงให้อัตโนมัติ</p>
-                </div>
-            </div>		
-            
-            <!-- Button: Manage Surrounding Data -->
-            <button type="button" id="openSurroundingDataModal" 
-                    class="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-3 rounded-lg hover:from-purple-600 hover:to-purple-800 font-medium text-lg shadow-lg transition-all duration-200 mb-4">
-                🧲 จัดการข้อมูลพลังตัวเลขรอบตัว (20 รายการ)
-            </button>
-            
-            <!-- Section: Options & Actions -->
-            <div class="section bg-gray-50 p-4 rounded-lg">
-                <div class="flex flex-col lg:flex-row gap-4">
-                    
-                    <!-- Left: Display Options -->
-                    <div class="flex-1">
-                        <label class="block mb-2 text-md font-bold text-gray-700">📊 ตัวเลือกการแสดงผล</label>
-                        <select name="option" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-3">
-                            <option value="BD" selected>📅 Birth Date เท่านั้น</option>
-                            <option value="IDC">🪪 ID Card เท่านั้น</option>
-                            <option value="FullName">✍️ Full Name เท่านั้น</option>	
-                            <option value="BD-IDC">📅🪪 Birth Date + ID Card</option>
-                            <option value="BD-IDC-FullName">📅🪪✍️ Birth + ID + Name</option>					
-                            <option value="Num-Ard">🧲 รวมตัวเลขรอบตัวทั้งหมด</option>
-                        </select>
-                        
-                        <div class="flex items-center gap-3 mb-3">
-                            <input type="checkbox" id="use_average" name="use_average" value="use_average" checked
-                                   class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
-                            <label for="use_average" class="text-sm font-medium text-gray-700">
-                                ใช้ค่าเฉลี่ยเมื่อต้องรวมตาราง (แนะนำ)
-                            </label>
-                        </div>				
-                        
-                        <div class="flex gap-2">
-                            <input type="text" name="search_name" id="search_name" 
-                                   class="p-2 border-2 border-gray-300 rounded-lg flex-grow focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="🔍 ชื่อสำหรับบันทึก/โหลดข้อมูล">
-                            <button type="button" id="load_search" 
-                                    class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 font-medium whitespace-nowrap">
-                                📂 เลือกรหัสค้นหา
-                            </button>
-                            <button type="submit" name="action" value="save" 
-                                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium whitespace-nowrap">
-                                💾 บันทึก
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Right: Psychomatrix Logo & Analyze Button -->
-                    <div class="flex-1 flex flex-col items-center justify-center">
-                        <div class="text-center mb-3">
-                            <label class="block w-full text-md bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                🔮 Psychomatrix Analysis
-                            </label>
-                        </div>
-                        <div class="text-center">
-                            <button type="submit" name="action" value="analyze" 
-                                    class="rounded-full bg-gradient-to-r from-blue-500 to-blue-700 m-2 p-4 hover:from-green-500 hover:to-green-700 shadow-lg transition-all duration-200">
-                                <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" 
-                                     class="h-16 w-16">
-                                <span class="block text-white font-bold mt-1">วิเคราะห์เลข</span>
-                            </button> 
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>	
-            
-        </form>
+    <!-- Loading Spinner -->
+    <div id="loadingIndicator" class="loading-spinner">
+        <div class="bg-white p-6 rounded-xl shadow-2xl">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-center font-medium text-gray-700">กำลังคำนวณ...</p>
+        </div>
     </div>
-
-    <!-- Modal: Search & Load -->
-    <div id="searchModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-40">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <h3 class="text-xl font-bold mb-4 text-center text-blue-700">📂 เลือกข้อมูลที่บันทึกไว้</h3>
-            <select id="search_select" class="w-full p-3 border-2 border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500">
-                <option value="">-- เลือกชื่อ --</option>
-                <!-- Populated by JavaScript -->
-            </select>
-            <div class="flex flex-wrap gap-2 justify-center">
-                <button type="button" id="select_search" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 font-medium">
-                    ✅ เลือก
-                </button>
-                <button type="button" id="delete_search" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-medium">
-                    🗑️ ลบ
-                </button>
-                <button type="button" id="cancel_search" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 font-medium">
-                    ❌ ยกเลิก
-                </button>
-                <button type="button" id="save_localstorage_file" class="text-xs text-blue-600 hover:text-blue-800 border border-blue-300 px-3 py-1 rounded">
-                    💾 บันทึกไฟล์
-                </button>
-                <input type="file" id="load_localstorage_file_input" accept=".txt,.json" class="hidden">
-                <button type="button" id="load_localstorage_file_btn" class="text-xs text-green-600 hover:text-green-800 border border-green-300 px-3 py-1 rounded">
-                    📥 โหลดไฟล์
+    
+    <!-- Header -->
+    <div class="max-w-6xl mx-auto mb-6">
+        <div class="text-center p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
+            <h1 class="text-3xl font-bold text-white mb-2">🔮 ผลการวิเคราะห์ Psychomatrix</h1>
+            <p id="resultTitle" class="text-blue-100">กำลังโหลดข้อมูล...</p>
+        </div>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="max-w-6xl mx-auto mb-0">
+        <div class="flex rounded-t-xl overflow-hidden shadow-lg">
+            <button class="tablink active" onclick="switchTab('Main', this)" id="defaultOpen">
+                📊 ผลลัพธ์หลัก
+            </button>
+            <button class="tablink" onclick="switchTab('Explained', this)">
+                📖 รายละเอียด
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="max-w-6xl mx-auto mb-6">
+        
+        <!-- Main Tab -->
+        <div id="Main" class="tabcontent bg-white p-6 rounded-b-xl shadow-lg" style="display: block;">
+            <!-- Result Content -->
+            <div id="mainResultContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+            
+            <!-- Error Message Container -->
+            <div id="errorContainer" style="display: none;"></div>
+            
+            <!-- Back Button -->
+            <div class="text-center mt-8">
+                <button onclick="window.location.href='Psychomatrix.html'" 
+                        class="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-green-500 hover:to-green-700 
+                               text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all duration-200">
+                    ← กลับไปกรอกข้อมูลใหม่
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- Modal: Surrounding Data (20 Fields) -->
-    <div id="surroundingDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4 text-center text-purple-700">🧲 แก้ไขข้อมูลพลังตัวเลขรอบตัว</h3>
-            <form id="surroundingDataForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                    <!-- 20 input fields will be generated by JavaScript -->
+        
+        <!-- Explained Tab -->
+        <div id="Explained" class="tabcontent bg-white p-6 rounded-b-xl shadow-lg">
+            <div id="explainedContent">
+                <div class="text-center text-gray-500 py-12">
+                    <div class="text-6xl mb-4">📖</div>
+                    <p class="text-xl">เลือกรายการจากผลลัพธ์หลักเพื่อดูรายละเอียด</p>
                 </div>
-                <input type="hidden" id="modal_search_name" name="search_name">
-                <div class="flex gap-3 justify-center">
-                    <button type="submit" id="saveSurroundingData" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-medium">
-                        💾 บันทึก/อัปเดต
-                    </button>
-                    <button type="button" id="cancelSurroundingData" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 font-medium">
-                        ❌ ยกเลิก
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-	
-    <!-- Psychomatrix JavaScript -->
-    <script src="js/Psychomatrix.js?v=1.0"></script>
+    
+    <!-- Footer -->
+    <div class="max-w-6xl mx-auto text-center py-4">
+        <p class="text-gray-500 text-sm">© 2025 RainbowOrcaKids - Psychomatrix Analysis System</p>
+    </div>
+    
+    <!-- Result JavaScript -->
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        let resultData = null;
+        let pinnacleData = null;
+        
+        // ==================== INITIALIZE PAGE ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                // Load result from sessionStorage
+                const storedResult = sessionStorage.getItem('psychomatrixResult');
+                if (!storedResult) {
+                    throw new Error('❌ ไม่พบข้อมูลผลลัพธ์ กรุณากลับไปกรอกข้อมูลใหม่');
+                }
+                
+                resultData = JSON.parse(storedResult);
+                console.log('✅ Loaded result data:', resultData);
+                
+                // Display results
+                displayResults();
+                
+            } catch (error) {
+                showError(error.message);
+                console.error('Error loading result:', error);
+            }
+        });
+        
+        // ==================== DISPLAY FUNCTIONS ====================
+        
+        function displayResults() {
+            const contentDiv = document.getElementById('mainResultContent');
+            const titleEl = document.getElementById('resultTitle');
+            
+            if (!resultData || !resultData.results || resultData.results.length === 0) {
+                showError('❌ ไม่มีข้อมูลผลลัพธ์ กรุณาลองใหม่');
+                return;
+            }
+            
+            // Set title
+            titleEl.textContent = `ชื่อ: ${resultData.search_name || 'ไม่ระบุ'} | ตัวเลือก: ${getOptionLabel(resultData.option)}`;
+            
+            let html = '';
+            
+            // Loop through each result section
+            resultData.results.forEach((result, index) => {
+                html += `
+                    <div class="result-card">
+                        <h2 class="text-2xl font-bold text-blue-700 mb-4 pb-2 border-b-2 border-blue-200">
+                            ${result.title || 'ผลลัพธ์'}
+                        </h2>
+                        <div class="space-y-4">
+                `;
+                
+                // Display each data item
+                if (result.data) {
+                    Object.entries(result.data).forEach(([key, value]) => {
+                        if (key === 'Numerology Table') {
+                            // Display table as HTML
+                            html += `<div class="mt-4">${value}</div>`;
+                        } else if (key === 'Pythagorean Square') {
+                            // Display Pythagorean Square
+                            html += `
+                                <div class="flex items-center justify-between mt-4">
+                                    <h3 class="text-lg font-bold text-purple-700">${key}</h3>
+                                    <div class="flex gap-2">
+                                        <button onclick="loadPythagoreanDetail()" 
+                                                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm">
+                                            📊 ดูความหมาย
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mt-2">${value}</div>
+                            `;
+                        } else if (key.includes('สรุปผล')) {
+                            // Highlight influential numbers
+                            html += `
+                                <div class="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mt-4">
+                                    <h3 class="text-lg font-bold text-yellow-800 mb-2">${key}</h3>
+                                    <p class="text-gray-700">${value}</p>
+                                </div>
+                            `;
+                        } else {
+                            // Normal key-value pair
+                            html += `
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <h3 class="font-bold text-gray-800">${key}</h3>
+                                    <p class="text-gray-700 mt-1">${value}</p>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+                
+                // Add navigation buttons if Pythagorean Square exists
+                if (result.data && (result.data['Pythagorean Square'] || result.data['Numerology Table'])) {
+                    html += `
+                        <div class="flex justify-center gap-4 mt-6 pt-4 border-t border-gray-200">
+                            ${result.data['Pythagorean Square'] ? `
+                                <button onclick="loadPythagoreanDetail()" 
+                                        class="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-green-500 hover:to-green-700 
+                                               text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all duration-200 tw-w-40">
+                                    🧩 ตารางพิธากอรัส
+                                </button>
+                            ` : ''}
+                            <button onclick="loadNumerologyContent('Destiny${result.destiny_number || ''}')" 
+                                    class="bg-gradient-to-r from-purple-500 to-purple-700 hover:from-pink-500 hover:to-pink-700 
+                                           text-white px-6 py-3 rounded-full font-medium shadow-lg transition-all duration-200 tw-w-40">
+                                📖 อ่านต่อ
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                html += `</div></div>`;
+            });
+            
+            contentDiv.innerHTML = html;
+        }
+        
+        function loadPythagoreanDetail() {
+            // Load Pythagorean Square explanation
+            document.getElementById('explainedContent').innerHTML = `
+                <div class="result-card">
+                    <h2 class="text-2xl font-bold text-purple-700 mb-4">🧩 ความหมายของตารางพิธากอรัส</h2>
+                    <p class="text-gray-700 mb-4">ตารางพิธากอรัสแสดงพลังของตัวเลขแต่ละตัว ที่มีอิทธิพลในชีวิตคุณ</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-blue-800 mb-3">เซลล์ที่มีพลังสูง</h3>
+                            <p class="text-gray-700">ตัวเลขที่ปรากฏบ่อยที่สุด บ่งบอกถึงคุณสมบัติเด่นของคุณ</p>
+                        </div>
+                        <div class="bg-pink-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-pink-800 mb-3">เซลล์ที่ขาดพลัง</h3>
+                            <p class="text-gray-700">ตัวเลขที่ไม่ปรากฏเลย บ่งบอกถึงบทเรียนที่ต้องเรียนรู้</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-6">
+                        <button onclick="switchTab('Main', document.querySelector('.tablink'))" 
+                                class="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600">
+                            ← กลับไปดูผลลัพธ์
+                        </button>
+                    </div>
+                </div>
+            `;
+            switchTab('Explained', document.querySelectorAll('.tablink')[1]);
+        }
+        
+        function loadNumerologyContent(contentPath) {
+            const explainedDiv = document.getElementById('explainedContent');
+            
+            // Show loading
+            explainedDiv.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-purple-600 mx-auto mb-4"></div>
+                    <p class="text-lg text-gray-600">กำลังโหลดเนื้อหา...</p>
+                </div>
+            `;
+            
+            switchTab('Explained', document.querySelectorAll('.tablink')[1]);
+            
+            // Load from GitHub Pages static content
+            fetch(`PsychomatrixContents/${contentPath}.html`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Content not found');
+                    return response.text();
+                })
+                .then(html => {
+                    explainedDiv.innerHTML = `
+                        <div class="result-card">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-2xl font-bold text-purple-700">📖 ${contentPath}</h2>
+                                <button onclick="switchTab('Main', document.querySelector('.tablink'))" 
+                                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                                    ← กลับ
+                                </button>
+                            </div>
+                            <div class="prose max-w-none">${html}</div>
+                        </div>
+                    `;
+                    // Execute any scripts in loaded content
+                    executeScripts(explainedDiv);
+                })
+                .catch(error => {
+                    explainedDiv.innerHTML = `
+                        <div class="error-message">
+                            <h3 class="font-bold text-lg mb-2">❌ ไม่พบเนื้อหา</h3>
+                            <p>ไม่สามารถโหลด ${contentPath} ได้: ${error.message}</p>
+                            <p class="text-sm mt-2">แน่ใจว่าไฟล์อยู่ในโฟลเดอร์ PsychomatrixContents/</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // ==================== UTILITY FUNCTIONS ====================
+        
+        function switchTab(tabName, elmnt) {
+            // Hide all tabcontent
+            const tabcontent = document.getElementsByClassName('tabcontent');
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = 'none';
+            }
+            
+            // Remove active class from all tablinks
+            const tablinks = document.getElementsByClassName('tablink');
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove('active');
+            }
+            
+            // Show current tab and add active class
+            document.getElementById(tabName).style.display = 'block';
+            elmnt.classList.add('active');
+        }
+        
+        function getOptionLabel(optionValue) {
+            const options = {
+                'BD': 'Birth Date เท่านั้น',
+                'IDC': 'ID Card เท่านั้น',
+                'FullName': 'Full Name เท่านั้น',
+                'BD-IDC': 'Birth Date + ID Card',
+                'BD-IDC-FullName': 'Birth + ID + Name',
+                'Num-Ard': 'รวมตัวเลขรอบตัว'
+            };
+            return options[optionValue] || optionValue;
+        }
+        
+        function showError(message) {
+            const container = document.getElementById('errorContainer');
+            container.innerHTML = `
+                <div class="error-message">
+                    <h3 class="font-bold text-lg mb-2">❌ เกิดข้อผิดพลาด</h3>
+                    <p>${message}</p>
+                    <div class="mt-4 text-center">
+                        <button onclick="window.location.href='Psychomatrix.html'" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            ← กลับไปกรอกข้อมูลใหม่
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+        
+        function executeScripts(container) {
+            const scripts = container.querySelectorAll('script');
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement('script');
+                if (oldScript.src) {
+                    newScript.src = oldScript.src;
+                } else {
+                    newScript.textContent = oldScript.textContent;
+                }
+                document.body.appendChild(newScript).parentNode.removeChild(newScript);
+            });
+        }
+        
+        // ==================== Pinnacle Graph (if exists) ====================
+        
+        function renderPinnacleGraph(data) {
+            if (!data || !pinnacleData) return;
+            
+            const graphContainer = document.getElementById('pinnacleGraphContainer');
+            if (!graphContainer) return;
+            
+            // This will be populated if pinnacle data exists
+            // Implementation depends on Edge Function returning graph data
+        }
+    </script>
 </body>
 </html>
