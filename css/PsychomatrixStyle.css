@@ -404,3 +404,19 @@ button[type="submit"]:hover {
     border: 2px solid #ef4444;
     background-color: rgba(239, 68, 68, 0.1);
 }
+
+/* เพิ่มใน PsychomatrixStyle.css */
+#surroundingDataModal .bg-white {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#surroundingFieldsContainer input[type="text"] {
+    transition: all 0.2s ease;
+}
+
+#surroundingFieldsContainer input[type="text"]:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
