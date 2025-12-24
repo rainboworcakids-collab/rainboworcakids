@@ -18,7 +18,7 @@
         // ป้องกันการกด Enter ส่งฟอร์มโดยไม่ตั้งใจ
         document.addEventListener('DOMContentLoaded', function() {
             document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                if (e.key === 'Enter') {
                     e.preventDefault();
                 }
             });
@@ -29,51 +29,59 @@
     
     <!-- Main Container -->
     <div class="Container">
+        <!-- Header -->
+        <div class="text-center mb-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-bold text-white mb-2">🔮 Psychomatrix Analysis</h1>
+            <p class="text-blue-100">วิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
+        </div>
+        
         <!-- Analysis Form -->
-        <form id="psychomatrixForm" class="no-print max-w-2xl mx-auto bg-white p-6 rounded shadow-lg mt-6">
+        <form id="psychomatrixForm" class="no-print max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-2xl">
             
             <!-- Section 1: Birth Date -->
-            <div class="section1 mb-6 p-4 rounded-lg">	
+            <div class="section1 mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200">	
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-3">📅 ข้อมูลวันเกิด (Birth Date)</label>
-                    <div class="flex flex-wrap gap-3">
+                    <label class="block text-lg font-bold text-gray-800 mb-4">📅 ข้อมูลวันเกิด (Birth Date)</label>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <!-- Day -->
-                        <div class="flex-1 min-w-20 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">วันที่</label>
-                            <select name="birth_day" class="p-2 w-full border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <!-- JavaScript will populate options -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">วันที่</label>
+                            <select name="birth_day" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกวัน</option>
+                                <!-- Options will be populated by JavaScript below -->
                             </select>
                         </div>
                         <!-- Month -->
-                        <div class="flex-1 min-w-20 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">เดือน</label>
-                            <select name="birth_month" class="p-2 w-full border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <!-- JavaScript will populate options -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เดือน</label>
+                            <select name="birth_month" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกเดือน</option>
                             </select>
                         </div>
-                        <!-- Century + Year -->
-                        <div class="flex-1 min-w-32 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">ปี ค.ศ.</label>
-                            <div class="flex gap-1">
-                                <select name="birth_century" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="19">19</option>
-                                    <option value="20" selected>20</option>
-                                </select>
-                                <select name="birth_year" class="p-2 flex-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
-                                </select>
-                            </div>
+                        <!-- Century -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ศตวรรษ</label>
+                            <select name="birth_century" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="19">19</option>
+                                <option value="20" selected>20</option>
+                            </select>
+                        </div>
+                        <!-- Year -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ปี</label>
+                            <select name="birth_year" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกปี</option>
+                            </select>
                         </div>
                         <!-- Time -->
-                        <div class="flex-1 min-w-32 border rounded p-2 bg-gray-50">
-                            <label class="block text-xs font-medium text-gray-600 mb-1">เวลาเกิด</label>
-                            <div class="flex items-center gap-1">
-                                <select name="birth_hour" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
-                                </select>	
-                                <span class="text-gray-500">:</span>
-                                <select name="birth_minute" class="p-2 flex-1 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <!-- JavaScript will populate options -->
+                        <div class="md:col-span-2 lg:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเกิด</label>
+                            <div class="flex gap-2">
+                                <select name="birth_hour" class="p-3 flex-1 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">ชม.</option>
+                                </select>
+                                <select name="birth_minute" class="p-3 flex-1 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">นาที</option>
                                 </select>
                             </div>
                         </div>
@@ -82,86 +90,84 @@
             </div>		
             
             <!-- Section 2: ID Card -->
-            <div class="section2 mb-6 p-4 rounded-lg">	
+            <div class="section2 mb-6 p-5 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border border-gray-200">	
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🪪 เลขบัตรประชาชน (ID Card Number)</label>
+                    <label class="block text-lg font-bold text-gray-800 mb-3">🪪 เลขบัตรประชาชน</label>
                     <input type="text" name="id_card" placeholder="1103705060128" maxlength="13"
-                           class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                           pattern="\d{13}" title="กรุณากรอกเลข 13 หลักเท่านั้น">
-                    <p class="text-xs text-gray-500 mt-1">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค</p>
+                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                           pattern="\d{13}" title="กรุณากรอกเลข 13 หลัก">
+                    <p class="text-sm text-gray-500 mt-2">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค เช่น 1103705060128</p>
                 </div>
             </div>		
             
             <!-- Section 3: Full Name -->
-            <div class="section3 mb-6 p-4 rounded-lg">		
+            <div class="section3 mb-6 p-5 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 border border-gray-200">		
                 <div class="mb-4">
-                    <label class="block text-sm font-bold text-gray-700 mb-2">✍️ ชื่อ-สกุลภาษาอังกฤษ (Full Name)</label>
+                    <label class="block text-lg font-bold text-gray-800 mb-3">✍️ ชื่อ-สกุลภาษาอังกฤษ</label>
                     <input type="text" name="full_name" placeholder="Thanadej Hwangsutham"
-                           class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                    <p class="text-xs text-gray-500 mt-1">สามารถกรอกชื่อภาษาไทยได้ ระบบจะแปลงให้อัตโนมัติ</p>
+                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
+                    <p class="text-sm text-gray-500 mt-2">สามารถกรอกชื่อภาษาไทยได้ ระบบจะแปลงให้อัตโนมัติ เช่น ธเนศเดช หวังสุธรรม</p>
                 </div>
             </div>		
             
             <!-- Button: Manage Surrounding Data -->
             <button type="button" id="openSurroundingDataModal" 
-                    class="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-3 rounded-lg hover:from-purple-600 hover:to-purple-800 font-medium text-lg shadow-lg transition-all duration-200 mb-4">
+                    class="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-4 rounded-lg hover:from-purple-600 hover:to-purple-800 font-bold text-lg shadow-lg transition-all duration-200 mb-6">
                 🧲 จัดการข้อมูลพลังตัวเลขรอบตัว (20 รายการ)
             </button>
             
             <!-- Section: Options & Actions -->
-            <div class="section bg-gray-50 p-4 rounded-lg">
-                <div class="flex flex-col lg:flex-row gap-4">
+            <div class="section bg-gray-50 p-5 rounded-xl border border-gray-200">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
                     
                     <!-- Left: Display Options -->
-                    <div class="flex-1">
-                        <label class="block mb-2 text-md font-bold text-gray-700">📊 ตัวเลือกการแสดงผล</label>
-                        <select name="option" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-3">
+                    <div class="lg:col-span-2">
+                        <label class="block mb-3 text-lg font-bold text-gray-800">📊 ตัวเลือกการแสดงผล</label>
+                        <select name="option" class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4">
                             <option value="BD" selected>📅 Birth Date เท่านั้น</option>
                             <option value="IDC">🪪 ID Card เท่านั้น</option>
                             <option value="FullName">✍️ Full Name เท่านั้น</option>	
-                            <option value="BD-IDC">📅🪪 Birth Date + ID Card</option>
-                            <option value="BD-IDC-FullName">📅🪪✍️ Birth + ID + Name</option>					
-                            <option value="Num-Ard">🧲 รวมตัวเลขรอบตัวทั้งหมด</option>
+                            <option value="BD-IDC">📅🪪 Birth Date + ID Card (แยกผล)</option>
+                            <option value="BD-IDC-FullName">📅🪪✍️ Birth + ID + Name (แยกผล)</option>					
+                            <option value="Num-Ard">🧲 รวมทุกตัวเลขรอบตัว</option>
                         </select>
                         
-                        <div class="flex items-center gap-3 mb-3">
+                        <div class="flex items-center gap-3 mb-4">
                             <input type="checkbox" id="use_average" name="use_average" value="use_average" checked
-                                   class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
-                            <label for="use_average" class="text-sm font-medium text-gray-700">
-                                ใช้ค่าเฉลี่ยเมื่อต้องรวมตาราง (แนะนำ)
+                                   class="w-6 h-6 text-blue-600 rounded focus:ring-blue-500">
+                            <label for="use_average" class="text-base font-medium text-gray-700">
+                                ✅ ใช้ค่าเฉลี่ยเมื่อต้องรวมตาราง (แนะนำ)
                             </label>
                         </div>				
                         
-                        <div class="flex gap-2">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <input type="text" name="search_name" id="search_name" 
-                                   class="p-2 border-2 border-gray-300 rounded-lg flex-grow focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   class="md:col-span-2 p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                    placeholder="🔍 ชื่อสำหรับบันทึก/โหลดข้อมูล">
-                            <button type="button" id="load_search" 
-                                    class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 font-medium whitespace-nowrap">
-                                📂 เลือกรหัสค้นหา
-                            </button>
-                            <button type="submit" name="action" value="save" 
-                                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 font-medium whitespace-nowrap">
-                                💾 บันทึก
-                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" id="load_search" 
+                                        class="bg-yellow-500 text-white px-4 py-3 rounded-lg hover:bg-yellow-600 font-medium w-full">
+                                    📂
+                                </button>
+                                <button type="submit" name="action" value="save" 
+                                        class="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 font-medium w-full">
+                                    💾
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Right: Psychomatrix Logo & Analyze Button -->
-                    <div class="flex-1 flex flex-col items-center justify-center">
-                        <div class="text-center mb-3">
-                            <label class="block w-full text-md bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
-                                🔮 Psychomatrix Analysis
-                            </label>
+                    <!-- Right: Analyze Button -->
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" 
+                                 class="h-20 w-20 mx-auto rounded-full shadow-lg">
                         </div>
-                        <div class="text-center">
-                            <button type="submit" name="action" value="analyze" 
-                                    class="rounded-full bg-gradient-to-r from-blue-500 to-blue-700 m-2 p-4 hover:from-green-500 hover:to-green-700 shadow-lg transition-all duration-200">
-                                <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" 
-                                     class="h-16 w-16">
-                                <span class="block text-white font-bold mt-1">วิเคราะห์เลข</span>
-                            </button> 
-                        </div>
+                        <button type="submit" name="action" value="analyze" 
+                                class="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-green-500 hover:to-green-700 
+                                       text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all duration-200 w-full">
+                            🔮 วิเคราะห์เลข
+                        </button>
                     </div>
                     
                 </div>
@@ -202,9 +208,9 @@
     <!-- Modal: Surrounding Data (20 Fields) -->
     <div id="surroundingDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4 text-center text-purple-700">🧲 แก้ไขข้อมูลพลังตัวเลขรอบตัว</h3>
+            <h3 class="text-xl font-bold mb-4 text-center text-purple-700">🧲 แก้ไขข้อมูลพลังตัวเลขรอบตัว (20 รายการ)</h3>
             <form id="surroundingDataForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6" id="surroundingFieldsContainer">
                     <!-- 20 input fields will be generated by JavaScript -->
                 </div>
                 <input type="hidden" id="modal_search_name" name="search_name">
@@ -221,6 +227,64 @@
     </div>
 	
     <!-- Psychomatrix JavaScript -->
-    <script src="js/Psychomatrix.js?v=1.0""</script>
+    <script src="js/Psychomatrix.js?v=2.0"></script>
+    
+    <!-- Inline JavaScript to populate select options immediately -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Populate Day (01-31)
+            const daySelect = document.querySelector('select[name="birth_day"]');
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                if (i === 28) option.selected = true; // Default to 28
+                option.textContent = String(i).padStart(2, '0');
+                daySelect.appendChild(option);
+            }
+            
+            // Populate Month (01-12)
+            const monthSelect = document.querySelector('select[name="birth_month"]');
+            for (let i = 1; i <= 12; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                if (i === 1) option.selected = true; // Default to January
+                option.textContent = String(i).padStart(2, '0');
+                monthSelect.appendChild(option);
+            }
+            
+            // Populate Year (00-99)
+            const yearSelect = document.querySelector('select[name="birth_year"]');
+            for (let i = 0; i <= 99; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                if (i === 15) option.selected = true; // Default to 15 (2015)
+                option.textContent = String(i).padStart(2, '0');
+                yearSelect.appendChild(option);
+            }
+            
+            // Populate Hour (00-23)
+            const hourSelect = document.querySelector('select[name="birth_hour"]');
+            for (let i = 0; i <= 23; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                if (i === 1) option.selected = true; // Default to 01
+                option.textContent = String(i).padStart(2, '0');
+                hourSelect.appendChild(option);
+            }
+            
+            // Populate Minute (00-59)
+            const minuteSelect = document.querySelector('select[name="birth_minute"]');
+            for (let i = 0; i <= 59; i++) {
+                const option = document.createElement('option');
+                option.value = String(i).padStart(2, '0');
+                if (i === 0) option.selected = true; // Default to 00
+                option.textContent = String(i).padStart(2, '0');
+                minuteSelect.appendChild(option);
+            }
+            
+            console.log('✅ สร้าง options สำเร็จ');
+        });
+    </script>
 </body>
 </html>
+
