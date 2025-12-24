@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แกลเลอรี่ผลงาน - RainbowOrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        .video-card {
+            transition: all 0.3s ease;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .star {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star.active {
+            color: #fbbf24;
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        .animate-slide-out {
+            animation: slideOut 0.3s ease-in;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+    <script src="js/nav.js"></script>
+    
+</head>
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation bar จะถูกเพิ่มโดย js/nav.js -->
+    
+    <!-- Main Content -->
+    <div class="min-h-screen pt-16">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-12">
+            <div class="container mx-auto px-4">
+                <h1 class="text-4xl font-bold mb-4">แกลเลอรี่ผลงานนักเรียน</h1>
+                <p class="text-lg opacity-90">ชมผลงานสร้างสรรค์จากนักเรียนทั่วประเทศ พร้อมให้คะแนนและแสดงความคิดเห็น</p>
+            </div>
+        </div>
+        
+        <!-- Stats Summary -->
+        <div class="container mx-auto px-4 -mt-6">
+            <div id="statsSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Stats จะถูกโหลดโดย gallery-app.js -->
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters and Controls -->
+        <div class="container mx-auto px-4 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+                    <div class="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เรียงตาม</label>
+                            <select id="sortBy" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 md:w-48">
+                                <option value="newest">ใหม่ล่าสุด</option>
+                                <option value="popular">ยอดนิยม</option>
+                                <option value="rating">คะแนนสูงสุด</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ภารกิจ</label>
+                            <select id="missionFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 md:w-48">
+                                <option value="all">ทั้งหมด</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ระดับชั้น</label>
+                            <select id="gradeFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 md:w-48">
+                                <option value="all">ทั้งหมด</option>
+                                <option value="1">ประถม 1</option>
+                                <option value="2">ประถม 2</option>
+                                <option value="3">ประถม 3</option>
+                                <option value="4">ประถม 4</option>
+                                <option value="5">ประถม 5</option>
+                                <option value="6">ประถม 6</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button id="applyFilters" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold w-full md:w-auto mt-4 md:mt-0">
+                        <i class="fas fa-filter mr-2"></i>กรองผลงาน
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gallery Grid -->
+        <div class="container mx-auto px-4 mb-12">
+            <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- ผลงานจะถูกโหลดโดย gallery-app.js -->
+                <div class="col-span-full text-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <p class="text-gray-600">กำลังโหลดผลงาน...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rating Modal -->
+    <div id="ratingModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div id="ratingModalContent" class="bg-white rounded-xl shadow-xl max-w-md mx-auto mt-20 p-6">
+            <h3 class="text-xl font-bold mb-4">ให้คะแนนผลงาน</h3>
+            <div class="flex justify-center mb-4">
+                <i class="star far fa-star text-3xl mx-1" data-rating="1"></i>
+                <i class="star far fa-star text-3xl mx-1" data-rating="2"></i>
+                <i class="star far fa-star text-3xl mx-1" data-rating="3"></i>
+                <i class="star far fa-star text-3xl mx-1" data-rating="4"></i>
+                <i class="star far fa-star text-3xl mx-1" data-rating="5"></i>
+            </div>
+            <p id="ratingText" class="text-center text-gray-600 mb-4">เลือกจำนวนดาวที่ต้องการให้</p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">ความคิดเห็น (ไม่จำเป็น)</label>
+                <textarea id="ratingComment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="เขียนความคิดเห็น..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelRating" class="px-4 py-2 text-gray-600 hover:text-gray-800">ยกเลิก</button>
+                <button id="submitRating" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg">ส่งคะแนน</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div id="reportModalContent" class="bg-white rounded-xl shadow-xl max-w-md mx-auto mt-20 p-6">
+            <h3 class="text-xl font-bold mb-4">รายงานผลงาน</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">เหตุผลในการรายงาน</label>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="radio" name="reportReason" value="inappropriate" class="mr-2">
+                        <span>เนื้อหาไม่เหมาะสม</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="reportReason" value="spam" class="mr-2">
+                        <span>สแปมหรือโฆษณา</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="reportReason" value="copyright" class="mr-2">
+                        <span>ละเมิดลิขสิทธิ์</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="reportReason" value="other" class="mr-2">
+                        <span>อื่น ๆ</span>
+                    </label>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">รายละเอียดเพิ่มเติม</label>
+                <textarea id="reportDetails" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" placeholder="กรุณาระบุรายละเอียด..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelReport" class="px-4 py-2 text-gray-600 hover:text-gray-800">ยกเลิก</button>
+                <button id="submitReport" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">ส่งรายงาน</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- โหลดไฟล์ JS ตามลำดับที่ถูกต้อง -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    
+    <script>
+        // Gallery JavaScript
+        let supabase = null;
+        let currentUser = null;
+        let currentSubmissionId = null;
+        let allMissions = [];
+        
+        // ฟังก์ชันรอให้ nav.js โหลดเสร็จ
+        function waitForNav() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 30;
+                
+                const checkNav = setInterval(() => {
+                    attempts++;
+                    
+                    // ตรวจสอบว่า navigation bar ถูกสร้างแล้วหรือยัง
+                    const navExists = document.querySelector('nav');
+                    
+                    if (navExists) {
+                        clearInterval(checkNav);
+                        console.log("✅ Navigation bar loaded");
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkNav);
+                        console.warn("❌ Navigation bar not loaded, continuing anyway");
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+        
+        // ฟังก์ชันเริ่มต้นแกลเลอรี่
+        async function initGallery() {
+            try {
+                console.log("🔄 Initializing gallery...");
+                
+                // ตรวจสอบว่ามี SupabaseConfig หรือไม่
+                if (window.SupabaseConfig && window.SupabaseConfig.client) {
+                    supabase = window.SupabaseConfig.client();
+                    console.log("✅ Using SupabaseConfig client");
+                } else if (window.supabaseClient) {
+                    supabase = window.supabaseClient;
+                    console.log("✅ Using window.supabaseClient");
+                } else if (window.initializeSupabaseClient) {
+                    supabase = window.initializeSupabaseClient();
+                    console.log("✅ Using initializeSupabaseClient");
+                } else {
+                    throw new Error("Supabase client not available");
+                }
+                
+                if (!supabase) {
+                    throw new Error("Failed to initialize Supabase client");
+                }
+                
+                // ตรวจสอบการล็อกอิน
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session) {
+                    // ถ้าไม่ได้ล็อกอิน ให้แสดงข้อความ
+                    showNotLoggedInMessage();
+                    return;
+                }
+                
+                currentUser = session.user;
+                console.log("✅ User authenticated:", currentUser.email);
+                
+                // ตั้งค่า event listeners
+                setupEventListeners();
+                
+                // โหลดข้อมูลภารกิจ
+                await loadMissions();
+                
+                // โหลดผลงาน
+                await loadSubmissions();
+                
+                // อัปเดตสถิติ
+                await updateStats();
+                
+            } catch (error) {
+                console.error("❌ Error initializing gallery:", error);
+                showError('ไม่สามารถโหลดแกลเลอรี่ได้: ' + error.message);
+            }
+        }
+        
+        // ฟังก์ชันแสดงข้อความกรณียังไม่ได้ล็อกอิน
+        function showNotLoggedInMessage() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            galleryGrid.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-8 max-w-md mx-auto">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-yellow-700 mb-2">กรุณาล็อกอิน</h3>
+                        <p class="text-gray-600 mb-4">คุณต้องล็อกอินเพื่อเข้าชมแกลเลอรี่ผลงาน</p>
+                        <a href="login_supabase.html" class="inline-block bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold">
+                            <i class="fas fa-sign-in-alt mr-2"></i>ไปหน้าล็อกอิน
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            // ซ่อน filter section
+            document.querySelector('.bg-white.rounded-xl').style.display = 'none';
+        }
+        
+        // ฟังก์ชันโหลดภารกิจสำหรับ filter
+        async function loadMissions() {
+            try {
+                const { data: missions, error } = await supabase
+                    .from('missions')
+                    .select('mission_id, mission_title')
+                    .order('mission_title');
+                
+                if (error) throw error;
+                
+                allMissions = missions || [];
+                const missionFilter = document.getElementById('missionFilter');
+                
+                // เพิ่ม options
+                missions.forEach(mission => {
+                    const option = document.createElement('option');
+                    option.value = mission.mission_id;
+                    option.textContent = mission.mission_title;
+                    missionFilter.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Error loading missions:', error);
+            }
+        }
+        
+        // ฟังก์ชันโหลดผลงาน
+        async function loadSubmissions() {
+            const galleryGrid = document.getElementById('galleryGrid');
+            
+            try {
+                // แสดง loading
+                galleryGrid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                        <p class="text-gray-600">กำลังโหลดผลงาน...</p>
+                    </div>
+                `;
+                
+                // ดึง filter values
+                const sortBy = document.getElementById('sortBy').value;
+                const missionId = document.getElementById('missionFilter').value;
+                const grade = document.getElementById('gradeFilter').value;
+                
+                // สร้าง query
+                let query = supabase
+                    .from('submissions')
+                    .select(`
+                        *,
+                        missions (mission_title),
+                        users (display_name, avatar_url)
+                    `)
+                    .eq('status', 'approved'); // เฉพาะผลงานที่ได้รับการอนุมัติ
+                
+                // ใช้ filter ภารกิจ
+                if (missionId && missionId !== 'all') {
+                    query = query.eq('mission_id', missionId);
+                }
+                
+                // เรียงลำดับ
+                if (sortBy === 'newest') {
+                    query = query.order('created_at', { ascending: false });
+                } else if (sortBy === 'popular') {
+                    query = query.order('views', { ascending: false });
+                } else if (sortBy === 'rating') {
+                    query = query.order('average_rating', { ascending: false });
+                }
+                
+                const { data: submissions, error } = await query;
+                
+                if (error) throw error;
+                
+                if (!submissions || submissions.length === 0) {
+                    galleryGrid.innerHTML = `
+                        <div class="col-span-full text-center py-12">
+                            <i class="fas fa-photo-video text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">ยังไม่มีผลงานในแกลเลอรี่</p>
+                            <p class="text-gray-400 text-sm mt-2">เป็นคนแรกที่ส่งผลงานเลย!</p>
+                            <a href="missions.html" class="inline-block mt-4 bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold">
+                                <i class="fas fa-rocket mr-2"></i>ดูภารกิจทั้งหมด
+                            </a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // เรนเดอร์ผลงาน
+                renderSubmissions(submissions);
+                
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                galleryGrid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                        <p class="text-red-500">เกิดข้อผิดพลาดในการโหลดผลงาน</p>
+                        <button onclick="loadSubmissions()" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                            ลองอีกครั้ง
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // ฟังก์ชันเรนเดอร์ผลงาน
+        function renderSubmissions(submissions) {
+            const galleryGrid = document.getElementById('galleryGrid');
+            galleryGrid.innerHTML = '';
+            
+            submissions.forEach(submission => {
+                const card = createSubmissionCard(submission);
+                galleryGrid.appendChild(card);
+            });
+        }
+        
+        // ฟังก์ชันสร้างการ์ดผลงาน
+        function createSubmissionCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'video-card bg-white rounded-xl shadow-md overflow-hidden';
+            
+            // กำหนดวันที่
+            const submittedDate = new Date(submission.created_at);
+            const timeAgo = getTimeAgo(submittedDate);
+            
+            card.innerHTML = `
+                <div class="relative">
+                    <!-- Video Thumbnail -->
+                    <div class="aspect-video bg-gray-800 relative overflow-hidden">
+                        <img src="https://img.youtube.com/vi/${getYouTubeId(submission.video_url)}/hqdefault.jpg" 
+                             alt="Video thumbnail" 
+                             class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+                            <div class="w-16 h-16 bg-white bg-opacity-80 rounded-full flex items-center justify-center">
+                                <i class="fas fa-play text-purple-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="absolute top-3 right-3 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                            <i class="fas fa-clock mr-1"></i>${submission.duration || '3:45'}
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="p-4">
+                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-2" title="${submission.title || 'ผลงานวิดีโอ'}">
+                            ${submission.title || 'ผลงานวิดีโอ'}
+                        </h3>
+                        
+                        <!-- User Info -->
+                        <div class="flex items-center mb-3">
+                            <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-sm font-bold mr-2 overflow-hidden">
+                                ${submission.users?.avatar_url ? 
+                                    `<img src="${submission.users.avatar_url}" alt="" class="w-full h-full object-cover">` :
+                                    `<span>${(submission.users?.display_name || 'ผู้ใช้').charAt(0)}</span>`
+                                }
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-gray-700">${submission.users?.display_name || 'ผู้ใช้'}</div>
+                                <div class="text-xs text-gray-500">${timeAgo}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Mission Info -->
+                        <div class="mb-3">
+                            <span class="inline-block bg-purple-100 text-purple-700 text-xs font-medium px-2 py-1 rounded">
+                                ${submission.missions?.mission_title || 'ภารกิจ'}
+                            </span>
+                        </div>
+                        
+                        <!-- Stats -->
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <i class="fas fa-eye mr-1"></i>
+                                <span>${submission.views || 0}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-thumbs-up mr-1"></i>
+                                <span>${submission.likes || 0}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-star mr-1 text-yellow-500"></i>
+                                <span>${submission.average_rating?.toFixed(1) || '0.0'}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-comment mr-1"></i>
+                                <span>${submission.comment_count || 0}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="mt-4 flex space-x-2">
+                            <button onclick="handleVote('${submission.id}', 'like')" 
+                                    class="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center">
+                                <i class="fas fa-thumbs-up mr-1"></i> ชอบ
+                            </button>
+                            <button onclick="openRatingModal('${submission.id}')" 
+                                    class="flex-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center justify-center">
+                                <i class="fas fa-star mr-1"></i> ให้คะแนน
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // เพิ่ม event listener สำหรับคลิกที่การ์ดเพื่อเปิดวิดีโอ
+            card.querySelector('.aspect-video').addEventListener('click', () => {
+                openVideoModal(submission);
+            });
+            
+            return card;
+        }
+        
+        // ฟังก์ชันคำนวณเวลาที่ผ่านมา
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+            
+            if (diffDay > 0) return `${diffDay} วันที่แล้ว`;
+            if (diffHour > 0) return `${diffHour} ชั่วโมงที่แล้ว`;
+            if (diffMin > 0) return `${diffMin} นาทีที่แล้ว`;
+            return 'ไม่กี่วินาทีที่แล้ว';
+        }
+        
+        // ฟังก์ชันดึง YouTube ID จาก URL
+        function getYouTubeId(url) {
+            if (!url) return 'dQw4w9WgXcQ'; // Default video ID
+            
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            
+            return (match && match[2].length === 11) ? match[2] : 'dQw4w9WgXcQ';
+        }
+        
+        // ฟังก์ชันเปิด modal วิดีโอ
+        function openVideoModal(submission) {
+            // สร้าง modal สำหรับแสดงวิดีโอ
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl w-full max-w-4xl overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-xl font-bold text-gray-800">${submission.title || 'ผลงานวิดีโอ'}</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="aspect-video">
+                        <iframe src="https://www.youtube.com/embed/${getYouTubeId(submission.video_url)}" 
+                                class="w-full h-full" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white text-lg font-bold mr-3 overflow-hidden">
+                                ${submission.users?.avatar_url ? 
+                                    `<img src="${submission.users.avatar_url}" alt="" class="w-full h-full object-cover">` :
+                                    `<span>${(submission.users?.display_name || 'ผู้ใช้').charAt(0)}</span>`
+                                }
+                            </div>
+                            <div>
+                                <div class="font-bold text-gray-800">${submission.users?.display_name || 'ผู้ใช้'}</div>
+                                <div class="text-sm text-gray-500">${new Date(submission.created_at).toLocaleDateString('th-TH')}</div>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 mb-6">${submission.description || 'ไม่มีการอธิบายเพิ่มเติม'}</p>
+                        <div class="flex space-x-4">
+                            <button onclick="handleVote('${submission.id}', 'like')" 
+                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center">
+                                <i class="fas fa-thumbs-up mr-2"></i> ชอบ (${submission.likes || 0})
+                            </button>
+                            <button onclick="openRatingModal('${submission.id}')" 
+                                    class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium flex items-center justify-center">
+                                <i class="fas fa-star mr-2"></i> ให้คะแนน (${submission.average_rating?.toFixed(1) || '0.0'})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // เพิ่ม view count
+            incrementViewCount(submission.id);
+        }
+        
+        // ฟังก์ชันเพิ่มจำนวน view
+        async function incrementViewCount(submissionId) {
+            try {
+                // ดึงจำนวน view ปัจจุบัน
+                const { data: submission, error: fetchError } = await supabase
+                    .from('submissions')
+                    .select('views')
+                    .eq('id', submissionId)
+                    .single();
+                
+                if (fetchError) throw fetchError;
+                
+                // อัปเดตจำนวน view
+                const newViews = (submission.views || 0) + 1;
+                const { error: updateError } = await supabase
+                    .from('submissions')
+                    .update({ views: newViews })
+                    .eq('id', submissionId);
+                
+                if (updateError) throw updateError;
+                
+            } catch (error) {
+                console.error('Error incrementing view count:', error);
+            }
+        }
+        
+        // ฟังก์ชันจัดการการโหวต
+        async function handleVote(submissionId, type) {
+            if (!currentUser) {
+                alert('กรุณาล็อกอินเพื่อใช้งานฟังก์ชันนี้');
+                return;
+            }
+            
+            try {
+                // ตรวจสอบว่าเคยโหวตแล้วหรือไม่
+                const { data: existingVote, error: checkError } = await supabase
+                    .from('votes')
+                    .select('*')
+                    .eq('submission_id', submissionId)
+                    .eq('user_id', currentUser.id)
+                    .eq('type', type)
+                    .single();
+                
+                if (checkError && checkError.code !== 'PGRST116') throw checkError;
+                
+                if (existingVote) {
+                    // ถ้าโหวตแล้ว ให้ยกเลิก
+                    const { error: deleteError } = await supabase
+                        .from('votes')
+                        .delete()
+                        .eq('id', existingVote.id);
+                    
+                    if (deleteError) throw deleteError;
+                    
+                    // อัปเดตจำนวน likes
+                    await updateLikeCount(submissionId, -1);
+                    
+                    showToast('ยกเลิกการโหวตแล้ว', 'info');
+                } else {
+                    // ถ้ายังไม่โหวต ให้เพิ่มโหวต
+                    const { error: insertError } = await supabase
+                        .from('votes')
+                        .insert({
+                            submission_id: submissionId,
+                            user_id: currentUser.id,
+                            type: type
+                        });
+                    
+                    if (insertError) throw insertError;
+                    
+                    // อัปเดตจำนวน likes
+                    await updateLikeCount(submissionId, 1);
+                    
+                    showToast('โหวตสำเร็จ!', 'success');
+                }
+                
+                // โหลดผลงานใหม่
+                await loadSubmissions();
+                
+            } catch (error) {
+                console.error('Error handling vote:', error);
+                showToast('เกิดข้อผิดพลาดในการโหวต: ' + error.message, 'error');
+            }
+        }
+        
+        // ฟังก์ชันอัปเดตจำนวน likes
+        async function updateLikeCount(submissionId, change) {
+            try {
+                // ดึงจำนวน likes ปัจจุบัน
+                const { data: submission, error: fetchError } = await supabase
+                    .from('submissions')
+                    .select('likes')
+                    .eq('id', submissionId)
+                    .single();
+                
+                if (fetchError) throw fetchError;
+                
+                // คำนวณจำนวน likes ใหม่
+                const newLikes = Math.max(0, (submission.likes || 0) + change);
+                
+                // อัปเดต
+                const { error: updateError } = await supabase
+                    .from('submissions')
+                    .update({ likes: newLikes })
+                    .eq('id', submissionId);
+                
+                if (updateError) throw updateError;
+                
+            } catch (error) {
+                console.error('Error updating like count:', error);
+                throw error;
+            }
+        }
+        
+        // ฟังก์ชันเปิด modal ให้คะแนน
+        function openRatingModal(submissionId) {
+            if (!currentUser) {
+                alert('กรุณาล็อกอินเพื่อให้คะแนน');
+                return;
+            }
+            
+            currentSubmissionId = submissionId;
+            document.getElementById('ratingModal').classList.remove('hidden');
+            
+            // รีเซ็ต stars
+            document.querySelectorAll('.star').forEach(star => {
+                star.classList.remove('fas', 'active');
+                star.classList.add('far');
+            });
+            
+            document.getElementById('ratingText').textContent = 'เลือกจำนวนดาวที่ต้องการให้';
+            document.getElementById('ratingComment').value = '';
+        }
+        
+        // ฟังก์ชันปิด modal ให้คะแนน
+        function closeRatingModal() {
+            document.getElementById('ratingModal').classList.add('hidden');
+            currentSubmissionId = null;
+        }
+        
+        // ฟังก์ชันส่งคะแนน
+        async function submitRating() {
+            try {
+                // ดึง rating จาก stars ที่เลือก
+                const selectedStars = document.querySelectorAll('.star.fas');
+                const rating = selectedStars.length;
+                
+                if (rating === 0) {
+                    alert('กรุณาเลือกจำนวนดาว');
+                    return;
+                }
+                
+                const comment = document.getElementById('ratingComment').value;
+                
+                // บันทึก rating ลงฐานข้อมูล
+                const { error } = await supabase
+                    .from('ratings')
+                    .insert({
+                        submission_id: currentSubmissionId,
+                        user_id: currentUser.id,
+                        rating: rating,
+                        comment: comment || null
+                    });
+                
+                if (error) throw error;
+                
+                // คำนวณ average rating ใหม่
+                await updateAverageRating(currentSubmissionId);
+                
+                showToast('ให้คะแนนสำเร็จ!', 'success');
+                closeRatingModal();
+                
+                // โหลดผลงานใหม่
+                await loadSubmissions();
+                
+            } catch (error) {
+                console.error('Error submitting rating:', error);
+                showToast('เกิดข้อผิดพลาดในการให้คะแนน: ' + error.message, 'error');
+            }
+        }
+        
+        // ฟังก์ชันอัปเดตคะแนนเฉลี่ย
+        async function updateAverageRating(submissionId) {
+            try {
+                // ดึง ratings ทั้งหมดของ submission นี้
+                const { data: ratings, error } = await supabase
+                    .from('ratings')
+                    .select('rating')
+                    .eq('submission_id', submissionId);
+                
+                if (error) throw error;
+                
+                // คำนวณคะแนนเฉลี่ย
+                const total = ratings.reduce((sum, item) => sum + item.rating, 0);
+                const average = ratings.length > 0 ? total / ratings.length : 0;
+                
+                // อัปเดตในตาราง submissions
+                const { error: updateError } = await supabase
+                    .from('submissions')
+                    .update({ average_rating: average })
+                    .eq('id', submissionId);
+                
+                if (updateError) throw updateError;
+                
+            } catch (error) {
+                console.error('Error updating average rating:', error);
+                throw error;
+            }
+        }
+        
+        // ฟังก์ชันเปิด modal รายงาน
+        function openReportModal(submissionId) {
+            currentSubmissionId = submissionId;
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+        
+        // ฟังก์ชันปิด modal รายงาน
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+            currentSubmissionId = null;
+            
+            // รีเซ็ต form
+            document.querySelectorAll('input[name="reportReason"]').forEach(input => {
+                input.checked = false;
+            });
+            document.getElementById('reportDetails').value = '';
+        }
+        
+        // ฟังก์ชันส่งรายงาน
+        async function submitReport() {
+            try {
+                const reason = document.querySelector('input[name="reportReason"]:checked');
+                if (!reason) {
+                    alert('กรุณาเลือกเหตุผลในการรายงาน');
+                    return;
+                }
+                
+                const details = document.getElementById('reportDetails').value;
+                
+                const { error } = await supabase
+                    .from('reports')
+                    .insert({
+                        submission_id: currentSubmissionId,
+                        user_id: currentUser.id,
+                        reason: reason.value,
+                        details: details || null,
+                        status: 'pending'
+                    });
+                
+                if (error) throw error;
+                
+                showToast('ส่งรายงานสำเร็จ ขอบคุณสำหรับการช่วยเหลือ', 'success');
+                closeReportModal();
+                
+            } catch (error) {
+                console.error('Error submitting report:', error);
+                showToast('เกิดข้อผิดพลาดในการส่งรายงาน: ' + error.message, 'error');
+            }
+        }
+        
+        // ฟังก์ชันอัปเดตสถิติ
+        async function updateStats() {
+            try {
+                // ดึงสถิติจากฐานข้อมูล
+                const { data: stats, error } = await supabase
+                    .from('gallery_stats')
+                    .select('*')
+                    .single();
+                
+                if (error && error.code !== 'PGRST116') throw error;
+                
+                const statsSummary = document.getElementById('statsSummary');
+                
+                // ถ้ามีสถิติจากฐานข้อมูล
+                if (stats) {
+                    statsSummary.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-video text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${stats.total_videos || 0}</div>
+                                    <div class="text-sm text-gray-600">ผลงานทั้งหมด</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${stats.total_creators || 0}</div>
+                                    <div class="text-sm text-gray-600">นักเรียนผู้สร้าง</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-thumbs-up text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${stats.total_likes || 0}</div>
+                                    <div class="text-sm text-gray-600">ยอดไลค์ทั้งหมด</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-star text-yellow-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${stats.average_rating?.toFixed(1) || '0.0'}</div>
+                                    <div class="text-sm text-gray-600">คะแนนเฉลี่ย</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // ถ้าไม่มีสถิติ ให้คำนวณเอง
+                    const { data: submissions, error: submissionsError } = await supabase
+                        .from('submissions')
+                        .select('*');
+                    
+                    if (submissionsError) throw submissionsError;
+                    
+                    const { data: users, error: usersError } = await supabase
+                        .from('users')
+                        .select('id');
+                    
+                    if (usersError) throw usersError;
+                    
+                    const totalVideos = submissions?.length || 0;
+                    const totalCreators = new Set(submissions?.map(s => s.user_id)).size || 0;
+                    const totalLikes = submissions?.reduce((sum, s) => sum + (s.likes || 0), 0) || 0;
+                    const avgRating = submissions?.reduce((sum, s) => sum + (s.average_rating || 0), 0) / totalVideos || 0;
+                    
+                    statsSummary.innerHTML = `
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-video text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${totalVideos}</div>
+                                    <div class="text-sm text-gray-600">ผลงานทั้งหมด</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${totalCreators}</div>
+                                    <div class="text-sm text-gray-600">นักเรียนผู้สร้าง</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-thumbs-up text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${totalLikes}</div>
+                                    <div class="text-sm text-gray-600">ยอดไลค์ทั้งหมด</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-md p-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-star text-yellow-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl font-bold text-gray-800">${avgRating.toFixed(1)}</div>
+                                    <div class="text-sm text-gray-600">คะแนนเฉลี่ย</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+        
+        // ฟังก์ชันตั้งค่า event listeners
+        function setupEventListeners() {
+            // Filter button
+            const applyFiltersBtn = document.getElementById('applyFilters');
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', loadSubmissions);
+            }
+            
+            // Rating modal
+            const cancelRatingBtn = document.getElementById('cancelRating');
+            if (cancelRatingBtn) {
+                cancelRatingBtn.addEventListener('click', closeRatingModal);
+            }
+            
+            const submitRatingBtn = document.getElementById('submitRating');
+            if (submitRatingBtn) {
+                submitRatingBtn.addEventListener('click', submitRating);
+            }
+            
+            // Report modal
+            const cancelReportBtn = document.getElementById('cancelReport');
+            if (cancelReportBtn) {
+                cancelReportBtn.addEventListener('click', closeReportModal);
+            }
+            
+            const submitReportBtn = document.getElementById('submitReport');
+            if (submitReportBtn) {
+                submitReportBtn.addEventListener('click', submitReport);
+            }
+            
+            // Star rating interaction
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    
+                    // Update all stars
+                    document.querySelectorAll('.star').forEach((s, index) => {
+                        if (index < rating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas', 'active');
+                        } else {
+                            s.classList.remove('fas', 'active');
+                            s.classList.add('far');
+                        }
+                    });
+                    
+                    const ratingTexts = ['เลือกจำนวนดาว', 'แย่มาก', 'ไม่ดี', 'พอใช้', 'ดี', 'ดีมาก'];
+                    const ratingText = document.getElementById('ratingText');
+                    if (ratingText) {
+                        ratingText.textContent = ratingTexts[rating];
+                    }
+                });
+            });
+            
+            // Modal overlays
+            const ratingModal = document.getElementById('ratingModal');
+            if (ratingModal) {
+                ratingModal.addEventListener('click', (e) => {
+                    if (e.target === ratingModal) {
+                        closeRatingModal();
+                    }
+                });
+            }
+            
+            const reportModal = document.getElementById('reportModal');
+            if (reportModal) {
+                reportModal.addEventListener('click', (e) => {
+                    if (e.target === reportModal) {
+                        closeReportModal();
+                    }
+                });
+            }
+        }
+        
+        // ฟังก์ชันแสดงข้อผิดพลาด
+        function showError(message) {
+            const galleryGrid = document.getElementById('galleryGrid');
+            galleryGrid.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-8 max-w-md mx-auto">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                        <h3 class="text-xl font-bold text-red-700 mb-2">เกิดข้อผิดพลาด</h3>
+                        <p class="text-gray-600 mb-4">${message}</p>
+                        <button onclick="initGallery()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                            ลองอีกครั้ง
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ฟังก์ชันแสดง toast
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ${
+                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+                'bg-blue-100 text-blue-800 border border-blue-200'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+        
+        // เริ่มต้นเมื่อ DOM โหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("📄 Gallery page DOM loaded");
+            
+            // รอให้ nav.js โหลดและสร้าง navigation bar เสร็จก่อน
+            await waitForNav();
+            
+            // เริ่มต้นแกลเลอรี่
+            await initGallery();
+        });
+        
+        // ทำให้ฟังก์ชันสามารถเรียกใช้จาก HTML ได้
+        window.handleVote = handleVote;
+        window.openRatingModal = openRatingModal;
+        window.openReportModal = openReportModal;
+        window.loadSubmissions = loadSubmissions;
+        window.initGallery = initGallery;
+    </script>
+    <!-- เพิ่ม debug logger script -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // เริ่มต้น debug logger (จะเริ่มต้นอัตโนมัติอยู่แล้ว)
+            // แต่สามารถตั้งค่าตัวเลือกเพิ่มเติมได้
+            window.DebugLogger.init({
+                autoOpen: false,
+                enableConsoleOverride: true
+            });
+            
+            // ใช้ debug logger
+            DebugLogger.info('Missions page loaded');
+            
+            // ดึงข้อมูล missions
+            try {
+                const supabase = window.supabaseClient || initializeSupabaseClient();
+                DebugLogger.debug('Supabase client initialized');
+                
+                const { data: missions, error } = await supabase
+                    .from('missions')
+                    .select('*');
+                
+                if (error) {
+                    DebugLogger.error('Failed to fetch missions:', error.message);
+                    // handle error
+                } else {
+                    DebugLogger.success(`Fetched ${missions.length} missions`);
+                    // display missions
+                }
+            } catch (error) {
+                DebugLogger.error('Missions page error:', error.message);
+            }
+        });
+    </script>    
+</body>
+</html>

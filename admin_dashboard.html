@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Rainbow OrcaKids</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="font-sarabun bg-gray-100">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <!-- Permission Denied Container (hidden by default) -->
+    <div id="permissionDeniedContainer" class="hidden min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-red-50 to-pink-100 p-8">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+            <div class="mb-6">
+                <div class="w-24 h-24 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-red-500 text-4xl"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-red-600 mb-3">
+                <i class="fas fa-exclamation-triangle mr-2"></i>ขออภัย! คุณไม่มีสิทธิ์เข้าถึงหน้านี้
+            </h1>
+            <p class="text-gray-600 mb-6">
+                หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบ (Administrator) เท่านั้น
+            </p>
+            <div class="space-y-3">
+                <a href="index.html" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-home mr-2"></i>กลับไปหน้าหลัก
+                </a>
+                <a href="profile.html" class="block w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-user mr-2"></i>ดูโปรไฟล์ของคุณ
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard Content (hidden by default) -->
+    <div id="adminDashboard" class="container mx-auto px-4 py-8">
+        <!-- Header with Admin Badge -->
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    <i class="fas fa-cogs mr-3"></i>Admin Dashboard
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <p class="text-gray-600">แผงควบคุมสำหรับผู้ดูแลระบบ</p>
+                    <span id="adminBadge" class="bg-purple-100 text-purple-800 text-xs font-semibold px-3 py-1 rounded-full">
+                        <i class="fas fa-crown mr-1"></i>Admin Mode
+                    </span>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="checkAdminAndRefresh()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                </button>
+                <button onclick="logoutAdmin()" 
+                        class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                </button>
+            </div>
+        </div>
+
+        <!-- Welcome Card -->
+        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg p-6 text-white mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">ยินดีต้อนรับ, <span id="adminName">ผู้ดูแลระบบ</span>!</h2>
+                    <p class="text-blue-100">คุณกำลังใช้งานแผงควบคุมผู้ดูแลระบบ</p>
+                </div>
+                <div class="bg-white bg-opacity-20 p-4 rounded-full">
+                    <i class="fas fa-shield-alt text-3xl"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ผู้ใช้ทั้งหมด</p>
+                        <p id="totalUsers" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-user-check text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Admin Users</p>
+                        <p id="adminUsers" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-tasks text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ภารกิจทั้งหมด</p>
+                        <p id="totalMissions" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-chart-line text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">System Uptime</p>
+                        <p id="systemUptime" class="text-2xl font-bold">99.9%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Tools Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Master Data Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-blue-200">
+                <h3 class="text-xl font-bold text-blue-600 mb-4">
+                    <i class="fas fa-database mr-2"></i>Master Data
+                </h3>
+                <div class="space-y-3">
+                    <a href="masterdata_roles_manager.html" 
+                       class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition duration-200">
+                        <i class="fas fa-user-shield text-blue-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Roles Management</div>
+                            <div class="text-sm text-gray-500">จัดการบทบาทผู้ใช้</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                    
+                    <a href="masterdata_grades_manager.html" 
+                       class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition duration-200">
+                        <i class="fas fa-graduation-cap text-green-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Grades Management</div>
+                            <div class="text-sm text-gray-500">จัดการระดับชั้น</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                    
+                    <a href="masterdata_missions_manager.html" 
+                       class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition duration-200">
+                        <i class="fas fa-tasks text-purple-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Missions Management</div>
+                            <div class="text-sm text-gray-500">จัดการภารกิจ</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                    
+                    <a href="masterdata_disciplines_manager.html" 
+                       class="flex items-center p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition duration-200">
+                        <i class="fas fa-book text-yellow-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Disciplines</div>
+                            <div class="text-sm text-gray-500">จัดการสาขาวิชา</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- User Management -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-green-200">
+                <h3 class="text-xl font-bold text-green-600 mb-4">
+                    <i class="fas fa-users mr-2"></i>User Management
+                </h3>
+                <div class="space-y-3">
+                    <a href="admin_users_manager.html" 
+                       class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg transition duration-200">
+                        <i class="fas fa-user-cog text-green-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Manage Users</div>
+                            <div class="text-sm text-gray-500">ดูและจัดการผู้ใช้</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                    
+                    <a href="admin_approvals.html" 
+                       class="flex items-center p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition duration-200">
+                        <i class="fas fa-check-circle text-yellow-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Approvals</div>
+                            <div class="text-sm text-gray-500">อนุมัติคำขอ</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                    
+                    <a href="admin_reports.html" 
+                       class="flex items-center p-3 bg-red-50 hover:bg-red-100 rounded-lg transition duration-200">
+                        <i class="fas fa-flag text-red-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Reports</div>
+                            <div class="text-sm text-gray-500">ดูรายงานและปัญหา</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- System Tools -->
+            <div class="bg-white rounded-xl shadow-lg p-6 border border-red-200">
+                <h3 class="text-xl font-bold text-red-600 mb-4">
+                    <i class="fas fa-tools mr-2"></i>System Tools
+                </h3>
+                <div class="space-y-3">
+                    <button onclick="showSystemLogs()" 
+                            class="w-full flex items-center p-3 bg-red-50 hover:bg-red-100 rounded-lg transition duration-200">
+                        <i class="fas fa-file-alt text-red-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">System Logs</div>
+                            <div class="text-sm text-gray-500">ดู log ระบบ</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </button>
+                    
+                    <button onclick="exportDatabase()" 
+                            class="w-full flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition duration-200">
+                        <i class="fas fa-download text-purple-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">Export Data</div>
+                            <div class="text-sm text-gray-500">ส่งออกข้อมูล</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </button>
+                    
+                    <button onclick="showSystemSettings()" 
+                            class="w-full flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition duration-200">
+                        <i class="fas fa-cog text-blue-500 mr-3"></i>
+                        <div>
+                            <div class="font-semibold">System Settings</div>
+                            <div class="text-sm text-gray-500">ตั้งค่าระบบ</div>
+                        </div>
+                        <i class="fas fa-arrow-right ml-auto text-gray-400"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="mt-8 bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-xl font-bold text-gray-700 mb-4">
+                <i class="fas fa-history mr-2"></i>Recent Admin Activity
+            </h3>
+            <div id="recentActivity" class="space-y-3">
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดกิจกรรมล่าสุด...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+   <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        // ฟังก์ชันตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
+        async function checkAdminPermission() {
+            try {
+                console.log("🔍 Checking admin permission...");
+                
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    console.error("❌ Supabase client not available");
+                    return false;
+                }
+                
+                // ตรวจสอบ session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    console.error("❌ Session error:", sessionError);
+                    return false;
+                }
+                
+                if (!session || !session.user) {
+                    console.warn("⚠️ No user session found");
+                    return false;
+                }
+                
+                console.log("👤 User logged in:", session.user.email);
+                
+                // ดึงข้อมูลผู้ใช้จากตาราง users
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('role, display_name, email')
+                    .eq('uid', session.user.id)
+                    .single();
+                
+                if (userError) {
+                    console.error("❌ Error fetching user data:", userError);
+                    
+                    // ลองใช้ fetchUserProfile จาก auth_status_manager.js
+                    try {
+                        if (typeof window.fetchUserProfile === 'function') {
+                            const profile = await window.fetchUserProfile(session.user);
+                            if (profile && profile.role === 'admin') {
+                                console.log("✅ Admin check passed via fetchUserProfile");
+                                return true;
+                            }
+                        }
+                    } catch (profileError) {
+                        console.error("❌ Error with fetchUserProfile:", profileError);
+                    }
+                    
+                    return false;
+                }
+                
+                console.log("📊 User role from database:", userData.role);
+                
+                // ตรวจสอบว่า role เป็น admin หรือไม่
+                const isAdmin = userData.role === 'admin' || 
+                               userData.role === 'administrator' || 
+                               userData.role === 'superadmin';
+                
+                if (isAdmin) {
+                    console.log("✅ User is admin:", userData.display_name || userData.email);
+                    // อัปเดตข้อมูลผู้ใช้ใน UI
+                    document.getElementById('adminName').textContent = userData.display_name || userData.email.split('@')[0];
+                    document.getElementById('adminBadge').innerHTML = `<i class="fas fa-crown mr-1"></i>Admin: ${userData.display_name || userData.email.split('@')[0]}`;
+                } else {
+                    console.log("❌ User is NOT admin. Role:", userData.role);
+                }
+                
+                return isAdmin;
+                
+            } catch (error) {
+                console.error("❌ Error in checkAdminPermission:", error);
+                return false;
+            }
+        }
+        
+        // ฟังก์ชันโหลดสถิติ
+        async function loadAdminStats() {
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) return;
+                
+                // ดึงจำนวนผู้ใช้ทั้งหมด
+                const { count: totalUsers } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true });
+                
+                // ดึงจำนวน admin users
+                const { count: adminUsers } = await supabase
+                    .from('users')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('role', 'admin');
+                
+                // ดึงจำนวนภารกิจ
+                const { count: totalMissions } = await supabase
+                    .from('missions')
+                    .select('*', { count: 'exact', head: true });
+                
+                // อัปเดต UI
+                if (totalUsers !== null) document.getElementById('totalUsers').textContent = totalUsers;
+                if (adminUsers !== null) document.getElementById('adminUsers').textContent = adminUsers;
+                if (totalMissions !== null) document.getElementById('totalMissions').textContent = totalMissions;
+                
+            } catch (error) {
+                console.error("❌ Error loading admin stats:", error);
+            }
+        }
+        
+        // ฟังก์ชันแสดง/ซ่อนเนื้อหาตามสิทธิ์
+        async function checkAndDisplayContent() {
+            const isAdmin = await checkAdminPermission();
+            
+            const permissionContainer = document.getElementById('permissionDeniedContainer');
+            const dashboardContainer = document.getElementById('adminDashboard');
+            
+            if (isAdmin) {
+                // แสดง admin dashboard
+                if (permissionContainer) permissionContainer.classList.add('hidden');
+                if (dashboardContainer) dashboardContainer.classList.remove('hidden');
+                
+                // โหลดข้อมูลเพิ่มเติม
+                await loadAdminStats();
+                
+            } else {
+                // แสดงข้อความไม่มีสิทธิ์
+                if (permissionContainer) permissionContainer.classList.remove('hidden');
+                if (dashboardContainer) dashboardContainer.classList.add('hidden');
+                
+                // แสดง SweetAlert แจ้งเตือน
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ไม่มีสิทธิ์เข้าถึง',
+                        text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+                        confirmButtonText: 'กลับไปหน้าหลัก',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = 'index.html';
+                        }
+                    });
+                } else {
+                    // ถ้าไม่มี SweetAlert ให้ redirect ทันที
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                }
+            }
+        }
+        
+        // ฟังก์ชันรีเฟรช
+        async function checkAdminAndRefresh() {
+            await checkAndDisplayContent();
+        }
+        
+        // ฟังก์ชันออกจากระบบ
+        async function logoutAdmin() {
+            try {
+                if (typeof handleLogout === 'function') {
+                    await handleLogout();
+                } else {
+                    const supabase = await getSupabaseClient();
+                    if (supabase) {
+                        await supabase.auth.signOut();
+                        window.location.href = 'login_supabase.html';
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Logout error:", error);
+            }
+        }
+        
+        // ฟังก์ชัน placeholder สำหรับ features อื่นๆ
+        function showSystemLogs() {
+            Swal.fire({
+                icon: 'info',
+                title: 'System Logs',
+                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+        
+        function exportDatabase() {
+            Swal.fire({
+                icon: 'info',
+                title: 'Export Data',
+                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+        
+        function showSystemSettings() {
+            Swal.fire({
+                icon: 'info',
+                title: 'System Settings',
+                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("📄 Admin Dashboard page loaded");
+            
+            // ตรวจสอบสิทธิ์และแสดงเนื้อหา
+            await checkAndDisplayContent();
+            
+            // ตั้งค่า auth listener
+            try {
+                const supabase = await getSupabaseClient();
+                if (supabase && supabase.auth) {
+                    supabase.auth.onAuthStateChange(async (event, session) => {
+                        console.log(`🔄 Auth State Change: ${event}`);
+                        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                            // รอสักครู่ให้ state อัปเดต
+                            setTimeout(async () => {
+                                await checkAndDisplayContent();
+                            }, 500);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error setting up auth listener:", error);
+            }
+        });
+    </script>
+    
+    <style>
+        /* Custom styles */
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Animation for permission denied */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #permissionDeniedContainer {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Gradient border effect */
+        .gradient-border {
+            border: 2px solid transparent;
+            background: linear-gradient(white, white) padding-box,
+                        linear-gradient(45deg, #3b82f6, #8b5cf6) border-box;
+        }
+        
+        /* Card hover effect */
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transform: translateY(-4px);
+        }
+    </style>
+</body>
+</html>

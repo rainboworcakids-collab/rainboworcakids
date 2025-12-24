@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูล Grades | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 สำหรับ Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    <i class="fas fa-graduation-cap mr-3"></i>จัดการข้อมูล Grades
+                </h1>
+                <p class="text-gray-600">เพิ่ม/แก้ไข/ลบ ข้อมูลระดับชั้นเรียนในระบบ (รองรับทุกระดับการศึกษา)</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <!-- ปุ่มกลับหน้า Dashboard -->
+                <a href="admin_dashboard.html" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+                <!-- ปุ่มเพิ่ม Grade ใหม่ -->
+                <button onclick="showAddGradeModal()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>เพิ่ม Grade ใหม่
+                </button>
+                
+                <!-- ปุ่มคำแนะนำการกำหนดระดับ -->
+                <button onclick="showGradeGuide()" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-info-circle mr-2"></i>คำแนะนำ
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Guide -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <i class="fas fa-lightbulb text-yellow-500 text-xl mt-1 mr-3"></i>
+                <div>
+                    <h3 class="font-bold text-blue-800 mb-1">ระบบระดับชั้นแบบขยาย (1-99)</h3>
+                    <p class="text-sm text-blue-700">
+                        ระบบใหม่รองรับทุกระดับการศึกษา: 
+                        <span class="font-semibold">อนุบาล (1-3)</span> | 
+                        <span class="font-semibold">ประถม (4-9)</span> | 
+                        <span class="font-semibold">มัธยมต้น (10-12)</span> | 
+                        <span class="font-semibold">มัธยมปลาย (13-15)</span> | 
+                        <span class="font-semibold">อาชีวะ (16-20)</span> | 
+                        <span class="font-semibold">อุดมศึกษา (21-99)</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-layer-group text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">รวม Grades</p>
+                        <p id="totalGrades" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ใช้งานอยู่</p>
+                        <p id="activeGrades" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-pause-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ไม่ใช้งาน</p>
+                        <p id="inactiveGrades" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-sort-numeric-up text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ระดับสูงสุด</p>
+                        <p id="maxGradeLevel" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="ค้นหาตามชื่อระดับชั้น, คำอธิบาย, ช่วงอายุ..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="statusFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="active">ใช้งานอยู่</option>
+                        <option value="inactive">ไม่ใช้งาน</option>
+                    </select>
+                    
+                    <select id="educationLevelFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">ทุกระดับการศึกษา</option>
+                        <option value="kindergarten">อนุบาล (1-3)</option>
+                        <option value="primary">ประถม (4-9)</option>
+                        <option value="middle">มัธยมต้น (10-12)</option>
+                        <option value="high">มัธยมปลาย (13-15)</option>
+                        <option value="vocational">อาชีวะ (16-20)</option>
+                        <option value="higher">อุดมศึกษา (21+)</option>
+                    </select>
+                    
+                    <button onclick="loadGrades()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล Grades...
+        </div>
+
+        <!-- Grades Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-sort mr-1"></i>ลำดับ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-hashtag mr-1"></i>ระดับ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-graduation-cap mr-1"></i>ชื่อระดับชั้น
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-users mr-1"></i>ช่วงอายุ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-tags mr-1"></i>ประเภท
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-1"></i>สร้างเมื่อ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-1"></i>จัดการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Data Message (hidden by default) -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูล Grades</h3>
+            <p class="text-gray-400 mb-6">เริ่มต้นด้วยการเพิ่ม Grade ใหม่</p>
+            <button onclick="showAddGradeModal()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-plus mr-2"></i>เพิ่ม Grade ใหม่
+            </button>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="admin_dashboard.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้า Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Add/Edit Grade Modal (hidden by default) -->
+    <div id="gradeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-700"></h3>
+                <button onclick="closeGradeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="gradeForm" onsubmit="saveGrade(event)">
+                    <input type="hidden" id="gradeId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Grade Level -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-hashtag mr-1"></i>ระดับการศึกษา *
+                            </label>
+                            <input type="number" id="gradeLevel" min="0" max="99"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="0-99"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <span id="levelHint" class="text-blue-600 font-semibold">กรอกตัวเลข 0-99</span>
+                            </p>
+                            <button type="button" onclick="autoFillBasedOnLevel()" 
+                                    class="mt-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded">
+                                <i class="fas fa-magic mr-1"></i>กรอกอัตโนมัติตามระดับ
+                            </button>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-sort-numeric-up mr-1"></i>ลำดับการแสดงผล *
+                            </label>
+                            <input type="number" id="displayOrder" min="0" max="999"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">ใช้สำหรับเรียงลำดับการแสดงผล</p>
+                        </div>
+
+                        <!-- Thai Name -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-font mr-1"></i>ชื่อระดับชั้น (ไทย) *
+                            </label>
+                            <input type="text" id="gradeNameTh" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ระบบจะกรอกอัตโนมัติเมื่อใส่ระดับ"
+                                   required>
+                        </div>
+
+                        <!-- English Name -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-font mr-1"></i>ชื่อระดับชั้น (อังกฤษ)
+                            </label>
+                            <input type="text" id="gradeNameEn" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ระบบจะกรอกอัตโนมัติเมื่อใส่ระดับ">
+                        </div>
+
+                        <!-- Age Group -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-users mr-1"></i>ช่วงอายุ
+                            </label>
+                            <input type="text" id="ageGroup" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="เช่น: 3-4 ปี, 15-16 ปี">
+                        </div>
+
+                        <!-- Education Type -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-tag mr-1"></i>ประเภทการศึกษา
+                            </label>
+                            <select id="educationType" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="kindergarten">อนุบาล</option>
+                                <option value="primary">ประถมศึกษา</option>
+                                <option value="middle">มัธยมศึกษาตอนต้น</option>
+                                <option value="high">มัธยมศึกษาตอนปลาย</option>
+                                <option value="vocational">อาชีวศึกษา</option>
+                                <option value="bachelor">ปริญญาตรี</option>
+                                <option value="master">ปริญญาโท</option>
+                                <option value="doctoral">ปริญญาเอก</option>
+                                <option value="other">อื่นๆ</option>
+                            </select>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-align-left mr-1"></i>คำอธิบาย
+                            </label>
+                            <textarea id="description" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="อธิบายรายละเอียดของระดับชั้นนี้..."></textarea>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="true" checked
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-green-600">
+                                        <i class="fas fa-check-circle mr-1"></i>ใช้งานอยู่
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="false"
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-red-600">
+                                        <i class="fas fa-times-circle mr-1"></i>ไม่ใช้งาน
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Education Level Guide -->
+                    <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h4 class="font-bold text-blue-800 mb-2 text-sm">
+                            <i class="fas fa-graduation-cap mr-1"></i>คำแนะนำระดับการศึกษา:
+                        </h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">0:</span> เตรียมอนุบาล
+                            </div>
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">1-3:</span> อนุบาล 1-3
+                            </div>
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">4-9:</span> ประถม 1-6
+                            </div>
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">10-12:</span> มัธยม 1-3
+                            </div>
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">13-15:</span> มัธยม 4-6
+                            </div>
+                            <div class="bg-white p-2 rounded border">
+                                <span class="font-semibold text-blue-700">16-20:</span> อาชีวศึกษา
+                            </div>
+                            <div class="bg-white p-2 rounded border md:col-span-3">
+                                <span class="font-semibold text-blue-700">21+:</span> อุดมศึกษา (21=ป.ตรีปี1, 25=ป.โทปี1, 27=ป.เอก)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closeGradeModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="submitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    
+    <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("🔐 Checking admin permission for this page...");
+            
+            // ตรวจสอบสิทธิ์ admin
+            const hasPermission = await checkAdminPermission();
+            
+            if (!hasPermission) {
+                // Redirect ไปหน้า dashboard
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีสิทธิ์เข้าถึง',
+                    text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+                    confirmButtonText: 'กลับไปหน้า Dashboard',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'admin_dashboard.html';
+                    }
+                });
+                return;
+            }
+            
+            // ถ้ามีสิทธิ์ ให้โหลดเนื้อหาหลัก
+            loadPageContent();
+        });
+
+        // ===============================================
+        // ฟังก์ชันตรวจสอบ admin permission
+        // ===============================================
+        async function checkAdminPermission() {
+            try {
+                console.log("🔍 Checking admin permission...");
+                
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    console.error("❌ Supabase client not available");
+                    return false;
+                }
+                
+                // ตรวจสอบ session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    console.error("❌ Session error:", sessionError);
+                    return false;
+                }
+                
+                if (!session || !session.user) {
+                    console.warn("⚠️ No user session found");
+                    return false;
+                }
+                
+                console.log("👤 User logged in:", session.user.email);
+                
+                // ใช้ fetchUserProfile
+                if (typeof window.fetchUserProfile !== 'function') {
+                    console.error("❌ fetchUserProfile function not available");
+                    return false;
+                }
+                
+                const profile = await window.fetchUserProfile(session.user);
+                console.log("📊 User profile:", profile);
+                
+                if (!profile) {
+                    console.error("❌ Cannot fetch user profile");
+                    return false;
+                }
+                
+                // ตรวจสอบว่า role เป็น admin หรือไม่
+                const isAdmin = profile.role === 'admin' || 
+                               profile.role === 'administrator' || 
+                               profile.role === 'superadmin';
+                
+                if (isAdmin) {
+                    console.log("✅ Admin permission granted");
+                } else {
+                    console.warn("⚠️ User is not an admin, role:", profile.role);
+                }
+                
+                return isAdmin;
+                
+            } catch (error) {
+                console.error("❌ Error in checkAdminPermission:", error);
+                return false;
+            }
+        }
+
+        // ฟังก์ชันโหลดเนื้อหาหลัก
+        async function loadPageContent() {
+            console.log("✅ Admin permission verified, loading page content...");
+            
+            // ตั้งค่า Event Listeners
+            document.getElementById('searchInput').addEventListener('keyup', filterGrades);
+            document.getElementById('statusFilter').addEventListener('change', filterGrades);
+            document.getElementById('educationLevelFilter').addEventListener('change', filterGrades);
+            
+            // Auto-fill เมื่อกรอกระดับการศึกษา
+            document.getElementById('gradeLevel').addEventListener('input', handleGradeLevelInput);
+            
+            // โหลดข้อมูล Grades
+            await loadGrades();
+            
+            // Initialize Debug Logger
+            initDebugLogger();
+        }
+
+        // ===============================================
+        // Grades Management JavaScript
+        // ===============================================
+        let currentGrades = [];
+        let isEditMode = false;
+        
+        // Debug Logger wrapper functions
+        function logSuccess(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.success === 'function') {
+                window.DebugLogger.success(message);
+            } else {
+                console.log('✅ ' + message);
+            }
+        }
+        
+        function logError(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.error === 'function') {
+                window.DebugLogger.error(message);
+            } else {
+                console.error('❌ ' + message);
+            }
+        }
+        
+        function logInfo(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.info === 'function') {
+                window.DebugLogger.info(message);
+            } else {
+                console.info('ℹ️ ' + message);
+            }
+        }
+        
+        function logWarning(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.warning === 'function') {
+                window.DebugLogger.warning(message);
+            } else {
+                console.warn('⚠️ ' + message);
+            }
+        }
+        
+        // Fallback Debug Logger
+        if (!window.DebugLogger) {
+            console.log('⚠️ DebugLogger not found, using fallback logger');
+            window.DebugLogger = {
+                init: function() { console.log('Fallback DebugLogger initialized'); },
+                log: function(msg, type) { 
+                    const icon = type === 'success' ? '✅' : 
+                                type === 'error' ? '❌' : 
+                                type === 'warning' ? '⚠️' : 
+                                type === 'info' ? '🔵' : '📝';
+                    console.log(`${icon} ${msg}`);
+                },
+                success: function(msg) { console.log('✅ ' + msg); },
+                error: function(msg) { console.error('❌ ' + msg); },
+                warning: function(msg) { console.warn('⚠️ ' + msg); },
+                info: function(msg) { console.info('ℹ️ ' + msg); },
+                debug: function(msg) { console.debug('🐛 ' + msg); }
+            };
+        }
+        
+        function initDebugLogger() {
+            if (window.DebugLogger && typeof window.DebugLogger.init === 'function') {
+                try {
+                    window.DebugLogger.init();
+                    console.log('✅ DebugLogger initialized');
+                } catch (e) {
+                    console.warn('⚠️ DebugLogger init failed:', e);
+                }
+            }
+        }
+
+        // ===============================================
+        // ฟังก์ชันจัดการระดับการศึกษา
+        // ===============================================
+        
+        // Mapping ระดับการศึกษา
+        const GRADE_MAPPING = {
+            0: { th: "เตรียมอนุบาล", en: "Pre-Kindergarten", type: "kindergarten", age: "2-3 ปี" },
+            1: { th: "อนุบาล 1", en: "Kindergarten 1", type: "kindergarten", age: "3-4 ปี" },
+            2: { th: "อนุบาล 2", en: "Kindergarten 2", type: "kindergarten", age: "4-5 ปี" },
+            3: { th: "อนุบาล 3", en: "Kindergarten 3", type: "kindergarten", age: "5-6 ปี" },
+            4: { th: "ประถม 1", en: "Grade 1", type: "primary", age: "6-7 ปี" },
+            5: { th: "ประถม 2", en: "Grade 2", type: "primary", age: "7-8 ปี" },
+            6: { th: "ประถม 3", en: "Grade 3", type: "primary", age: "8-9 ปี" },
+            7: { th: "ประถม 4", en: "Grade 4", type: "primary", age: "9-10 ปี" },
+            8: { th: "ประถม 5", en: "Grade 5", type: "primary", age: "10-11 ปี" },
+            9: { th: "ประถม 6", en: "Grade 6", type: "primary", age: "11-12 ปี" },
+            10: { th: "มัธยม 1", en: "Grade 7", type: "middle", age: "12-13 ปี" },
+            11: { th: "มัธยม 2", en: "Grade 8", type: "middle", age: "13-14 ปี" },
+            12: { th: "มัธยม 3", en: "Grade 9", type: "middle", age: "14-15 ปี" },
+            13: { th: "มัธยม 4", en: "Grade 10", type: "high", age: "15-16 ปี" },
+            14: { th: "มัธยม 5", en: "Grade 11", type: "high", age: "16-17 ปี" },
+            15: { th: "มัธยม 6", en: "Grade 12", type: "high", age: "17-18 ปี" },
+            16: { th: "ปวช. 1", en: "Vocational 1", type: "vocational", age: "16-17 ปี" },
+            17: { th: "ปวช. 2", en: "Vocational 2", type: "vocational", age: "17-18 ปี" },
+            18: { th: "ปวช. 3", en: "Vocational 3", type: "vocational", age: "18-19 ปี" },
+            19: { th: "ปวส. 1", en: "Diploma 1", type: "vocational", age: "19-20 ปี" },
+            20: { th: "ปวส. 2", en: "Diploma 2", type: "vocational", age: "20-21 ปี" },
+            21: { th: "ปริญญาตรี ปี 1", en: "Bachelor Year 1", type: "bachelor", age: "18-19 ปี" },
+            22: { th: "ปริญญาตรี ปี 2", en: "Bachelor Year 2", type: "bachelor", age: "19-20 ปี" },
+            23: { th: "ปริญญาตรี ปี 3", en: "Bachelor Year 3", type: "bachelor", age: "20-21 ปี" },
+            24: { th: "ปริญญาตรี ปี 4", en: "Bachelor Year 4", type: "bachelor", age: "21-22 ปี" },
+            25: { th: "ปริญญาโท ปี 1", en: "Master Year 1", type: "master", age: "22-23 ปี" },
+            26: { th: "ปริญญาโท ปี 2", en: "Master Year 2", type: "master", age: "23-24 ปี" },
+            27: { th: "ปริญญาเอก", en: "Doctorate", type: "doctoral", age: "24+ ปี" }
+        };
+        
+        function getGradeInfo(level) {
+            level = parseInt(level);
+            
+            // ถ้ามีใน mapping
+            if (GRADE_MAPPING[level]) {
+                return GRADE_MAPPING[level];
+            }
+            
+            // ถ้าไม่มีใน mapping ให้คำนวณอัตโนมัติ
+            let thName = "", enName = "", type = "other", age = "";
+            
+            if (level === 0) {
+                thName = "เตรียมอนุบาล";
+                enName = "Pre-Kindergarten";
+                type = "kindergarten";
+                age = "2-3 ปี";
+            } else if (level <= 3) {
+                thName = `อนุบาล ${level}`;
+                enName = `Kindergarten ${level}`;
+                type = "kindergarten";
+                age = `${level+2}-${level+3} ปี`;
+            } else if (level <= 9) {
+                thName = `ประถม ${level-3}`;
+                enName = `Grade ${level-3}`;
+                type = "primary";
+                age = `${level+2}-${level+3} ปี`;
+            } else if (level <= 12) {
+                thName = `มัธยม ${level-9}`;
+                enName = `Grade ${level-3}`;
+                type = "middle";
+                age = `${level+2}-${level+3} ปี`;
+            } else if (level <= 15) {
+                thName = `มัธยม ${level-9}`;
+                enName = `Grade ${level-3}`;
+                type = "high";
+                age = `${level+2}-${level+3} ปี`;
+            } else if (level <= 18) {
+                thName = `ปวช. ${level-15}`;
+                enName = `Vocational ${level-15}`;
+                type = "vocational";
+                age = `${level+1}-${level+2} ปี`;
+            } else if (level <= 20) {
+                thName = `ปวส. ${level-18}`;
+                enName = `Diploma ${level-18}`;
+                type = "vocational";
+                age = `${level+1}-${level+2} ปี`;
+            } else if (level <= 24) {
+                thName = `ปริญญาตรี ปี ${level-20}`;
+                enName = `Bachelor Year ${level-20}`;
+                type = "bachelor";
+                age = `${level-3}-${level-2} ปี`;
+            } else if (level <= 26) {
+                thName = `ปริญญาโท ปี ${level-24}`;
+                enName = `Master Year ${level-24}`;
+                type = "master";
+                age = `${level-3}-${level-2} ปี`;
+            } else if (level <= 28) {
+                thName = `ปริญญาเอก ปี ${level-26}`;
+                enName = `Doctorate Year ${level-26}`;
+                type = "doctoral";
+                age = `${level-3}-${level+2} ปี`;
+            } else {
+                thName = `ระดับการศึกษา ${level}`;
+                enName = `Education Level ${level}`;
+                type = "other";
+                age = `${level+10}-${level+15} ปี`;
+            }
+            
+            return { th: thName, en: enName, type: type, age: age };
+        }
+        
+        function getEducationTypeLabel(type) {
+            const labels = {
+                "kindergarten": "อนุบาล",
+                "primary": "ประถม",
+                "middle": "ม.ต้น",
+                "high": "ม.ปลาย",
+                "vocational": "อาชีวะ",
+                "bachelor": "ป.ตรี",
+                "master": "ป.โท",
+                "doctoral": "ป.เอก",
+                "other": "อื่นๆ"
+            };
+            return labels[type] || type;
+        }
+        
+        function getEducationTypeColor(type) {
+            const colors = {
+                "kindergarten": "bg-yellow-100 text-yellow-800 border-yellow-200",
+                "primary": "bg-green-100 text-green-800 border-green-200",
+                "middle": "bg-blue-100 text-blue-800 border-blue-200",
+                "high": "bg-purple-100 text-purple-800 border-purple-200",
+                "vocational": "bg-orange-100 text-orange-800 border-orange-200",
+                "bachelor": "bg-red-100 text-red-800 border-red-200",
+                "master": "bg-pink-100 text-pink-800 border-pink-200",
+                "doctoral": "bg-indigo-100 text-indigo-800 border-indigo-200",
+                "other": "bg-gray-100 text-gray-800 border-gray-200"
+            };
+            return colors[type] || "bg-gray-100 text-gray-800 border-gray-200";
+        }
+        
+        function handleGradeLevelInput() {
+            const level = document.getElementById('gradeLevel').value;
+            if (level === '' || level < 0 || level > 99) return;
+            
+            const info = getGradeInfo(level);
+            
+            // อัปเดต hint
+            const hintElement = document.getElementById('levelHint');
+            hintElement.textContent = `${info.th} (${info.age})`;
+            
+            // ถ้าไม่ใช่ edit mode หรือเป็น add mode ให้ auto-fill
+            if (!isEditMode || document.getElementById('gradeId').value === '') {
+                document.getElementById('gradeNameTh').value = info.th;
+                document.getElementById('gradeNameEn').value = info.en;
+                document.getElementById('ageGroup').value = info.age;
+                document.getElementById('educationType').value = info.type;
+            }
+        }
+        
+        function autoFillBasedOnLevel() {
+            const level = document.getElementById('gradeLevel').value;
+            if (level === '' || level < 0 || level > 99) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณากรอกระดับการศึกษา',
+                    text: 'กรุณากรอกตัวเลขระดับการศึกษา 0-99 ก่อน',
+                    confirmButtonText: 'ตกลง'
+                });
+                return;
+            }
+            
+            const info = getGradeInfo(level);
+            document.getElementById('gradeNameTh').value = info.th;
+            document.getElementById('gradeNameEn').value = info.en;
+            document.getElementById('ageGroup').value = info.age;
+            document.getElementById('educationType').value = info.type;
+            
+            // อัปเดต hint
+            const hintElement = document.getElementById('levelHint');
+            hintElement.textContent = `${info.th} (${info.age})`;
+            
+            logInfo(`อัตโนมัติกรอกข้อมูลสำหรับระดับ ${level}: ${info.th}`);
+        }
+        
+        function showGradeGuide() {
+            Swal.fire({
+                title: 'คำแนะนำการกำหนดระดับการศึกษา',
+                html: `
+                    <div class="text-left">
+                        <h4 class="font-bold text-blue-700 mb-2">ระบบระดับชั้นแบบขยาย (0-99):</h4>
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-2 border">ระดับ</th>
+                                    <th class="p-2 border">ชื่อไทย</th>
+                                    <th class="p-2 border">ช่วงอายุ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-yellow-50"><td class="p-2 border font-bold" colspan="3">อนุบาล</td></tr>
+                                <tr><td class="p-2 border">0</td><td class="p-2 border">เตรียมอนุบาล</td><td class="p-2 border">2-3 ปี</td></tr>
+                                <tr><td class="p-2 border">1-3</td><td class="p-2 border">อนุบาล 1-3</td><td class="p-2 border">3-6 ปี</td></tr>
+                                
+                                <tr class="bg-green-50"><td class="p-2 border font-bold" colspan="3">ประถมศึกษา</td></tr>
+                                <tr><td class="p-2 border">4-9</td><td class="p-2 border">ประถม 1-6</td><td class="p-2 border">6-12 ปี</td></tr>
+                                
+                                <tr class="bg-blue-50"><td class="p-2 border font-bold" colspan="3">มัธยมต้น</td></tr>
+                                <tr><td class="p-2 border">10-12</td><td class="p-2 border">มัธยม 1-3</td><td class="p-2 border">12-15 ปี</td></tr>
+                                
+                                <tr class="bg-purple-50"><td class="p-2 border font-bold" colspan="3">มัธยมปลาย</td></tr>
+                                <tr><td class="p-2 border">13-15</td><td class="p-2 border">มัธยม 4-6</td><td class="p-2 border">15-18 ปี</td></tr>
+                                
+                                <tr class="bg-orange-50"><td class="p-2 border font-bold" colspan="3">อาชีวศึกษา</td></tr>
+                                <tr><td class="p-2 border">16-18</td><td class="p-2 border">ปวช. 1-3</td><td class="p-2 border">16-19 ปี</td></tr>
+                                <tr><td class="p-2 border">19-20</td><td class="p-2 border">ปวส. 1-2</td><td class="p-2 border">19-21 ปี</td></tr>
+                                
+                                <tr class="bg-red-50"><td class="p-2 border font-bold" colspan="3">อุดมศึกษา</td></tr>
+                                <tr><td class="p-2 border">21-24</td><td class="p-2 border">ปริญญาตรี ปี 1-4</td><td class="p-2 border">18-22 ปี</td></tr>
+                                <tr><td class="p-2 border">25-26</td><td class="p-2 border">ปริญญาโท ปี 1-2</td><td class="p-2 border">22-24 ปี</td></tr>
+                                <tr><td class="p-2 border">27+</td><td class="p-2 border">ปริญญาเอก</td><td class="p-2 border">24+ ปี</td></tr>
+                            </tbody>
+                        </table>
+                        <p class="mt-3 text-sm text-gray-600">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            <strong>เคล็ดลับ:</strong> เมื่อกรอกตัวเลขระดับแล้ว กดปุ่ม "กรอกอัตโนมัติตามระดับ" เพื่อเติมข้อมูลอัตโนมัติ
+                        </p>
+                    </div>
+                `,
+                width: 700,
+                confirmButtonText: 'เข้าใจแล้ว'
+            });
+        }
+
+        // โหลดข้อมูล Grades จาก Supabase
+        async function loadGrades() {
+            const loadingStatus = document.getElementById('loadingStatus');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const tableBody = document.getElementById('gradesTableBody');
+            
+            loadingStatus.classList.remove('hidden');
+            tableBody.innerHTML = '';
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                // ดึงข้อมูล grades พร้อมเรียงลำดับตาม display_order
+                const { data: grades, error } = await supabase
+                    .from('grades')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+                
+                if (error) throw error;
+                
+                currentGrades = grades || [];
+                
+                // อัปเดตสถิติ
+                updateStats(currentGrades);
+                
+                // แสดงข้อมูลในตาราง
+                if (currentGrades.length > 0) {
+                    renderGradesTable(currentGrades);
+                    noDataMessage.classList.add('hidden');
+                } else {
+                    tableBody.innerHTML = '';
+                    noDataMessage.classList.remove('hidden');
+                }
+                
+                loadingStatus.classList.add('hidden');
+                
+                logSuccess(`โหลดข้อมูล Grades สำเร็จ: ${currentGrades.length} รายการ`);
+                
+            } catch (error) {
+                loadingStatus.classList.add('hidden');
+                showError('ไม่สามารถดึงข้อมูล Grades ได้: ' + error.message);
+                logError('Error loading grades: ' + error.message);
+            }
+        }
+
+        // แสดงข้อมูลในตาราง
+        function renderGradesTable(grades) {
+            const tableBody = document.getElementById('gradesTableBody');
+            tableBody.innerHTML = '';
+            
+            grades.forEach((grade, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                // ฟอร์แมตวันที่
+                const createdDate = new Date(grade.created_at).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // กำหนดประเภทการศึกษา
+                const gradeInfo = getGradeInfo(grade.grade_level);
+                const typeLabel = getEducationTypeLabel(gradeInfo.type);
+                const typeColor = getEducationTypeColor(gradeInfo.type);
+                
+                // กำหนดสี badge ตามระดับการศึกษา
+                let levelColor = 'bg-blue-100 text-blue-800';
+                if (grade.grade_level <= 3) {
+                    levelColor = 'bg-yellow-100 text-yellow-800';
+                } else if (grade.grade_level <= 9) {
+                    levelColor = 'bg-green-100 text-green-800';
+                } else if (grade.grade_level <= 12) {
+                    levelColor = 'bg-blue-100 text-blue-800';
+                } else if (grade.grade_level <= 15) {
+                    levelColor = 'bg-purple-100 text-purple-800';
+                } else if (grade.grade_level <= 20) {
+                    levelColor = 'bg-orange-100 text-orange-800';
+                } else {
+                    levelColor = 'bg-red-100 text-red-800';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        ${grade.display_order}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-sm font-semibold rounded-full ${levelColor}">
+                            Lv. ${grade.grade_level}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">${grade.grade_name_th}</div>
+                        <div class="text-sm text-gray-500">${grade.grade_name_en || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${grade.age_group || gradeInfo.age || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full border ${typeColor}">
+                            ${typeLabel}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${grade.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${grade.is_active ? 'ใช้งาน' : 'ไม่ใช้งาน'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>${createdDate}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editGrade('${grade.grade_id}')" 
+                                class="text-blue-600 hover:text-blue-900 mr-3" title="แก้ไข">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteGrade('${grade.grade_id}', '${grade.grade_name_th}')" 
+                                class="text-red-600 hover:text-red-900" title="ลบ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // อัปเดตสถิติ
+        function updateStats(grades) {
+            const total = grades.length;
+            const active = grades.filter(g => g.is_active).length;
+            const inactive = total - active;
+            const maxGradeLevel = grades.length > 0 ? Math.max(...grades.map(g => g.grade_level)) : 0;
+            
+            document.getElementById('totalGrades').textContent = total;
+            document.getElementById('activeGrades').textContent = active;
+            document.getElementById('inactiveGrades').textContent = inactive;
+            document.getElementById('maxGradeLevel').textContent = maxGradeLevel;
+        }
+
+        // กรองข้อมูล Grades
+        function filterGrades() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const educationFilter = document.getElementById('educationLevelFilter').value;
+            
+            let filtered = currentGrades;
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filtered = filtered.filter(grade => 
+                    grade.grade_level.toString().includes(searchTerm) ||
+                    grade.grade_name_th.toLowerCase().includes(searchTerm) ||
+                    grade.grade_name_en?.toLowerCase().includes(searchTerm) ||
+                    grade.age_group?.toLowerCase().includes(searchTerm) ||
+                    grade.description?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // กรองตามสถานะ
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(grade => 
+                    statusFilter === 'active' ? grade.is_active : !grade.is_active
+                );
+            }
+            
+            // กรองตามระดับการศึกษา
+            if (educationFilter !== 'all') {
+                filtered = filtered.filter(grade => {
+                    const gradeInfo = getGradeInfo(grade.grade_level);
+                    
+                    switch(educationFilter) {
+                        case 'kindergarten': return grade.grade_level <= 3;
+                        case 'primary': return grade.grade_level >= 4 && grade.grade_level <= 9;
+                        case 'middle': return grade.grade_level >= 10 && grade.grade_level <= 12;
+                        case 'high': return grade.grade_level >= 13 && grade.grade_level <= 15;
+                        case 'vocational': return grade.grade_level >= 16 && grade.grade_level <= 20;
+                        case 'higher': return grade.grade_level >= 21;
+                        default: return true;
+                    }
+                });
+            }
+            
+            renderGradesTable(filtered);
+        }
+
+        // แสดง Modal สำหรับเพิ่ม Grade
+        function showAddGradeModal() {
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = 'เพิ่ม Grade ใหม่';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>บันทึกข้อมูล';
+            
+            // รีเซ็ตฟอร์ม
+            document.getElementById('gradeForm').reset();
+            document.getElementById('gradeId').value = '';
+            document.getElementById('levelHint').textContent = 'กรอกตัวเลข 0-99';
+            
+            // ตั้งค่า display order ถัดไป
+            const maxOrder = currentGrades.length > 0 ? Math.max(...currentGrades.map(g => g.display_order)) : 0;
+            document.getElementById('displayOrder').value = maxOrder + 1;
+            
+            // ตั้งค่า grade level ถัดไป (ไม่ซ้ำกับที่มีอยู่)
+            const existingLevels = currentGrades.map(g => g.grade_level);
+            let nextLevel = 1;
+            while (existingLevels.includes(nextLevel)) {
+                nextLevel++;
+                if (nextLevel > 99) {
+                    nextLevel = 99;
+                    break;
+                }
+            }
+            document.getElementById('gradeLevel').value = nextLevel;
+            
+            // Auto-suggest ข้อมูล
+            const info = getGradeInfo(nextLevel);
+            document.getElementById('gradeNameTh').value = info.th;
+            document.getElementById('gradeNameEn').value = info.en;
+            document.getElementById('ageGroup').value = info.age;
+            document.getElementById('educationType').value = info.type;
+            
+            // อัปเดต hint
+            document.getElementById('levelHint').textContent = `${info.th} (${info.age})`;
+            
+            // แสดง Modal
+            document.getElementById('gradeModal').classList.remove('hidden');
+        }
+
+        // แสดง Modal สำหรับแก้ไข Grade
+        async function editGrade(gradeId) {
+            const grade = currentGrades.find(g => g.grade_id === gradeId);
+            if (!grade) {
+                showError('ไม่พบข้อมูล Grade ที่ต้องการแก้ไข');
+                return;
+            }
+            
+            isEditMode = true;
+            document.getElementById('modalTitle').textContent = 'แก้ไข Grade';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>อัปเดตข้อมูล';
+            
+            // เติมข้อมูลลงในฟอร์ม
+            document.getElementById('gradeId').value = grade.grade_id;
+            document.getElementById('gradeLevel').value = grade.grade_level;
+            document.getElementById('gradeLevel').readOnly = true; // ไม่ให้แก้ไข grade level ในโหมดแก้ไข
+            document.getElementById('displayOrder').value = grade.display_order;
+            document.getElementById('gradeNameTh').value = grade.grade_name_th;
+            document.getElementById('gradeNameEn').value = grade.grade_name_en || '';
+            document.getElementById('ageGroup').value = grade.age_group || '';
+            document.getElementById('description').value = grade.description || '';
+            
+            // กำหนด education type ตามระดับ
+            const gradeInfo = getGradeInfo(grade.grade_level);
+            document.getElementById('educationType').value = gradeInfo.type;
+            
+            // ตั้งค่าสถานะ
+            const activeRadio = document.querySelector(`input[name="isActive"][value="${grade.is_active}"]`);
+            if (activeRadio) {
+                activeRadio.checked = true;
+            }
+            
+            // อัปเดต hint
+            const hintElement = document.getElementById('levelHint');
+            hintElement.textContent = `${grade.grade_name_th} (${grade.age_group || gradeInfo.age})`;
+            
+            // แสดง Modal
+            document.getElementById('gradeModal').classList.remove('hidden');
+        }
+
+        // ปิด Modal
+        function closeGradeModal() {
+            document.getElementById('gradeModal').classList.add('hidden');
+            document.getElementById('gradeLevel').readOnly = false; // เปิดให้แก้ไข grade level ใหม่
+        }
+
+        // บันทึกข้อมูล Grade
+        async function saveGrade(event) {
+            event.preventDefault();
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const gradeLevel = parseInt(document.getElementById('gradeLevel').value);
+                if (gradeLevel < 0 || gradeLevel > 99) {
+                    showError('ระดับการศึกษาต้องอยู่ระหว่าง 0-99');
+                    return;
+                }
+                
+                const gradeData = {
+                    grade_level: gradeLevel,
+                    display_order: parseInt(document.getElementById('displayOrder').value),
+                    grade_name_th: document.getElementById('gradeNameTh').value.trim(),
+                    grade_name_en: document.getElementById('gradeNameEn').value.trim() || null,
+                    age_group: document.getElementById('ageGroup').value.trim() || null,
+                    description: document.getElementById('description').value.trim() || null,
+                    is_active: document.querySelector('input[name="isActive"]:checked').value === 'true'
+                };
+                
+                const gradeId = document.getElementById('gradeId').value;
+                
+                let result;
+                if (isEditMode && gradeId) {
+                    // แก้ไขข้อมูล
+                    const { data, error } = await supabase
+                        .from('grades')
+                        .update({
+                            ...gradeData,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('grade_id', gradeId)
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`อัปเดต Grade สำเร็จ: ${gradeData.grade_name_th}`);
+                    
+                } else {
+                    // เพิ่มข้อมูลใหม่
+                    const { data, error } = await supabase
+                        .from('grades')
+                        .insert([gradeData])
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`เพิ่ม Grade สำเร็จ: ${gradeData.grade_name_th}`);
+                }
+                
+                // ปิด Modal และรีเฟรชข้อมูล
+                closeGradeModal();
+                await loadGrades();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: `บันทึกข้อมูล Grade "${gradeData.grade_name_th}" สำเร็จ`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error saving grade:', error);
+                
+                if (error.code === '23505') { // Unique violation
+                    showError('ระดับชั้นนี้มีอยู่ในระบบแล้ว กรุณาใช้ระดับชั้นอื่น');
+                } else {
+                    showError('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error saving grade: ' + error.message);
+            }
+        }
+
+        // ลบข้อมูล Grade
+        async function deleteGrade(gradeId, gradeName) {
+            // ยืนยันการลบ
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: `คุณแน่ใจว่าต้องการลบ Grade "${gradeName}" ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const { error } = await supabase
+                    .from('grades')
+                    .delete()
+                    .eq('grade_id', gradeId);
+                
+                if (error) throw error;
+                
+                logSuccess(`ลบ Grade สำเร็จ: ${gradeName}`);
+                
+                // รีเฟรชข้อมูล
+                await loadGrades();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบสำเร็จ!',
+                    text: `ลบ Grade "${gradeName}" ออกจากระบบแล้ว`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error deleting grade:', error);
+                
+                // ตรวจสอบว่า Grade นี้ถูกใช้อยู่หรือไม่
+                if (error.code === '23503') { // Foreign key violation
+                    showError('ไม่สามารถลบ Grade นี้ได้ เนื่องจากถูกใช้งานอยู่ในระบบแล้ว');
+                } else {
+                    showError('ลบข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error deleting grade: ' + error.message);
+            }
+        }
+
+        // แสดงข้อความแจ้งเตือน
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: message,
+                confirmButtonText: 'ตกลง'
+            });
+        }
+    </script>
+    
+    <style>
+        /* Custom styles */
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            ring: 2px;
+        }
+        
+        /* Scrollbar styling */
+        #gradesTableBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #gradesTableBody::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #gradesTableBody::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #gradesTableBody::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Type badges */
+        .badge-kindergarten { background-color: #fef3c7; color: #92400e; border-color: #fbbf24; }
+        .badge-primary { background-color: #d1fae5; color: #065f46; border-color: #10b981; }
+        .badge-middle { background-color: #dbeafe; color: #1e40af; border-color: #3b82f6; }
+        .badge-high { background-color: #e9d5ff; color: #5b21b6; border-color: #8b5cf6; }
+        .badge-vocational { background-color: #ffedd5; color: #9a3412; border-color: #f97316; }
+        .badge-bachelor { background-color: #fee2e2; color: #991b1b; border-color: #ef4444; }
+        .badge-master { background-color: #fce7f3; color: #9d174d; border-color: #ec4899; }
+        .badge-doctoral { background-color: #e0e7ff; color: #3730a3; border-color: #6366f1; }
+    </style>
+</body>
+</html>

@@ -1,0 +1,932 @@
+<!-- masterdata_roles_manager -->
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูล Roles | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 สำหรับ Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <div class="container mx-auto px-4 py-8">
+
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-blue-700 mb-2">
+            <i class="fas fa-user-shield mr-3"></i>จัดการข้อมูล Roles
+        </h1>
+        <p class="text-gray-600">เพิ่ม/แก้ไข/ลบ ข้อมูลบทบาทผู้ใช้ในระบบ</p>
+    </div>
+    
+    <div class="flex gap-3">
+        <!-- ปุ่มกลับหน้า Dashboard -->
+        <a href="admin_dashboard.html" 
+           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+            <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+        </a>
+        
+        <!-- ปุ่มเพิ่ม Role ใหม่ -->
+        <button onclick="showAddRoleModal()" 
+                class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+            <i class="fas fa-plus mr-2"></i>เพิ่ม Role ใหม่
+        </button>
+    </div>
+</div>
+
+
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">รวม Roles</p>
+                        <p id="totalRoles" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ใช้งานอยู่</p>
+                        <p id="activeRoles" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-pause-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ไม่ใช้งาน</p>
+                        <p id="inactiveRoles" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-list-ol text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ลำดับสูงสุด</p>
+                        <p id="maxOrder" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="ค้นหาตามชื่อ Role, คำอธิบาย..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="statusFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="active">ใช้งานอยู่</option>
+                        <option value="inactive">ไม่ใช้งาน</option>
+                    </select>
+                    <button onclick="loadRoles()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล Roles...
+        </div>
+
+        <!-- Roles Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-sort mr-1"></i>ลำดับ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-key mr-1"></i>Role Key
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-user-tag mr-1"></i>ชื่อบทบาท
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-list mr-1"></i>Permissions
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-1"></i>สร้างเมื่อ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-1"></i>จัดการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="rolesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Data Message (hidden by default) -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูล Roles</h3>
+            <p class="text-gray-400 mb-6">เริ่มต้นด้วยการเพิ่ม Role ใหม่</p>
+            <button onclick="showAddRoleModal()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-plus mr-2"></i>เพิ่ม Role ใหม่
+            </button>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าหลัก
+            </a>
+        </div>
+    </div>
+
+    <!-- Add/Edit Role Modal (hidden by default) -->
+    <div id="roleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-700"></h3>
+                <button onclick="closeRoleModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="roleForm" onsubmit="saveRole(event)">
+                    <input type="hidden" id="roleId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Role Key -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-key mr-1"></i>Role Key *
+                            </label>
+                            <input type="text" id="roleKey" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: admin, teacher, student"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">ต้องเป็นภาษาอังกฤษเท่านั้น ใช้สำหรับอ้างอิงในระบบ</p>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-sort-numeric-up mr-1"></i>ลำดับการแสดงผล *
+                            </label>
+                            <input type="number" id="displayOrder" min="0" max="999"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   required>
+                        </div>
+
+                        <!-- Thai Name -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-font mr-1"></i>ชื่อบทบาท (ไทย) *
+                            </label>
+                            <input type="text" id="roleNameTh" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: ผู้ดูแลระบบ"
+                                   required>
+                        </div>
+
+                        <!-- English Name -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-font mr-1"></i>ชื่อบทบาท (อังกฤษ)
+                            </label>
+                            <input type="text" id="roleNameEn" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: Administrator">
+                        </div>
+
+                        <!-- Description -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-align-left mr-1"></i>คำอธิบาย
+                            </label>
+                            <textarea id="description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="อธิบายบทบาทนี้..."></textarea>
+                        </div>
+
+                        <!-- Permissions (Simplified JSON) -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-list-check mr-1"></i>Permissions (JSON Format)
+                            </label>
+                            <textarea id="permissions" rows="4"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                      placeholder='{"view": true, "create": true, "edit": true, "delete": false}'></textarea>
+                            <p class="text-xs text-gray-500 mt-1">รูปแบบ JSON สำหรับกำหนดสิทธิ์การเข้าถึง</p>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="true" checked
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-green-600">
+                                        <i class="fas fa-check-circle mr-1"></i>ใช้งานอยู่
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="false"
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-red-600">
+                                        <i class="fas fa-times-circle mr-1"></i>ไม่ใช้งาน
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closeRoleModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="submitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    
+    <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("🔐 Checking admin permission for this page...");
+    
+    // ตรวจสอบสิทธิ์ admin ใช้ฟังก์ชันแบบเดียวกันกับ admin_dashboard.html
+    const hasPermission = await checkAdminPermission();
+    
+    if (!hasPermission) {
+        // Redirect ไปหน้า dashboard แทน index.html
+        Swal.fire({
+            icon: 'warning',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+            confirmButtonText: 'กลับไปหน้า Dashboard',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'admin_dashboard.html';
+            }
+        });
+        return;
+    }
+    
+    // ถ้ามีสิทธิ์ ให้โหลดเนื้อหาหลัก
+    loadPageContent();
+});
+
+// ===============================================
+// ฟังก์ชันตรวจสอบ admin permission (ใช้ fetchUserProfile)
+// ===============================================
+async function checkAdminPermission() {
+    try {
+        console.log("🔍 Checking admin permission...");
+        
+        const supabase = await getSupabaseClient();
+        if (!supabase) {
+            console.error("❌ Supabase client not available");
+            return false;
+        }
+        
+        // ตรวจสอบ session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+            console.error("❌ Session error:", sessionError);
+            return false;
+        }
+        
+        if (!session || !session.user) {
+            console.warn("⚠️ No user session found");
+            return false;
+        }
+        
+        console.log("👤 User logged in:", session.user.email);
+        
+        // ใช้ fetchUserProfile จาก auth_status_manager.js โดยตรง
+        if (typeof window.fetchUserProfile !== 'function') {
+            console.error("❌ fetchUserProfile function not available");
+            return false;
+        }
+        
+        const profile = await window.fetchUserProfile(session.user);
+        console.log("📊 User profile:", profile);
+        
+        if (!profile) {
+            console.error("❌ Cannot fetch user profile");
+            return false;
+        }
+        
+        // ตรวจสอบว่า role เป็น admin หรือไม่
+        const isAdmin = profile.role === 'admin' || 
+                       profile.role === 'administrator' || 
+                       profile.role === 'superadmin';
+        
+        if (isAdmin) {
+            console.log("✅ Admin permission granted");
+        } else {
+            console.warn("⚠️ User is not an admin, role:", profile.role);
+        }
+        
+        return isAdmin;
+        
+    } catch (error) {
+        console.error("❌ Error in checkAdminPermission:", error);
+        return false;
+    }
+}
+
+
+
+// ฟังก์ชันโหลดเนื้อหาหลัก
+async function loadPageContent() {
+    console.log("✅ Admin permission verified, loading page content...");
+    
+    // ตั้งค่า Event Listeners
+    document.getElementById('searchInput').addEventListener('keyup', filterRoles);
+    document.getElementById('statusFilter').addEventListener('change', filterRoles);
+    
+    // โหลดข้อมูล Roles
+    await loadRoles();
+    
+    // Initialize Debug Logger
+    initDebugLogger();
+}
+</script>
+    
+    
+    <!-- Roles Manager JavaScript -->
+<script>
+    let currentRoles = [];
+    let isEditMode = false;
+    
+    // ===============================================
+    // Debug Logger Wrapper Functions
+    // ใช้เพื่อป้องกัน error เมื่อ DebugLogger ยังไม่พร้อม
+    // ===============================================
+    
+    function logSuccess(message) {
+        if (window.DebugLogger && typeof window.DebugLogger.success === 'function') {
+            window.DebugLogger.success(message);
+        } else {
+            console.log('✅ ' + message);
+        }
+    }
+    
+    function logError(message) {
+        if (window.DebugLogger && typeof window.DebugLogger.error === 'function') {
+            window.DebugLogger.error(message);
+        } else {
+            console.error('❌ ' + message);
+        }
+    }
+    
+    function logInfo(message) {
+        if (window.DebugLogger && typeof window.DebugLogger.info === 'function') {
+            window.DebugLogger.info(message);
+        } else {
+            console.info('ℹ️ ' + message);
+        }
+    }
+    
+    function logWarning(message) {
+        if (window.DebugLogger && typeof window.DebugLogger.warning === 'function') {
+            window.DebugLogger.warning(message);
+        } else {
+            console.warn('⚠️ ' + message);
+        }
+    }
+    
+    // ===============================================
+    // Fallback Debug Logger หากไฟล์ไม่โหลด
+    // ===============================================
+    
+    if (!window.DebugLogger) {
+        console.log('⚠️ DebugLogger not found, using fallback logger');
+        window.DebugLogger = {
+            init: function() { console.log('Fallback DebugLogger initialized'); },
+            log: function(msg, type) { 
+                const icon = type === 'success' ? '✅' : 
+                            type === 'error' ? '❌' : 
+                            type === 'warning' ? '⚠️' : 
+                            type === 'info' ? '🔵' : '📝';
+                console.log(`${icon} ${msg}`);
+            },
+            success: function(msg) { console.log('✅ ' + msg); },
+            error: function(msg) { console.error('❌ ' + msg); },
+            warning: function(msg) { console.warn('⚠️ ' + msg); },
+            info: function(msg) { console.info('ℹ️ ' + msg); },
+            debug: function(msg) { console.debug('🐛 ' + msg); }
+        };
+    }
+    
+    // ตรวจสอบและ init DebugLogger
+    function initDebugLogger() {
+        if (window.DebugLogger && typeof window.DebugLogger.init === 'function') {
+            try {
+                window.DebugLogger.init();
+                console.log('✅ DebugLogger initialized');
+            } catch (e) {
+                console.warn('⚠️ DebugLogger init failed:', e);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log("📄 Roles Manager page loaded");
+        
+        // Initialize Debug Logger
+        initDebugLogger();
+        
+        // ตั้งค่า Event Listeners
+        document.getElementById('searchInput').addEventListener('keyup', filterRoles);
+        document.getElementById('statusFilter').addEventListener('change', filterRoles);
+        
+        // โหลดข้อมูล Roles
+        await loadRoles();
+    });
+
+    // โหลดข้อมูล Roles จาก Supabase
+    async function loadRoles() {
+        const loadingStatus = document.getElementById('loadingStatus');
+        const noDataMessage = document.getElementById('noDataMessage');
+        const tableBody = document.getElementById('rolesTableBody');
+        
+        loadingStatus.classList.remove('hidden');
+        tableBody.innerHTML = '';
+        
+        try {
+            const supabase = await getSupabaseClient();
+            if (!supabase) {
+                showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                return;
+            }
+            
+            // ดึงข้อมูล roles พร้อมเรียงลำดับตาม display_order
+            const { data: roles, error } = await supabase
+                .from('roles')
+                .select('*')
+                .order('display_order', { ascending: true });
+            
+            if (error) throw error;
+            
+            currentRoles = roles || [];
+            
+            // อัปเดตสถิติ
+            updateStats(currentRoles);
+            
+            // แสดงข้อมูลในตาราง
+            if (currentRoles.length > 0) {
+                renderRolesTable(currentRoles);
+                noDataMessage.classList.add('hidden');
+            } else {
+                tableBody.innerHTML = '';
+                noDataMessage.classList.remove('hidden');
+            }
+            
+            loadingStatus.classList.add('hidden');
+            
+            // ใช้ wrapper function แทน
+            logSuccess(`โหลดข้อมูล Roles สำเร็จ: ${currentRoles.length} รายการ`);
+            
+        } catch (error) {
+            loadingStatus.classList.add('hidden');
+            showError('ไม่สามารถดึงข้อมูล Roles ได้: ' + error.message);
+            // ใช้ wrapper function แทน
+            logError('Error loading roles: ' + error.message);
+        }
+    }
+
+    // แสดงข้อมูลในตาราง
+    function renderRolesTable(roles) {
+        const tableBody = document.getElementById('rolesTableBody');
+        tableBody.innerHTML = '';
+        
+        roles.forEach((role, index) => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50 transition-colors';
+            
+            // ฟอร์แมตวันที่
+            const createdDate = new Date(role.created_at).toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            // ฟอร์แมต permissions
+            let permissionsText = '-';
+            if (role.permissions && typeof role.permissions === 'object') {
+                const permKeys = Object.keys(role.permissions);
+                permissionsText = permKeys.length > 0 ? permKeys.join(', ') : '-';
+            }
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                    ${role.display_order}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        ${role.role_key}
+                    </span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">${role.role_name_th}</div>
+                    <div class="text-sm text-gray-500">${role.role_name_en || '-'}</div>
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${permissionsText}">
+                    ${permissionsText}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full ${role.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                        ${role.is_active ? 'ใช้งาน' : 'ไม่ใช้งาน'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <i class="far fa-clock mr-1"></i>${createdDate}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button onclick="editRole('${role.role_id}')" 
+                            class="text-blue-600 hover:text-blue-900 mr-3" title="แก้ไข">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteRole('${role.role_id}', '${role.role_name_th}')" 
+                            class="text-red-600 hover:text-red-900" title="ลบ">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+    }
+
+    // อัปเดตสถิติ
+    function updateStats(roles) {
+        const total = roles.length;
+        const active = roles.filter(r => r.is_active).length;
+        const inactive = total - active;
+        const maxOrder = roles.length > 0 ? Math.max(...roles.map(r => r.display_order)) : 0;
+        
+        document.getElementById('totalRoles').textContent = total;
+        document.getElementById('activeRoles').textContent = active;
+        document.getElementById('inactiveRoles').textContent = inactive;
+        document.getElementById('maxOrder').textContent = maxOrder;
+    }
+
+    // กรองข้อมูล Roles
+    function filterRoles() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        
+        let filtered = currentRoles;
+        
+        // กรองตามคำค้นหา
+        if (searchTerm) {
+            filtered = filtered.filter(role => 
+                role.role_key.toLowerCase().includes(searchTerm) ||
+                role.role_name_th.toLowerCase().includes(searchTerm) ||
+                role.role_name_en?.toLowerCase().includes(searchTerm) ||
+                role.description?.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // กรองตามสถานะ
+        if (statusFilter !== 'all') {
+            filtered = filtered.filter(role => 
+                statusFilter === 'active' ? role.is_active : !role.is_active
+            );
+        }
+        
+        renderRolesTable(filtered);
+    }
+
+    // แสดง Modal สำหรับเพิ่ม Role
+    function showAddRoleModal() {
+        isEditMode = false;
+        document.getElementById('modalTitle').textContent = 'เพิ่ม Role ใหม่';
+        document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>บันทึกข้อมูล';
+        
+        // รีเซ็ตฟอร์ม
+        document.getElementById('roleForm').reset();
+        document.getElementById('roleId').value = '';
+        
+        // ตั้งค่า display order ถัดไป
+        const maxOrder = Math.max(...currentRoles.map(r => r.display_order), 0);
+        document.getElementById('displayOrder').value = maxOrder + 1;
+        
+        // แสดง Modal
+        document.getElementById('roleModal').classList.remove('hidden');
+    }
+
+    // แสดง Modal สำหรับแก้ไข Role
+    async function editRole(roleId) {
+        const role = currentRoles.find(r => r.role_id === roleId);
+        if (!role) {
+            showError('ไม่พบข้อมูล Role ที่ต้องการแก้ไข');
+            return;
+        }
+        
+        isEditMode = true;
+        document.getElementById('modalTitle').textContent = 'แก้ไข Role';
+        document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>อัปเดตข้อมูล';
+        
+        // เติมข้อมูลลงในฟอร์ม
+        document.getElementById('roleId').value = role.role_id;
+        document.getElementById('roleKey').value = role.role_key;
+        document.getElementById('roleKey').readOnly = true; // ไม่ให้แก้ไข key
+        document.getElementById('displayOrder').value = role.display_order;
+        document.getElementById('roleNameTh').value = role.role_name_th;
+        document.getElementById('roleNameEn').value = role.role_name_en || '';
+        document.getElementById('description').value = role.description || '';
+        
+        // ตั้งค่า permissions
+        if (role.permissions && typeof role.permissions === 'object') {
+            document.getElementById('permissions').value = JSON.stringify(role.permissions, null, 2);
+        } else {
+            document.getElementById('permissions').value = '';
+        }
+        
+        // ตั้งค่าสถานะ
+        const activeRadio = document.querySelector(`input[name="isActive"][value="${role.is_active}"]`);
+        if (activeRadio) {
+            activeRadio.checked = true;
+        }
+        
+        // แสดง Modal
+        document.getElementById('roleModal').classList.remove('hidden');
+    }
+
+    // ปิด Modal
+    function closeRoleModal() {
+        document.getElementById('roleModal').classList.add('hidden');
+        document.getElementById('roleKey').readOnly = false; // เปิดให้แก้ไข key ใหม่
+    }
+
+    // บันทึกข้อมูล Role
+    async function saveRole(event) {
+        event.preventDefault();
+        
+        try {
+            const supabase = await getSupabaseClient();
+            if (!supabase) {
+                showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                return;
+            }
+            
+            const roleData = {
+                role_key: document.getElementById('roleKey').value.trim(),
+                display_order: parseInt(document.getElementById('displayOrder').value),
+                role_name_th: document.getElementById('roleNameTh').value.trim(),
+                role_name_en: document.getElementById('roleNameEn').value.trim() || null,
+                description: document.getElementById('description').value.trim() || null,
+                is_active: document.querySelector('input[name="isActive"]:checked').value === 'true'
+            };
+            
+            // Parse permissions JSON
+            const permissionsText = document.getElementById('permissions').value.trim();
+            if (permissionsText) {
+                try {
+                    roleData.permissions = JSON.parse(permissionsText);
+                } catch (e) {
+                    showError('รูปแบบ JSON ของ Permissions ไม่ถูกต้อง');
+                    return;
+                }
+            } else {
+                roleData.permissions = {};
+            }
+            
+            const roleId = document.getElementById('roleId').value;
+            
+            let result;
+            if (isEditMode && roleId) {
+                // แก้ไขข้อมูล
+                const { data, error } = await supabase
+                    .from('roles')
+                    .update({
+                        ...roleData,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('role_id', roleId)
+                    .select();
+                
+                if (error) throw error;
+                result = data[0];
+                
+                // ใช้ wrapper function แทน
+                logSuccess(`อัปเดต Role สำเร็จ: ${roleData.role_name_th}`);
+                
+            } else {
+                // เพิ่มข้อมูลใหม่
+                const { data, error } = await supabase
+                    .from('roles')
+                    .insert([roleData])
+                    .select();
+                
+                if (error) throw error;
+                result = data[0];
+                
+                // ใช้ wrapper function แทน
+                logSuccess(`เพิ่ม Role สำเร็จ: ${roleData.role_name_th}`);
+            }
+            
+            // ปิด Modal และรีเฟรชข้อมูล
+            closeRoleModal();
+            await loadRoles();
+            
+            // แสดงข้อความสำเร็จ
+            Swal.fire({
+                icon: 'success',
+                title: 'สำเร็จ!',
+                text: `บันทึกข้อมูล Role "${roleData.role_name_th}" สำเร็จ`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+        } catch (error) {
+            console.error('Error saving role:', error);
+            
+            if (error.code === '23505') { // Unique violation
+                showError('Role Key นี้มีอยู่ในระบบแล้ว กรุณาใช้ Key อื่น');
+            } else {
+                showError('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
+            }
+            
+            // ใช้ wrapper function แทน
+            logError('Error saving role: ' + error.message);
+        }
+    }
+
+    // ลบข้อมูล Role
+    async function deleteRole(roleId, roleName) {
+        // ยืนยันการลบ
+        const result = await Swal.fire({
+            title: 'ยืนยันการลบ',
+            text: `คุณแน่ใจว่าต้องการลบ Role "${roleName}" ใช่หรือไม่?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        });
+        
+        if (!result.isConfirmed) return;
+        
+        try {
+            const supabase = await getSupabaseClient();
+            if (!supabase) {
+                showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                return;
+            }
+            
+            const { error } = await supabase
+                .from('roles')
+                .delete()
+                .eq('role_id', roleId);
+            
+            if (error) throw error;
+            
+            // ใช้ wrapper function แทน
+            logSuccess(`ลบ Role สำเร็จ: ${roleName}`);
+            
+            // รีเฟรชข้อมูล
+            await loadRoles();
+            
+            // แสดงข้อความสำเร็จ
+            Swal.fire({
+                icon: 'success',
+                title: 'ลบสำเร็จ!',
+                text: `ลบ Role "${roleName}" ออกจากระบบแล้ว`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+            
+        } catch (error) {
+            console.error('Error deleting role:', error);
+            
+            // ตรวจสอบว่า Role นี้ถูกใช้อยู่หรือไม่
+            if (error.code === '23503') { // Foreign key violation
+                showError('ไม่สามารถลบ Role นี้ได้ เนื่องจากถูกใช้งานอยู่ในระบบแล้ว');
+            } else {
+                showError('ลบข้อมูลไม่สำเร็จ: ' + error.message);
+            }
+            
+            // ใช้ wrapper function แทน
+            logError('Error deleting role: ' + error.message);
+        }
+    }
+
+    // แสดงข้อความแจ้งเตือน
+    function showError(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: message,
+            confirmButtonText: 'ตกลง'
+        });
+    }
+</script>
+ 
+    <style>
+        /* Custom styles */
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            ring: 2px;
+        }
+        
+        /* Scrollbar styling */
+        #rolesTableBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #rolesTableBody::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #rolesTableBody::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #rolesTableBody::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</body>
+</html>

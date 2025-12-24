@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูลผู้ใช้ | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 สำหรับ Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Admin Header (Simple) -->
+    <div class="bg-white shadow-md border-b border-gray-200">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <!-- Logo -->
+                <a href="admin_dashboard.html" class="flex items-center space-x-2">
+                    <i class="fas fa-rainbow text-blue-600 text-2xl"></i>
+                    <span class="text-xl font-bold text-blue-700">Rainbow OrcaKids Admin</span>
+                </a>
+                
+                <!-- Admin Controls -->
+                <div class="flex space-x-3">
+                    <a href="admin_dashboard.html" 
+                       class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md transition-colors">
+                        <i class="fas fa-tachometer-alt mr-1"></i>แดชบอร์ด
+                    </a>
+                    <div class="relative">
+                        <button onclick="adminLogout()" 
+                               class="text-red-600 hover:text-red-800 px-3 py-2 rounded-md hover:bg-red-50 transition-colors">
+                            <i class="fas fa-sign-out-alt mr-1"></i>ออกจากระบบ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    <i class="fas fa-users mr-3"></i>จัดการข้อมูลผู้ใช้
+                </h1>
+                <p class="text-gray-600">เพิ่ม/แก้ไข/ลบ ข้อมูลผู้ใช้ในระบบ และจัดการรหัสผ่าน</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <!-- ปุ่มกลับหน้า Dashboard -->
+                <a href="admin_dashboard.html" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+            </div>
+        </div>
+
+        <!-- RPC Status Alert -->
+        <div id="rpcStatusAlert" class="hidden mb-6">
+            <!-- จะแสดงสถานะ RPC functions -->
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">รวมผู้ใช้</p>
+                        <p id="totalUsers" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-chalkboard-teacher text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ครู/อาจารย์</p>
+                        <p id="teacherCount" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-user-check text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ผู้สร้างเนื้อหา</p>
+                        <p id="creatorCount" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-egg text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ไข่ทั้งหมด</p>
+                        <p id="totalEggs" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="ค้นหาตามชื่อ, อีเมล, UID..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="roleFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">บทบาททั้งหมด</option>
+                        <!-- จะโหลดจาก roles table -->
+                    </select>
+                    <select id="gradeFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">ชั้นเรียนทั้งหมด</option>
+                        <!-- จะโหลดจาก grades table -->
+                    </select>
+                    <button onclick="loadUsers()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูลผู้ใช้...
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-user mr-1"></i>ผู้ใช้
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-envelope mr-1"></i>อีเมล
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-user-tag mr-1"></i>บทบาท
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-graduation-cap mr-1"></i>ชั้นเรียน
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-egg mr-1"></i>ไข่
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-star mr-1"></i>คะแนน
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-1"></i>สร้างเมื่อ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-1"></i>จัดการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Data Message (hidden by default) -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูลผู้ใช้</h3>
+            <p class="text-gray-400 mb-6">เริ่มต้นด้วยการเพิ่มผู้ใช้ใหม่</p>
+            <button onclick="showAddUserModal()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-plus mr-2"></i>เพิ่มผู้ใช้ใหม่
+            </button>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="index.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าหลัก
+            </a>
+        </div>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- MODAL 1: Add/Edit User Modal (hidden by default) -->
+    <!-- =============================================== -->
+    <div id="userModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-700"></h3>
+                <button onclick="closeUserModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="userForm" onsubmit="saveUser(event)">
+                    <input type="hidden" id="userId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- UID (แสดงเมื่อแก้ไข) -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-id-card mr-1"></i>UID
+                            </label>
+                            <div id="uidInputContainer">
+                                <input type="text" id="uid" 
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono hidden"
+                                       placeholder="00000000-0000-0000-0000-000000000000"
+                                       pattern="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+                                       readonly>
+                                <div id="uidInfo" class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p class="text-blue-700">
+                                        <i class="fas fa-info-circle mr-2"></i>
+                                        UID จะถูกสร้างอัตโนมัติเมื่อลงทะเบียนผู้ใช้ใหม่
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-envelope mr-1"></i>อีเมล *
+                            </label>
+                            <input type="email" id="email" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="example@email.com"
+                                   required>
+                            <p id="emailEditWarning" class="text-xs text-yellow-600 mt-1 hidden">
+                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                การแก้ไขอีเมลจะส่งผลถึงระบบการเข้าสู่ระบบ
+                            </p>
+                        </div>
+
+                        <!-- Password สำหรับการเพิ่มผู้ใช้ใหม่ -->
+                        <div class="md:col-span-2" id="passwordContainer">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-lock mr-1"></i>รหัสผ่าน *
+                            </label>
+                            <input type="password" id="password" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="รหัสผ่านสำหรับบัญชีใหม่"
+                                   minlength="6">
+                            <p class="text-xs text-gray-500 mt-1">รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร</p>
+                        </div>
+
+                        <!-- Display Name -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-user mr-1"></i>ชื่อที่แสดง *
+                            </label>
+                            <input type="text" id="displayName" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ชื่อผู้ใช้"
+                                   required>
+                        </div>
+
+                        <!-- Role -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-user-tag mr-1"></i>บทบาท *
+                            </label>
+                            <select id="role" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   required>
+                                <option value="">เลือกบทบาท</option>
+                                <!-- จะโหลดจาก roles table -->
+                            </select>
+                        </div>
+
+                        <!-- Grade -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-graduation-cap mr-1"></i>ชั้นเรียน
+                            </label>
+                            <select id="grade" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">ไม่ได้ระบุ</option>
+                                <!-- จะโหลดจาก grades table -->
+                            </select>
+                        </div>
+
+                        <!-- Basic Eggs -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-egg mr-1"></i>ไข่พื้นฐาน
+                            </label>
+                            <input type="number" id="totalEggsBasic" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   value="10">
+                        </div>
+
+                        <!-- Premium Eggs -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-gem mr-1"></i>ไข่พรีเมียม
+                            </label>
+                            <input type="number" id="totalEggsPremium" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   value="0">
+                        </div>
+
+                        <!-- Community Eggs -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-users mr-1"></i>ไข่ชุมชน
+                            </label>
+                            <input type="number" id="communityEggs" min="0"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   value="0">
+                        </div>
+
+                        <!-- Creator Status -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-user-check mr-1"></i>สถานะผู้สร้าง
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="creatorStatus" value="true"
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-green-600">
+                                        <i class="fas fa-check-circle mr-1"></i>เป็นผู้สร้าง
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="creatorStatus" value="false" checked
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-gray-600">
+                                        <i class="fas fa-times-circle mr-1"></i>ไม่เป็นผู้สร้าง
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Bio -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-align-left mr-1"></i>คำอธิบาย
+                            </label>
+                            <textarea id="bio" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="คำอธิบายเกี่ยวกับผู้ใช้..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closeUserModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="submitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- MODAL 2: Change Password Modal -->
+    <!-- =============================================== -->
+    <div id="passwordModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="passwordModalTitle" class="text-2xl font-bold text-gray-700">
+                    <i class="fas fa-key mr-2"></i>เปลี่ยนรหัสผ่าน
+                </h3>
+                <button onclick="closePasswordModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="passwordForm" onsubmit="updatePassword(event)">
+                    <input type="hidden" id="passwordUserId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fas fa-user mr-1"></i>ผู้ใช้
+                        </label>
+                        <p id="passwordUserName" class="text-lg font-semibold text-gray-800"></p>
+                        <p id="passwordUserEmail" class="text-sm text-gray-600"></p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fas fa-lock mr-1"></i>รหัสผ่านใหม่ *
+                        </label>
+                        <input type="password" id="newPassword" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               placeholder="รหัสผ่านใหม่"
+                               minlength="6"
+                               required>
+                        <p class="text-xs text-gray-500 mt-1">รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร</p>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fas fa-lock mr-1"></i>ยืนยันรหัสผ่านใหม่ *
+                        </label>
+                        <input type="password" id="confirmPassword" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                               placeholder="ยืนยันรหัสผ่านใหม่"
+                               minlength="6"
+                               required>
+                    </div>
+                    
+                    <!-- Password Strength Indicator -->
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-xs text-gray-600">ความแข็งแกร่งของรหัสผ่าน:</span>
+                            <span id="passwordStrength" class="text-xs">-</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="passwordStrengthBar" class="bg-red-500 h-2 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closePasswordModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="passwordSubmitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>อัพเดตรหัสผ่าน
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/debug-logger.js"></script>
+    <script src="js/admin-rpc-checker.js"></script>
+    
+    <script>
+// ===============================================
+// Admin Users Manager (Version 8)
+// ===============================================
+
+// Global variables
+let currentUsers = [];
+let currentRoles = [];
+let currentGrades = [];
+let isEditMode = false;
+let currentAdminId = null;
+
+// Debug Logger Wrapper - ใช้จาก debug-logger.js โดยตรง
+function logSuccess(message) {
+    if (window.DebugLogger && typeof window.DebugLogger.success === 'function') {
+        window.DebugLogger.success(message);
+    } else {
+        console.log('✅ ' + message);
+    }
+}
+
+function logError(message) {
+    if (window.DebugLogger && typeof window.DebugLogger.error === 'function') {
+        window.DebugLogger.error(message);
+    } else {
+        console.error('❌ ' + message);
+    }
+}
+
+function logInfo(message) {
+    if (window.DebugLogger && typeof window.DebugLogger.info === 'function') {
+        window.DebugLogger.info(message);
+    } else {
+        console.info('ℹ️ ' + message);
+    }
+}
+
+function logWarning(message) {
+    if (window.DebugLogger && typeof window.DebugLogger.warning === 'function') {
+        window.DebugLogger.warning(message);
+    } else {
+        console.warn('⚠️ ' + message);
+    }
+}
+
+// ===============================================
+// ฟังก์ชันตรวจสอบ Admin Permission
+// ===============================================
+async function checkAdminPermission() {
+    try {
+        logInfo('🔍 กำลังตรวจสอบสิทธิ์แอดมิน...');
+        
+        const supabase = await window.authStatusManager.getSupabaseClient();
+        if (!supabase) {
+            logError('ไม่สามารถเชื่อมต่อกับ Supabase ได้');
+            return false;
+        }
+        
+        // ตรวจสอบว่ามี session หรือไม่
+        const session = await window.authStatusManager.checkCurrentSession();
+        if (!session || !session.user) {
+            logWarning('ไม่มี session ผู้ใช้');
+            return false;
+        }
+        
+        // ดึงข้อมูลผู้ใช้ปัจจุบัน
+        const userProfile = await window.authStatusManager.fetchUserProfile(session.user);
+        if (!userProfile) {
+            logError('ไม่สามารถดึงข้อมูลโปรไฟล์ได้');
+            return false;
+        }
+        
+        logInfo(`ข้อมูลผู้ใช้ปัจจุบัน: ${userProfile.display_name}, บทบาท: ${userProfile.role}`);
+        
+        // ตรวจสอบสิทธิ์ Admin
+        const isAdmin = userProfile.role === 'admin' || 
+                       userProfile.role === 'administrator' || 
+                       userProfile.role === 'superadmin';
+        
+        if (isAdmin) {
+            currentAdminId = session.user.id;
+            logSuccess('ตรวจสอบสิทธิ์แอดมินสำเร็จ');
+        } else {
+            logWarning('ผู้ใช้ไม่มีสิทธิ์แอดมิน');
+        }
+        
+        return isAdmin;
+        
+    } catch (error) {
+        logError('เกิดข้อผิดพลาดในการตรวจสอบสิทธิ์: ' + error.message);
+        return false;
+    }
+}
+
+// ===============================================
+// ฟังก์ชันเริ่มต้นหน้า
+// ===============================================
+async function initializePage() {
+    logInfo('🔄 กำลังเริ่มต้นหน้า Admin Users Manager...');
+    
+    // ตรวจสอบสิทธิ์แอดมิน
+    const hasPermission = await checkAdminPermission();
+    if (!hasPermission) {
+        Swal.fire({
+            icon: 'error',
+            title: 'ไม่มีสิทธิ์เข้าถึง',
+            text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+            confirmButtonText: 'กลับไปหน้า Dashboard',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        }).then(() => {
+            window.location.href = 'admin_dashboard.html';
+        });
+        return;
+    }
+    
+    // ตรวจสอบความเข้ากันได้ของ auth_status_manager
+    if (window.RPCChecker && window.RPCChecker.checkAuthStatusManagerCompatibility) {
+        const authCompat = await window.RPCChecker.checkAuthStatusManagerCompatibility();
+        if (!authCompat) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ระบบไม่สมบูรณ์',
+                text: 'กรุณารีเฟรชหน้าหรือตรวจสอบไฟล์ auth_status_manager.js',
+                confirmButtonText: 'รีเฟรช'
+            }).then(() => {
+                window.location.reload();
+            });
+            return;
+        }
+    }
+    
+    // เริ่มต้น Debug Logger
+    if (window.DebugLogger && typeof window.DebugLogger.init === 'function') {
+        try {
+            window.DebugLogger.init();
+            logSuccess('DebugLogger เริ่มต้นสำเร็จ');
+        } catch (e) {
+            logWarning('DebugLogger init failed: ' + e.message);
+        }
+    }
+    
+    // ตั้งค่า event listeners
+    document.getElementById('searchInput').addEventListener('keyup', filterUsers);
+    document.getElementById('roleFilter').addEventListener('change', filterUsers);
+    document.getElementById('gradeFilter').addEventListener('change', filterUsers);
+    document.getElementById('newPassword')?.addEventListener('input', checkPasswordStrength);
+    
+    // โหลดข้อมูล
+    await loadMasterData();
+    await loadUsers();
+    
+    logSuccess('✅ หน้า Admin Users Manager พร้อมใช้งาน');
+}
+
+// ===============================================
+// ฟังก์ชันโหลด Master Data
+// ===============================================
+async function loadMasterData() {
+    try {
+        const supabase = await window.authStatusManager.getSupabaseClient();
+        if (!supabase) {
+            throw new Error('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+        }
+        
+        // โหลด Roles
+        const { data: roles, error: rolesError } = await supabase
+            .from('roles')
+            .select('role_key, role_name_th, role_name_en, is_active')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+        
+        if (rolesError) {
+            logError('Error loading roles: ' + rolesError.message);
+            currentRoles = [
+                { role_key: 'student', role_name_th: 'นักเรียน' },
+                { role_key: 'teacher', role_name_th: 'ครู' },
+                { role_key: 'admin', role_name_th: 'ผู้ดูแลระบบ' },
+                { role_key: 'content_creator', role_name_th: 'ผู้สร้างเนื้อหา' }
+            ];
+        } else {
+            currentRoles = roles || [];
+            logSuccess(`โหลดข้อมูล Roles สำเร็จ: ${currentRoles.length} รายการ`);
+        }
+        
+        // โหลด Grades
+        const { data: grades, error: gradesError } = await supabase
+            .from('grades')
+            .select('grade_level, grade_name_th, grade_name_en, is_active')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+        
+        if (gradesError) {
+            logError('Error loading grades: ' + gradesError.message);
+            currentGrades = [
+                { grade_level: 1, grade_name_th: 'ประถมศึกษาปีที่ 1' },
+                { grade_level: 2, grade_name_th: 'ประถมศึกษาปีที่ 2' },
+                { grade_level: 3, grade_name_th: 'ประถมศึกษาปีที่ 3' },
+                { grade_level: 4, grade_name_th: 'ประถมศึกษาปีที่ 4' },
+                { grade_level: 5, grade_name_th: 'ประถมศึกษาปีที่ 5' },
+                { grade_level: 6, grade_name_th: 'ประถมศึกษาปีที่ 6' }
+            ];
+        } else {
+            currentGrades = grades || [];
+            logSuccess(`โหลดข้อมูล Grades สำเร็จ: ${currentGrades.length} รายการ`);
+        }
+        
+        updateDropdownFilters();
+        
+    } catch (error) {
+        logError('Error loading master data: ' + error.message);
+        showError('ไม่สามารถโหลดข้อมูลพื้นฐานได้: ' + error.message);
+    }
+}
+
+// อัปเดต dropdown filters
+function updateDropdownFilters() {
+    const roleFilter = document.getElementById('roleFilter');
+    roleFilter.innerHTML = '<option value="all">บทบาททั้งหมด</option>';
+    
+    currentRoles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.role_key;
+        option.textContent = role.role_name_th;
+        roleFilter.appendChild(option);
+    });
+    
+    const gradeFilter = document.getElementById('gradeFilter');
+    gradeFilter.innerHTML = '<option value="all">ชั้นเรียนทั้งหมด</option>';
+    
+    currentGrades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade.grade_level;
+        option.textContent = grade.grade_name_th;
+        gradeFilter.appendChild(option);
+    });
+}
+
+// ===============================================
+// ฟังก์ชันโหลดข้อมูลผู้ใช้
+// ===============================================
+async function loadUsers() {
+    const loadingStatus = document.getElementById('loadingStatus');
+    const noDataMessage = document.getElementById('noDataMessage');
+    const tableBody = document.getElementById('usersTableBody');
+    
+    loadingStatus.classList.remove('hidden');
+    tableBody.innerHTML = '';
+    
+    try {
+        // ใช้ RPCChecker.callRPCSafely เพื่อโหลดข้อมูล
+        const result = await window.RPCChecker.callRPCSafely(
+            'get_all_users_for_admin',
+            {},
+            'ไม่สามารถดึงข้อมูลผู้ใช้ได้'
+        );
+        
+        if (!result.success) {
+            throw new Error(result.error || 'ไม่สามารถดึงข้อมูลผู้ใช้ได้');
+        }
+        
+        currentUsers = result.data || [];
+        
+        updateStats(currentUsers);
+        
+        if (currentUsers.length > 0) {
+            renderUsersTable(currentUsers);
+            noDataMessage.classList.add('hidden');
+        } else {
+            tableBody.innerHTML = '';
+            noDataMessage.classList.remove('hidden');
+        }
+        
+        loadingStatus.classList.add('hidden');
+        
+        logSuccess(`โหลดข้อมูล Users สำเร็จ: ${currentUsers.length} รายการ`);
+        
+    } catch (error) {
+        loadingStatus.classList.add('hidden');
+        logError('Exception in loadUsers: ' + error.message);
+        showError('เกิดข้อผิดพลาด: ' + error.message);
+    }
+}
+
+// ===============================================
+// ฟังก์ชันแสดงข้อมูลในตาราง
+// ===============================================
+function renderUsersTable(users) {
+    const tableBody = document.getElementById('usersTableBody');
+    tableBody.innerHTML = '';
+    
+    users.forEach((user) => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 transition-colors';
+        
+        const createdDate = new Date(user.created_at).toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+        
+        let roleName = user.role || 'ไม่ได้ระบุ';
+        const roleObj = currentRoles.find(r => r.role_key === user.role);
+        if (roleObj) {
+            roleName = roleObj.role_name_th || roleObj.role_name_en || user.role;
+        }
+        
+        let gradeName = user.grade ? `ชั้น ${user.grade}` : 'ไม่ได้ระบุ';
+        if (user.grade) {
+            const gradeObj = currentGrades.find(g => g.grade_level === user.grade);
+            if (gradeObj) {
+                gradeName = gradeObj.grade_name_th || gradeObj.grade_name_en || `ชั้น ${user.grade}`;
+            }
+        }
+        
+        const totalEggs = (user.total_eggs_basic || 0) + (user.total_eggs_premium || 0) + (user.community_eggs || 0);
+        const userEmail = user.email || 'ไม่มีอีเมล';
+        
+        // ตรวจสอบว่าเป็นผู้ใช้ปัจจุบันหรือไม่ (ไม่สามารถลบตัวเองได้)
+        const isCurrentUser = user.uid === currentAdminId;
+        
+        row.innerHTML = `
+            <td class="px-6 py-4">
+                <div class="flex items-center">
+                    ${user.avatar_url ? 
+                        `<img src="${user.avatar_url}" alt="${user.display_name}" class="w-10 h-10 rounded-full mr-3">` :
+                        `<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <i class="fas fa-user text-blue-600"></i>
+                        </div>`
+                    }
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">${user.display_name || 'ไม่มีชื่อ'}</div>
+                        <div class="text-xs text-gray-500 truncate max-w-xs" title="${user.uid}">UID: ${user.uid.substring(0, 8)}...</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                ${userEmail}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 text-xs font-semibold rounded-full ${user.role === 'admin' ? 'bg-red-100 text-red-800' : user.role === 'teacher' ? 'bg-green-100 text-green-800' : user.role === 'content_creator' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}">
+                    ${roleName}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                ${gradeName}
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                <div class="font-semibold">${totalEggs}</div>
+                <div class="text-xs text-gray-500">
+                    พื้นฐาน: ${user.total_eggs_basic || 0}, พรีเมียม: ${user.total_eggs_premium || 0}
+                </div>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-900">
+                ${user.avg_rating > 0 ? 
+                    `<div class="flex items-center">
+                        <span class="font-semibold mr-1">${user.avg_rating.toFixed(1)}</span>
+                        <i class="fas fa-star text-yellow-500"></i>
+                        <span class="text-xs text-gray-500 ml-1">(${user.total_ratings || 0})</span>
+                    </div>` :
+                    '<span class="text-gray-400">-</span>'
+                }
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <i class="far fa-clock mr-1"></i>${createdDate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button onclick="editUser('${user.uid}')" 
+                            class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50" 
+                            title="แก้ไขข้อมูล">
+                        <i class="fas fa-edit"></i>
+                    </button>
+
+                    <button onclick="showChangePasswordModal('${user.uid}', '${user.display_name || user.email}', '${user.email}')" 
+                            class="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50" 
+                            title="เปลี่ยนรหัสผ่าน">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    
+                    <button onclick="deleteUser('${user.uid}', '${user.display_name || user.email}', ${isCurrentUser})" 
+                            class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 ${isCurrentUser ? 'opacity-50 cursor-not-allowed' : ''}" 
+                            title="${isCurrentUser ? 'ไม่สามารถลบบัญชีตัวเองได้' : 'ลบผู้ใช้'}"
+                            ${isCurrentUser ? 'disabled' : ''}>
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+// อัปเดต dropdowns ในฟอร์ม
+function updateFormDropdowns() {
+    const roleSelect = document.getElementById('role');
+    roleSelect.innerHTML = '<option value="">เลือกบทบาท</option>';
+    
+    currentRoles.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.role_key;
+        option.textContent = role.role_name_th;
+        roleSelect.appendChild(option);
+    });
+    
+    const gradeSelect = document.getElementById('grade');
+    gradeSelect.innerHTML = '<option value="">ไม่ได้ระบุ</option>';
+    
+    currentGrades.forEach(grade => {
+        const option = document.createElement('option');
+        option.value = grade.grade_level;
+        option.textContent = grade.grade_name_th;
+        gradeSelect.appendChild(option);
+    });
+}
+
+// แสดง Modal สำหรับแก้ไข User
+async function editUser(userId) {
+    const user = currentUsers.find(u => u.uid === userId);
+    if (!user) {
+        showError('ไม่พบข้อมูลผู้ใช้ที่ต้องการแก้ไข');
+        return;
+    }
+    
+    isEditMode = true;
+    document.getElementById('modalTitle').textContent = 'แก้ไขผู้ใช้';
+    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>อัปเดตข้อมูล';
+    
+    document.getElementById('userId').value = user.uid;
+    document.getElementById('uid').value = user.uid;
+    document.getElementById('uid').classList.remove('hidden');
+    document.getElementById('uidInfo').classList.add('hidden');
+    document.getElementById('uid').setAttribute('readonly', 'readonly');
+    
+    document.getElementById('passwordContainer').classList.add('hidden');
+    document.getElementById('password').removeAttribute('required');
+    
+    document.getElementById('emailEditWarning').classList.remove('hidden');
+    
+    document.getElementById('email').value = user.email || '';
+    document.getElementById('displayName').value = user.display_name || '';
+    document.getElementById('totalEggsBasic').value = user.total_eggs_basic || 0;
+    document.getElementById('totalEggsPremium').value = user.total_eggs_premium || 0;
+    document.getElementById('communityEggs').value = user.community_eggs || 0;
+    document.getElementById('bio').value = user.bio || '';
+    
+    updateFormDropdowns();
+    
+    const roleSelect = document.getElementById('role');
+    if (user.role) {
+        roleSelect.value = user.role;
+    }
+    
+    const gradeSelect = document.getElementById('grade');
+    if (user.grade) {
+        gradeSelect.value = user.grade;
+    } else {
+        gradeSelect.value = '';
+    }
+    
+    const creatorStatus = user.creator_status ? 'true' : 'false';
+    document.querySelector(`input[name="creatorStatus"][value="${creatorStatus}"]`).checked = true;
+    
+    document.getElementById('userModal').classList.remove('hidden');
+}
+
+// ปิด Modal
+function closeUserModal() {
+    document.getElementById('userModal').classList.add('hidden');
+}
+
+// ===============================================
+// ฟังก์ชันบันทึกข้อมูลผู้ใช้
+// ===============================================
+async function saveUser(event) {
+    event.preventDefault();
+    
+    try {
+        const userData = {
+            email: document.getElementById('email').value.trim(),
+            display_name: document.getElementById('displayName').value.trim() || null,
+            role: document.getElementById('role').value,
+            grade: document.getElementById('grade').value ? parseInt(document.getElementById('grade').value) : null,
+            total_eggs_basic: parseInt(document.getElementById('totalEggsBasic').value) || 0,
+            total_eggs_premium: parseInt(document.getElementById('totalEggsPremium').value) || 0,
+            community_eggs: parseInt(document.getElementById('communityEggs').value) || 0,
+            creator_status: document.querySelector('input[name="creatorStatus"]:checked').value === 'true',
+            bio: document.getElementById('bio').value.trim() || null
+        };
+        
+        if (!userData.email || !userData.role) {
+            showError('กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน (อีเมล, บทบาท)');
+            return;
+        }
+        
+        let result;
+        
+        if (isEditMode) {
+            // แก้ไขผู้ใช้ที่มีอยู่
+            const existingUid = document.getElementById('uid').value;
+            
+            if (!existingUid) {
+                showError('ไม่พบ UID ของผู้ใช้ที่ต้องการแก้ไข');
+                return;
+            }
+            
+            result = await window.RPCChecker.callRPCSafely(
+                'update_user_admin_simple',
+                {
+                    p_uid: existingUid,
+                    p_email: userData.email,
+                    p_display_name: userData.display_name,
+                    p_role: userData.role,
+                    p_grade: userData.grade,
+                    p_total_eggs_basic: userData.total_eggs_basic,
+                    p_total_eggs_premium: userData.total_eggs_premium,
+                    p_community_eggs: userData.community_eggs,
+                    p_creator_status: userData.creator_status,
+                    p_bio: userData.bio
+                },
+                'ไม่สามารถอัปเดตข้อมูลผู้ใช้ได้'
+            );
+            
+        } else {
+            // สร้างผู้ใช้ใหม่
+            const password = document.getElementById('password').value;
+            
+            if (!password || password.length < 6) {
+                showError('กรุณาระบุรหัสผ่านอย่างน้อย 6 ตัวอักษร');
+                return;
+            }
+            
+            result = await window.RPCChecker.callRPCSafely(
+                'create_user_admin_simple',
+                {
+                    p_email: userData.email,
+                    p_password: password,
+                    p_display_name: userData.display_name,
+                    p_role: userData.role,
+                    p_grade: userData.grade,
+                    p_total_eggs_basic: userData.total_eggs_basic,
+                    p_total_eggs_premium: userData.total_eggs_premium,
+                    p_community_eggs: userData.community_eggs,
+                    p_creator_status: userData.creator_status,
+                    p_bio: userData.bio
+                },
+                'ไม่สามารถสร้างผู้ใช้ได้'
+            );
+        }
+        
+        if (!result.success) {
+            throw new Error(result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        }
+        
+        logSuccess(`${isEditMode ? 'อัปเดต' : 'สร้าง'}ผู้ใช้สำเร็จ: ${userData.display_name || userData.email}`);
+        
+        closeUserModal();
+        await loadUsers();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'สำเร็จ!',
+            text: `${isEditMode ? 'อัปเดต' : 'สร้าง'}ผู้ใช้ "${userData.display_name || userData.email}" สำเร็จ`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+        
+    } catch (error) {
+        logError('Error saving user: ' + error.message);
+        showError('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + error.message);
+    }
+}
+
+// ===============================================
+// ฟังก์ชันจัดการรหัสผ่าน
+// ===============================================
+
+// แสดง Modal สำหรับเปลี่ยนรหัสผ่าน
+function showChangePasswordModal(userId, userName, userEmail) {
+    document.getElementById('passwordUserId').value = userId;
+    document.getElementById('passwordUserName').textContent = userName;
+    document.getElementById('passwordUserEmail').textContent = `(${userEmail})`;
+    
+    document.getElementById('passwordForm').reset();
+    document.getElementById('passwordStrength').textContent = '-';
+    document.getElementById('passwordStrengthBar').style.width = '0%';
+    document.getElementById('passwordStrengthBar').className = 'bg-red-500 h-2 rounded-full';
+    
+    document.getElementById('passwordModal').classList.remove('hidden');
+    
+    logInfo(`เปิด modal เปลี่ยนรหัสผ่านสำหรับผู้ใช้: ${userName} (${userEmail})`);
+}
+
+// ปิด Modal รหัสผ่าน
+function closePasswordModal() {
+    document.getElementById('passwordModal').classList.add('hidden');
+}
+
+// ตรวจสอบความแข็งแกร่งของรหัสผ่าน
+function checkPasswordStrength() {
+    const password = document.getElementById('newPassword').value;
+    let strength = 0;
+    let text = '';
+    let barColor = 'bg-red-500';
+    
+    if (password.length >= 6) strength += 1;
+    if (password.length >= 8) strength += 1;
+    if (/[A-Z]/.test(password)) strength += 1;
+    if (/[0-9]/.test(password)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    switch(strength) {
+        case 0:
+        case 1:
+            text = 'อ่อนมาก';
+            barColor = 'bg-red-500';
+            break;
+        case 2:
+            text = 'อ่อน';
+            barColor = 'bg-orange-500';
+            break;
+        case 3:
+            text = 'ปานกลาง';
+            barColor = 'bg-yellow-500';
+            break;
+        case 4:
+            text = 'แข็ง';
+            barColor = 'bg-green-500';
+            break;
+        case 5:
+            text = 'แข็งมาก';
+            barColor = 'bg-green-600';
+            break;
+    }
+    
+    const percentage = (strength / 5) * 100;
+    document.getElementById('passwordStrength').textContent = text;
+    document.getElementById('passwordStrengthBar').style.width = `${percentage}%`;
+    document.getElementById('passwordStrengthBar').className = `${barColor} h-2 rounded-full`;
+}
+
+// อัปเดตรหัสผ่าน
+async function updatePassword(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('passwordUserId').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const button = document.getElementById('passwordSubmitButton');
+    
+    try {
+        // Validation
+        if (!newPassword || !confirmPassword) {
+            showError('โปรดกรอกรหัสผ่านทั้งสองช่อง');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showError('รหัสผ่านไม่ตรงกัน');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            showError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+            return;
+        }
+        
+        // Disable button during process
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังเปลี่ยนรหัสผ่าน...';
+        
+        // ใช้ RPC function reset_user_password_admin
+        const result = await window.RPCChecker.callRPCSafely(
+            'reset_user_password_admin',
+            {
+                p_user_id: userId,
+                p_new_password: newPassword
+            },
+            'ไม่สามารถเปลี่ยนรหัสผ่านได้'
+        );
+        
+        if (!result.success) {
+            throw new Error(result.error || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
+        }
+        
+        // Success
+        closePasswordModal();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'เปลี่ยนรหัสผ่านสำเร็จ!',
+            text: 'รหัสผ่านของผู้ใช้ถูกเปลี่ยนเรียบร้อยแล้ว',
+            timer: 2000,
+            showConfirmButton: false
+        });
+        
+        logSuccess(`เปลี่ยนรหัสผ่านสำเร็จสำหรับผู้ใช้: ${document.getElementById('passwordUserName').textContent}`);
+        
+    } catch (error) {
+        logError('Error updating password: ' + error.message);
+        
+        if (error.message.includes('reset_user_password_admin') || error.message.includes('function does not exist')) {
+            showError('ฟังก์ชัน reset_user_password_admin ยังไม่พร้อมใช้งาน');
+            showRPCPasswordCreationInstructions();
+        } else {
+            showError('เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน: ' + error.message);
+        }
+    } finally {
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-save mr-2"></i>อัพเดตรหัสผ่าน';
+    }
+}
+
+// แสดงคำแนะนำการสร้าง RPC function สำหรับ reset password
+function showRPCPasswordCreationInstructions() {
+    Swal.fire({
+        icon: 'info',
+        title: 'ต้องการ RPC Function',
+        html: `
+            <div class="text-left">
+                <p>สำหรับการเปลี่ยนรหัสผ่าน <strong>ผู้อื่น</strong> ต้องการ RPC function ใน Supabase:</p>
+                <div class="mt-3 p-2 bg-gray-100 rounded text-xs overflow-auto max-h-60">
+                    <pre>
+-- สร้างฟังก์ชัน reset รหัสผ่านสำหรับ admin
+CREATE OR REPLACE FUNCTION reset_user_password_admin(
+    p_user_id uuid,
+    p_new_password text
+)
+RETURNS boolean
+SECURITY DEFINER
+SET search_path = auth, public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_admin_user_id uuid;
+BEGIN
+    -- ตรวจสอบว่า user ที่เรียกใช้เป็น admin
+    SELECT uid INTO v_admin_user_id 
+    FROM public.users 
+    WHERE uid = auth.uid() 
+    AND role IN ('admin', 'administrator', 'superadmin');
+    
+    IF v_admin_user_id IS NULL THEN
+        RAISE EXCEPTION 'Unauthorized: Admin access required';
+    END IF;
+
+    -- อัปเดตรหัสผ่านใน auth.users โดยใช้ pgcrypto
+    UPDATE auth.users 
+    SET encrypted_password = crypt(p_new_password, gen_salt('bf')),
+        updated_at = now()
+    WHERE id = p_user_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
+-- เปิดสิทธิ์ให้ฟังก์ชันนี้สามารถเรียกใช้ได้
+GRANT EXECUTE ON FUNCTION reset_user_password_admin(uuid, text) TO authenticated;
+                    </pre>
+                </div>
+                <p class="mt-3 text-sm text-gray-600">หมายเหตุ: ต้องมี extension "pgcrypto" ใน database</p>
+            </div>
+        `,
+        confirmButtonText: 'เข้าใจแล้ว',
+        showCancelButton: true,
+        cancelButtonText: 'เปิด SQL Editor',
+        showCloseButton: true
+    }).then((result) => {
+        if (result.dismiss === 'cancel') {
+            window.open('https://supabase.com/dashboard/project/oibubvhuiuurkxhnefsw/sql', '_blank');
+        }
+    });
+}
+
+// ===============================================
+// ฟังก์ชันลบผู้ใช้
+// ===============================================
+async function deleteUser(userId, userName, isCurrentUser = false) {
+    if (isCurrentUser) {
+        showError('ไม่สามารถลบบัญชีของคุณเองได้');
+        return;
+    }
+    
+    const result = await Swal.fire({
+        title: 'ยืนยันการลบ',
+        html: `คุณแน่ใจว่าต้องการลบผู้ใช้ "<b>${userName}</b>" ใช่หรือไม่?<br>
+              <small class="text-red-600">การลบจะทำให้ผู้ใช้ไม่สามารถเข้าสู่ระบบได้</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'ใช่, ลบเลย!',
+        cancelButtonText: 'ยกเลิก'
+    });
+    
+    if (!result.isConfirmed) return;
+    
+    try {
+        const deleteResult = await window.RPCChecker.callRPCSafely(
+            'delete_user_admin_simple',
+            { p_user_id: userId },
+            'ไม่สามารถลบผู้ใช้ได้'
+        );
+        
+        if (!deleteResult.success) {
+            throw new Error(deleteResult.error || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+        }
+        
+        logSuccess(`ลบผู้ใช้สำเร็จ: ${userName}`);
+        
+        await loadUsers();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'ลบสำเร็จ!',
+            text: `ลบผู้ใช้ "${userName}" ออกจากระบบแล้ว`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+        
+    } catch (error) {
+        logError('Error deleting user: ' + error.message);
+        showError('เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message);
+    }
+}
+
+// ===============================================
+// ฟังก์ชันช่วยเหลือ
+// ===============================================
+
+// อัปเดตสถิติ
+function updateStats(users) {
+    const total = users.length;
+    const teachers = users.filter(u => u.role === 'teacher').length;
+    const creators = users.filter(u => u.creator_status).length;
+    const totalEggs = users.reduce((sum, user) => {
+        return sum + (user.total_eggs_basic || 0) + (user.total_eggs_premium || 0) + (user.community_eggs || 0);
+    }, 0);
+    
+    document.getElementById('totalUsers').textContent = total;
+    document.getElementById('teacherCount').textContent = teachers;
+    document.getElementById('creatorCount').textContent = creators;
+    document.getElementById('totalEggs').textContent = totalEggs;
+}
+
+// กรองข้อมูล Users
+function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const gradeFilter = document.getElementById('gradeFilter').value;
+    
+    let filtered = currentUsers;
+    
+    if (searchTerm) {
+        filtered = filtered.filter(user => 
+            (user.display_name && user.display_name.toLowerCase().includes(searchTerm)) ||
+            (user.email && user.email.toLowerCase().includes(searchTerm)) ||
+            (user.uid && user.uid.toLowerCase().includes(searchTerm)) ||
+            (user.bio && user.bio.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    if (roleFilter !== 'all') {
+        filtered = filtered.filter(user => user.role === roleFilter);
+    }
+    
+    if (gradeFilter !== 'all') {
+        const gradeNum = parseInt(gradeFilter);
+        filtered = filtered.filter(user => user.grade === gradeNum);
+    }
+    
+    renderUsersTable(filtered);
+}
+
+// แสดงข้อความแจ้งเตือน
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: message,
+        confirmButtonText: 'ตกลง'
+    });
+}
+
+// ===============================================
+// ฟังก์ชันออกจากระบบ (เพิ่มสำหรับ Admin Header)
+// ===============================================
+async function adminLogout() {
+    try {
+        const supabase = window.authStatusManager ? await window.authStatusManager.getSupabaseClient() : null;
+        if (supabase) {
+            await supabase.auth.signOut();
+        }
+        window.location.href = 'index.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        window.location.href = 'index.html';
+    }
+}
+
+// ===============================================
+// เริ่มต้นหน้าเมื่อ DOM พร้อม
+// ===============================================
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('📁 Admin Users Manager (Version 8) Initializing...');
+    
+    // รอให้ไฟล์อื่นโหลดเสร็จ
+    setTimeout(async () => {
+        await initializePage();
+    }, 500);
+});
+
+// Export functions สำหรับการทดสอบ
+window.AdminUsersManager = {
+    initializePage,
+    loadUsers,
+    saveUser,
+    deleteUser,
+    updatePassword,
+    checkRPCStatus
+};
+    </script>
+ 
+    <style>
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            ring: 2px;
+        }
+        
+        #usersTableBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #usersTableBody::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #usersTableBody::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #usersTableBody::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        .avatar-fallback {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3b82f6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #userModal > div, #passwordModal > div {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            background-color: #f9fafb;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+
+</body>
+</html>

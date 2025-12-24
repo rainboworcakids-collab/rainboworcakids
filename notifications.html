@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การแจ้งเตือน - RainbowOrcaKids</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/notifications.css">
+
+</head>
+<body class="font-sarabun">
+    <!-- Navigation bar จะถูกเพิ่มโดย js/nav.js -->
+    
+    <div class="min-h-screen pb-12">
+        <!-- Loading State -->
+        <div id="loading" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+            <div class="text-center">
+                <div class="spinner mb-4 mx-auto"></div>
+                <p class="text-gray-600">กำลังโหลดการแจ้งเตือน...</p>
+            </div>
+        </div>
+
+        <!-- Main Content (hidden initially) -->
+        <div id="mainContent" class="hidden">
+            <!-- Header Section -->
+            <div class="bg-gradient-to-r from-blue-500 via-purple-600 to-purple-700 text-white pt-24 pb-12 px-4">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Breadcrumb -->
+                    <div class="mb-6 text-sm text-blue-100">
+                        <a href="missions.html" class="hover:text-white">หน้าหลัก</a> 
+                        <span class="mx-2">/</span>
+                        <span class="text-white font-semibold">การแจ้งเตือน</span>
+                    </div>
+                    
+                    <div class="flex flex-col md:flex-row items-center justify-between">
+                        <div class="mb-8 md:mb-0">
+                            <h1 class="text-3xl md:text-4xl font-bold mb-2">การแจ้งเตือน</h1>
+                            <p class="text-blue-100">ติดตามกิจกรรมและอัปเดตล่าสุดทั้งหมดของคุณ</p>
+                        </div>
+                        
+                        <!-- Notification Stats -->
+                        <div class="text-center bg-white/10 backdrop-blur-sm rounded-2xl p-6 shadow-xl">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="mr-3">
+                                    <i class="fas fa-bell text-4xl text-yellow-300"></i>
+                                </div>
+                                <div>
+                                    <div class="text-2xl text-blue-100">การแจ้งเตือน</div>
+                                    <div class="text-5xl font-bold mt-1" id="unread-count">0</div>
+                                    <div class="text-sm text-blue-100 mt-1">ยังไม่อ่าน</div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-center space-x-3">
+                                <button id="mark-all-read-btn" class="bg-white text-blue-600 font-semibold px-5 py-2 rounded-full hover:bg-blue-50 transition flex items-center">
+                                    <i class="fas fa-check-double mr-2"></i> อ่านทั้งหมด
+                                </button>
+                                <button id="clear-notifications-btn" class="bg-transparent border border-white text-white font-semibold px-5 py-2 rounded-full hover:bg-white/20 transition flex items-center">
+                                    <i class="fas fa-trash-alt mr-2"></i> ล้างทั้งหมด
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="max-w-7xl mx-auto px-4 -mt-8">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column: Notifications List -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <!-- Filter Section -->
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <button class="filter-btn active" data-filter="all">ทั้งหมด</button>
+                                <button class="filter-btn" data-filter="unread">ยังไม่อ่าน</button>
+                                <button class="filter-btn" data-filter="missions">ภารกิจ</button>
+                                <button class="filter-btn" data-filter="rewards">รางวัล</button>
+                                <button class="filter-btn" data-filter="system">ระบบ</button>
+                                <button class="filter-btn" data-filter="achievements">ความสำเร็จ</button>
+                            </div>
+                            
+                            <!-- Search and Sort -->
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mt-4">
+                                <div class="relative w-full md:w-auto">
+                                    <input type="text" id="notification-search" placeholder="ค้นหาการแจ้งเตือน..." 
+                                           class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                                <select id="notification-sort" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="newest">ใหม่ล่าสุด</option>
+                                    <option value="oldest">เก่าที่สุด</option>
+                                    <option value="unread-first">ยังไม่อ่านก่อน</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Notifications List -->
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold text-gray-800">
+                                    <i class="fas fa-bell text-blue-500 mr-2"></i> การแจ้งเตือนทั้งหมด
+                                </h2>
+                                <button id="refresh-notifications-btn" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                    <i class="fas fa-redo-alt mr-1"></i> รีเฟรช
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar p-2" id="notifications-list">
+                                <!-- Dynamic notifications will be loaded here -->
+                                <div class="text-center py-8 text-gray-400 loading-pulse">
+                                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                    <p>กำลังโหลดการแจ้งเตือน...</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Pagination -->
+                            <div class="mt-6 pt-6 border-t border-gray-200 flex justify-between items-center">
+                                <button id="load-more-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                    <i class="fas fa-plus mr-1"></i> โหลดเพิ่มเติม
+                                </button>
+                                <div class="text-sm text-gray-600">
+                                    แสดง <span id="showing-count">0</span> จาก <span id="total-count">0</span> การแจ้งเตือน
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Notification Settings & Stats -->
+                    <div class="space-y-8">
+                        <!-- Notification Settings -->
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                                <i class="fas fa-cog text-gray-500 mr-2"></i> ตั้งค่าการแจ้งเตือน
+                            </h2>
+                            
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-gray-800">การแจ้งเตือนภารกิจ</div>
+                                        <div class="text-sm text-gray-600">แจ้งเตือนเมื่อมีภารกิจใหม่หรือภารกิจที่กำลังจะหมด</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="mission-notifications" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-gray-800">การแจ้งเตือนรางวัล</div>
+                                        <div class="text-sm text-gray-600">แจ้งเตือนเมื่อได้รับไข่หรือรางวัลใหม่</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="reward-notifications" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-gray-800">การแจ้งเตือนระบบ</div>
+                                        <div class="text-sm text-gray-600">อัปเดตระบบและประกาศสำคัญ</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="system-notifications" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-gray-800">การแจ้งเตือนอีเมล</div>
+                                        <div class="text-sm text-gray-600">ส่งการแจ้งเตือนไปยังอีเมลของคุณ</div>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="email-notifications" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <button id="save-settings-btn" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold flex items-center justify-center">
+                                    <i class="fas fa-save mr-2"></i> บันทึกการตั้งค่า
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Notification Stats -->
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
+                            <h3 class="text-xl font-bold mb-4">สถิติการแจ้งเตือน</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-100">ทั้งหมด</span>
+                                    <span class="font-bold text-lg" id="stats-total">0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-100">ยังไม่อ่าน</span>
+                                    <span class="font-bold" id="stats-unread">0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-100">อ่านแล้ว</span>
+                                    <span class="font-bold" id="stats-read">0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-100">ภารกิจ</span>
+                                    <span class="font-bold" id="stats-missions">0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-blue-100">รางวัล</span>
+                                    <span class="font-bold" id="stats-rewards">0</span>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-white/30">
+                                    <div class="text-center">
+                                        <div class="text-sm text-blue-100 mb-1">อัปเดตล่าสุด</div>
+                                        <div class="font-bold" id="last-updated">กำลังโหลด...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Help & Tips -->
+                        <div class="bg-white rounded-2xl shadow-lg p-6 card-hover">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                                <i class="fas fa-question-circle text-blue-500 mr-2"></i> ความช่วยเหลือ
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <div class="font-medium text-gray-800">ทำเครื่องหมายว่าอ่านแล้ว</div>
+                                        <div class="text-sm text-gray-600">คลิกปุ่ม ✓ หรือการแจ้งเตือนเพื่อทำเครื่องหมายว่าอ่านแล้ว</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-filter text-blue-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <div class="font-medium text-gray-800">กรองการแจ้งเตือน</div>
+                                        <div class="text-sm text-gray-600">ใช้ปุ่มกรองด้านบนเพื่อดูเฉพาะการแจ้งเตือนที่ต้องการ</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <i class="fas fa-trash-alt text-red-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <div class="font-medium text-gray-800">ลบการแจ้งเตือน</div>
+                                        <div class="text-sm text-gray-600">คลิกที่ไอคอนถังขยะเพื่อลบการแจ้งเตือน</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden text-center py-10">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+                <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-4"></i>
+                <h3 class="text-xl font-bold text-red-700 mb-2">เกิดข้อผิดพลาด</h3>
+                <p id="errorMessage" class="text-gray-600 mb-4"></p>
+                <button onclick="window.location.reload()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                    โหลดหน้าอีกครั้ง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Scripts - โหลดตามลำดับที่ถูกต้อง -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/debug-manager.js"></script>
+  
+    <!-- Notifications Page Specific Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("📄 Notifications page loaded");
+            
+            // ฟังก์ชันสำหรับดึงและแสดงรายการแจ้งเตือน
+            async function fetchNotifications() {
+                const notificationsList = document.getElementById('notifications-list');
+                const loadingElement = document.getElementById('loading');
+                const mainContent = document.getElementById('mainContent');
+                const errorState = document.getElementById('errorState');
+                
+                // ตรวจสอบว่ามี element ที่ต้องการหรือไม่
+                if (!notificationsList || !loadingElement || !mainContent || !errorState) {
+                    console.error("ไม่พบ elements ที่ต้องการ");
+                    return;
+                }
+                
+                try {
+                    // ใช้ getSupabaseClient จาก auth_status_manager.js
+                    const supabase = await getSupabaseClient();
+                    if (!supabase) {
+                        loadingElement.classList.add('hidden');
+                        errorState.classList.remove('hidden');
+                        document.getElementById('errorMessage').textContent = 'ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้';
+                        console.error("❌ ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้");
+                        return;
+                    }
+                    
+                    // ตรวจสอบว่ามี session หรือไม่
+                    const { data: { session } } = await supabase.auth.getSession();
+                    
+                    if (!session) {
+                        // ถ้าไม่ได้ล็อกอิน ให้แสดงข้อมูลตัวอย่าง
+                        console.log("👤 ผู้ใช้ไม่ได้ล็อกอิน กำลังแสดงข้อมูลตัวอย่าง");
+                        showMockNotifications();
+                        loadingElement.classList.add('hidden');
+                        mainContent.classList.remove('hidden');
+                        return;
+                    }
+                    
+                    const userId = session.user.id;
+                    console.log("✅ User authenticated:", session.user.email);
+                    
+                    // ลองดึงข้อมูลจากตาราง notifications ถ้ามี
+                    try {
+                        const { data: notifications, error } = await supabase
+                            .from('notifications')
+                            .select('*')
+                            .eq('user_id', userId)
+                            .order('created_at', { ascending: false });
+                        
+                        if (error) {
+                            console.warn("⚠️ ไม่สามารถดึงข้อมูลการแจ้งเตือนจากฐานข้อมูล:", error.message);
+                            showMockNotifications();
+                        } else if (notifications && notifications.length > 0) {
+                            console.log(`✅ โหลดการแจ้งเตือนสำเร็จ ${notifications.length} รายการ`);
+                            displayNotifications(notifications);
+                        } else {
+                            console.log("ℹ️ ไม่พบการแจ้งเตือนในฐานข้อมูล");
+                            showMockNotifications();
+                        }
+                    } catch (dbError) {
+                        console.warn("⚠️ เกิดข้อผิดพลาดในการดึงข้อมูล:", dbError.message);
+                        showMockNotifications();
+                    }
+                    
+                    loadingElement.classList.add('hidden');
+                    mainContent.classList.remove('hidden');
+                    
+                } catch (error) {
+                    console.error('Error fetching notifications:', error);
+                    loadingElement.classList.add('hidden');
+                    errorState.classList.remove('hidden');
+                    document.getElementById('errorMessage').textContent = `เกิดข้อผิดพลาด: ${error.message}`;
+                }
+            }
+
+            // ฟังก์ชันแสดงข้อมูลตัวอย่าง
+            function showMockNotifications() {
+                console.log("📝 กำลังแสดงข้อมูลตัวอย่างการแจ้งเตือน");
+                
+                const mockNotifications = [
+                    {
+                        id: '1',
+                        title: 'ภารกิจใหม่รออยู่!',
+                        message: 'ภารกิจ "เรียนรู้ตัวเลข 1-10" พร้อมให้เริ่มแล้ว',
+                        type: 'missions',
+                        is_read: false,
+                        created_at: '2025-12-08T10:30:00Z'
+                    },
+                    {
+                        id: '2',
+                        title: 'ได้รับรางวัล!',
+                        message: 'คุณได้รับดาว 50 ดาวสำหรับการทำภารกิจสำเร็จ',
+                        type: 'rewards',
+                        is_read: true,
+                        created_at: '2025-12-07T15:45:00Z'
+                    },
+                    {
+                        id: '3',
+                        title: 'อัปเดตระบบ',
+                        message: 'ระบบได้อัปเดตฟีเจอร์แกลเลอรี่ใหม่เรียบร้อยแล้ว',
+                        type: 'system',
+                        is_read: true,
+                        created_at: '2025-12-05T09:15:00Z'
+                    },
+                    {
+                        id: '4',
+                        title: 'ระดับขึ้นแล้ว!',
+                        message: 'ยินดีด้วย! คุณได้เลื่อนขึ้นเป็นระดับ 5 แล้ว',
+                        type: 'achievements',
+                        is_read: false,
+                        created_at: '2025-12-04T14:20:00Z'
+                    },
+                    {
+                        id: '5',
+                        title: 'ภารกิจกำลังจะหมดเวลา',
+                        message: 'ภารกิจ "วาดรูปสัตว์ทะเล" จะหมดเวลาภายใน 24 ชั่วโมง',
+                        type: 'missions',
+                        is_read: false,
+                        created_at: '2025-12-03T16:10:00Z'
+                    },
+                    {
+                        id: '6',
+                        title: 'เพื่อนใหม่ในคลาส',
+                        message: 'มีสมาชิกใหม่ "น้องพลอย" เข้าร่วมคลาสของคุณ',
+                        type: 'system',
+                        is_read: true,
+                        created_at: '2025-12-02T11:05:00Z'
+                    },
+                    {
+                        id: '7',
+                        title: 'ได้รับไข่พิเศษ',
+                        message: 'คุณได้รับไข่พิเศษ 10 ฟองสำหรับการเข้าสู่ระบบต่อเนื่อง 7 วัน',
+                        type: 'rewards',
+                        is_read: false,
+                        created_at: '2025-12-01T08:30:00Z'
+                    },
+                    {
+                        id: '8',
+                        title: 'แนะนำเพื่อน',
+                        message: 'ชวนเพื่อนมาใช้ RainbowOrcaKids เพื่อรับไข่พิเศษ 20 ฟอง',
+                        type: 'rewards',
+                        is_read: true,
+                        created_at: '2025-11-30T13:45:00Z'
+                    }
+                ];
+                
+                displayNotifications(mockNotifications);
+                
+                // แสดงข้อความว่าเป็นข้อมูลตัวอย่าง
+                const lastUpdated = document.getElementById('last-updated');
+                if (lastUpdated) {
+                    lastUpdated.textContent = 'ข้อมูลตัวอย่าง';
+                }
+            }
+
+            // ฟังก์ชันแสดงการแจ้งเตือน
+            function displayNotifications(notifications) {
+                const notificationsList = document.getElementById('notifications-list');
+                if (!notificationsList) return;
+                
+                // อัปเดตสถิติ
+                updateNotificationStats(notifications);
+                
+                if (notifications.length === 0) {
+                    notificationsList.innerHTML = `
+                        <div class="text-center py-8 text-gray-400">
+                            <i class="fas fa-bell-slash text-3xl mb-3"></i>
+                            <p>ไม่มีการแจ้งเตือน</p>
+                            <p class="text-sm mt-1">เมื่อมีการแจ้งเตือนใหม่ จะปรากฏที่นี่</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                notificationsList.innerHTML = '';
+                
+                notifications.forEach(notification => {
+                    const notificationElement = createNotificationElement(notification);
+                    notificationsList.appendChild(notificationElement);
+                });
+            }
+
+            // ฟังก์ชันสร้าง element การแจ้งเตือน
+            function createNotificationElement(notification) {
+                const element = document.createElement('div');
+                element.className = `notification-item ${notification.is_read ? 'read' : 'unread'} border-b border-gray-100 pb-4 last:border-0 last:pb-0`;
+                element.dataset.id = notification.id;
+                
+                // Format date
+                const notificationDate = new Date(notification.created_at);
+                const timeAgo = getTimeAgo(notificationDate);
+                const formattedDate = notificationDate.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                // Get icon based on type
+                let icon = 'fas fa-bell';
+                let iconColor = 'text-blue-500';
+                let bgColor = 'bg-blue-100';
+                
+                switch(notification.type) {
+                    case 'missions':
+                        icon = 'fas fa-flag';
+                        iconColor = 'text-green-500';
+                        bgColor = 'bg-green-100';
+                        break;
+                    case 'rewards':
+                        icon = 'fas fa-gift';
+                        iconColor = 'text-yellow-500';
+                        bgColor = 'bg-yellow-100';
+                        break;
+                    case 'achievements':
+                        icon = 'fas fa-trophy';
+                        iconColor = 'text-purple-500';
+                        bgColor = 'bg-purple-100';
+                        break;
+                    case 'system':
+                        icon = 'fas fa-cog';
+                        iconColor = 'text-gray-500';
+                        bgColor = 'bg-gray-100';
+                        break;
+                }
+                
+                element.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="w-10 h-10 rounded-full ${bgColor} flex items-center justify-center mr-3 flex-shrink-0">
+                            <i class="${icon} ${iconColor}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-bold text-gray-800 ${notification.is_read ? '' : 'font-semibold'}">${notification.title}</h3>
+                                <div class="flex space-x-2">
+                                    <button class="mark-read-btn text-sm ${notification.is_read ? 'text-gray-400' : 'text-blue-600 hover:text-blue-800'}" 
+                                            title="${notification.is_read ? 'ทำเครื่องหมายว่ายังไม่อ่าน' : 'ทำเครื่องหมายว่าอ่านแล้ว'}">
+                                        <i class="fas ${notification.is_read ? 'fa-envelope-open' : 'fa-envelope'}"></i>
+                                    </button>
+                                    <button class="delete-btn text-sm text-gray-400 hover:text-red-600" 
+                                            title="ลบการแจ้งเตือน">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mt-1">${notification.message}</p>
+                            <div class="flex justify-between items-center mt-2">
+                                <div class="text-xs text-gray-500">
+                                    <i class="far fa-clock mr-1"></i> ${formattedDate} (${timeAgo})
+                                </div>
+                                <span class="px-2 py-1 text-xs rounded-full ${notification.is_read ? 'bg-gray-100 text-gray-600' : 'bg-blue-100 text-blue-600'}">
+                                    ${getTypeLabel(notification.type)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // เพิ่ม event listeners สำหรับปุ่ม
+                const markReadBtn = element.querySelector('.mark-read-btn');
+                const deleteBtn = element.querySelector('.delete-btn');
+                
+                markReadBtn.addEventListener('click', () => {
+                    toggleReadStatus(notification.id, element);
+                });
+                
+                deleteBtn.addEventListener('click', () => {
+                    deleteNotification(notification.id, element);
+                });
+                
+                return element;
+            }
+
+            // ฟังก์ชันอัปเดตสถิติ
+            function updateNotificationStats(notifications) {
+                const total = notifications.length;
+                const unread = notifications.filter(n => !n.is_read).length;
+                const read = total - unread;
+                
+                const missions = notifications.filter(n => n.type === 'missions').length;
+                const rewards = notifications.filter(n => n.type === 'rewards').length;
+                
+                // อัปเดตตัวเลขใน UI
+                const elements = {
+                    'unread-count': unread,
+                    'stats-total': total,
+                    'stats-unread': unread,
+                    'stats-read': read,
+                    'stats-missions': missions,
+                    'stats-rewards': rewards
+                };
+                
+                for (const [id, value] of Object.entries(elements)) {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                }
+                
+                // อัปเดตเวลาล่าสุด
+                if (notifications.length > 0) {
+                    const latest = new Date(notifications[0].created_at);
+                    const formatted = latest.toLocaleDateString('th-TH', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const lastUpdated = document.getElementById('last-updated');
+                    if (lastUpdated) {
+                        lastUpdated.textContent = formatted;
+                    }
+                }
+                
+                // อัปเดตจำนวนที่แสดง
+                const showingCount = document.getElementById('showing-count');
+                const totalCount = document.getElementById('total-count');
+                if (showingCount) showingCount.textContent = notifications.length;
+                if (totalCount) totalCount.textContent = notifications.length;
+            }
+
+            // ฟังก์ชัน toggle สถานะการอ่าน
+            async function toggleReadStatus(notificationId, element) {
+                try {
+                    const supabase = await getSupabaseClient();
+                    if (!supabase) {
+                        console.warn("❌ ไม่สามารถเชื่อมต่อ Supabase สำหรับอัปเดตสถานะ");
+                        return;
+                    }
+                    
+                    // หา notification จาก element
+                    const isRead = element.classList.contains('read');
+                    
+                    // อัปเดต UI ทันที
+                    if (isRead) {
+                        element.classList.remove('read');
+                        element.classList.add('unread');
+                        const markReadBtn = element.querySelector('.mark-read-btn');
+                        const icon = element.querySelector('.mark-read-btn i');
+                        if (markReadBtn) {
+                            markReadBtn.classList.remove('text-gray-400');
+                            markReadBtn.classList.add('text-blue-600', 'hover:text-blue-800');
+                        }
+                        if (icon) {
+                            icon.className = 'fas fa-envelope';
+                        }
+                    } else {
+                        element.classList.remove('unread');
+                        element.classList.add('read');
+                        const markReadBtn = element.querySelector('.mark-read-btn');
+                        const icon = element.querySelector('.mark-read-btn i');
+                        if (markReadBtn) {
+                            markReadBtn.classList.remove('text-blue-600', 'hover:text-blue-800');
+                            markReadBtn.classList.add('text-gray-400');
+                        }
+                        if (icon) {
+                            icon.className = 'fas fa-envelope-open';
+                        }
+                    }
+                    
+                    // อัปเดตสถิติใหม่
+                    setTimeout(() => {
+                        const allNotifications = document.querySelectorAll('.notification-item');
+                        const notificationsArray = Array.from(allNotifications).map(el => ({
+                            id: el.dataset.id,
+                            is_read: el.classList.contains('read')
+                        }));
+                        updateNotificationStats(notificationsArray);
+                    }, 100);
+                    
+                    console.log(`✅ สถานะการอ่านถูกเปลี่ยนสำหรับ notification ID: ${notificationId}`);
+                    
+                } catch (error) {
+                    console.error('Error toggling read status:', error);
+                }
+            }
+
+            // ฟังก์ชันลบการแจ้งเตือน
+            async function deleteNotification(notificationId, element) {
+                if (!confirm('คุณต้องการลบการแจ้งเตือนนี้ใช่หรือไม่?')) {
+                    return;
+                }
+                
+                try {
+                    const supabase = await getSupabaseClient();
+                    
+                    // ถ้ามี supabase client ให้พยายามลบจากฐานข้อมูล
+                    if (supabase) {
+                        const { error } = await supabase
+                            .from('notifications')
+                            .delete()
+                            .eq('id', notificationId);
+                        
+                        if (error) {
+                            console.warn("⚠️ ไม่สามารถลบการแจ้งเตือนจากฐานข้อมูล:", error.message);
+                        }
+                    }
+                    
+                    // ลบจาก UI
+                    element.remove();
+                    
+                    // อัปเดตสถิติใหม่
+                    setTimeout(() => {
+                        const allNotifications = document.querySelectorAll('.notification-item');
+                        const notificationsArray = Array.from(allNotifications).map(el => ({
+                            id: el.dataset.id,
+                            type: 'missions', // default
+                            is_read: el.classList.contains('read'),
+                            created_at: new Date().toISOString()
+                        }));
+                        updateNotificationStats(notificationsArray);
+                    }, 100);
+                    
+                    console.log(`✅ ลบการแจ้งเตือน ID: ${notificationId} สำเร็จ`);
+                    
+                } catch (error) {
+                    console.error('Error deleting notification:', error);
+                }
+            }
+
+            // ฟังก์ชัน helper
+            function getTypeLabel(type) {
+                switch(type) {
+                    case 'missions': return 'ภารกิจ';
+                    case 'rewards': return 'รางวัล';
+                    case 'achievements': return 'ความสำเร็จ';
+                    case 'system': return 'ระบบ';
+                    default: return type;
+                }
+            }
+
+            function getTimeAgo(date) {
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+                
+                let interval = Math.floor(seconds / 31536000);
+                if (interval >= 1) {
+                    return `${interval} ปีที่แล้ว`;
+                }
+                
+                interval = Math.floor(seconds / 2592000);
+                if (interval >= 1) {
+                    return `${interval} เดือนที่แล้ว`;
+                }
+                
+                interval = Math.floor(seconds / 86400);
+                if (interval >= 1) {
+                    return `${interval} วันที่แล้ว`;
+                }
+                
+                interval = Math.floor(seconds / 3600);
+                if (interval >= 1) {
+                    return `${interval} ชั่วโมงที่แล้ว`;
+                }
+                
+                interval = Math.floor(seconds / 60);
+                if (interval >= 1) {
+                    return `${interval} นาทีที่แล้ว`;
+                }
+                
+                return 'เมื่อสักครู่';
+            }
+
+            // ฟังก์ชันตั้งค่า event listeners
+            function setupEventListeners() {
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        applyFilter();
+                    });
+                });
+                
+                // Search input
+                const searchInput = document.getElementById('notification-search');
+                if (searchInput) {
+                    let searchTimeout;
+                    searchInput.addEventListener('input', function() {
+                        clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            applyFilter();
+                        }, 300);
+                    });
+                }
+                
+                // Sort select
+                const sortSelect = document.getElementById('notification-sort');
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', function() {
+                        applyFilter();
+                    });
+                }
+                
+                // Refresh button
+                const refreshBtn = document.getElementById('refresh-notifications-btn');
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', async () => {
+                        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> กำลังโหลด...';
+                        await fetchNotifications();
+                        refreshBtn.innerHTML = '<i class="fas fa-redo-alt mr-1"></i> รีเฟรช';
+                    });
+                }
+                
+                // Load more button
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.addEventListener('click', () => {
+                        // ในเวอร์ชันจริงจะโหลดข้อมูลเพิ่มเติม
+                        alert('ฟีเจอร์โหลดเพิ่มเติมจะพร้อมใช้งานในเวอร์ชันถัดไป');
+                    });
+                }
+                
+                // Mark all as read button
+                const markAllReadBtn = document.getElementById('mark-all-read-btn');
+                if (markAllReadBtn) {
+                    markAllReadBtn.addEventListener('click', () => {
+                        const allNotifications = document.querySelectorAll('.notification-item');
+                        allNotifications.forEach(element => {
+                            if (element.classList.contains('unread')) {
+                                const markReadBtn = element.querySelector('.mark-read-btn');
+                                const icon = element.querySelector('.mark-read-btn i');
+                                
+                                element.classList.remove('unread');
+                                element.classList.add('read');
+                                
+                                if (markReadBtn) {
+                                    markReadBtn.classList.remove('text-blue-600', 'hover:text-blue-800');
+                                    markReadBtn.classList.add('text-gray-400');
+                                }
+                                
+                                if (icon) {
+                                    icon.className = 'fas fa-envelope-open';
+                                }
+                            }
+                        });
+                        
+                        // อัปเดตสถิติ
+                        setTimeout(() => {
+                            const allNotifications = document.querySelectorAll('.notification-item');
+                            const notificationsArray = Array.from(allNotifications).map(el => ({
+                                id: el.dataset.id,
+                                type: 'missions',
+                                is_read: true,
+                                created_at: new Date().toISOString()
+                            }));
+                            updateNotificationStats(notificationsArray);
+                        }, 100);
+                        
+                        alert('ทำเครื่องหมายการแจ้งเตือนทั้งหมดว่าอ่านแล้วสำเร็จ!');
+                    });
+                }
+                
+                // Clear all notifications button
+                const clearAllBtn = document.getElementById('clear-notifications-btn');
+                if (clearAllBtn) {
+                    clearAllBtn.addEventListener('click', () => {
+                        if (!confirm('คุณต้องการลบการแจ้งเตือนทั้งหมดใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้')) {
+                            return;
+                        }
+                        
+                        const notificationsList = document.getElementById('notifications-list');
+                        if (notificationsList) {
+                            notificationsList.innerHTML = `
+                                <div class="text-center py-8 text-gray-400">
+                                    <i class="fas fa-bell-slash text-3xl mb-3"></i>
+                                    <p>ไม่มีการแจ้งเตือน</p>
+                                    <p class="text-sm mt-1">เมื่อมีการแจ้งเตือนใหม่ จะปรากฏที่นี่</p>
+                                </div>
+                            `;
+                        }
+                        
+                        // อัปเดตสถิติเป็น 0
+                        const elements = {
+                            'unread-count': 0,
+                            'stats-total': 0,
+                            'stats-unread': 0,
+                            'stats-read': 0,
+                            'stats-missions': 0,
+                            'stats-rewards': 0
+                        };
+                        
+                        for (const [id, value] of Object.entries(elements)) {
+                            const element = document.getElementById(id);
+                            if (element) {
+                                element.textContent = value;
+                            }
+                        }
+                        
+                        alert('ลบการแจ้งเตือนทั้งหมดสำเร็จ!');
+                    });
+                }
+                
+                // Save settings button
+                const saveSettingsBtn = document.getElementById('save-settings-btn');
+                if (saveSettingsBtn) {
+                    saveSettingsBtn.addEventListener('click', () => {
+                        alert('บันทึกการตั้งค่าสำเร็จแล้ว!');
+                    });
+                }
+            }
+
+            // ฟังก์ชันกรองการแจ้งเตือน
+            function applyFilter() {
+                const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+                const searchQuery = document.getElementById('notification-search')?.value.toLowerCase() || '';
+                const sortOption = document.getElementById('notification-sort')?.value || 'newest';
+                
+                const allNotifications = document.querySelectorAll('.notification-item');
+                
+                allNotifications.forEach(element => {
+                    let showElement = true;
+                    
+                    // กรองตามประเภท
+                    if (activeFilter !== 'all') {
+                        const typeElement = element.querySelector('span:last-child');
+                        const typeText = typeElement ? typeElement.textContent.trim() : '';
+                        
+                        if (activeFilter === 'unread') {
+                            showElement = element.classList.contains('unread');
+                        } else {
+                            const typeMap = {
+                                'missions': 'ภารกิจ',
+                                'rewards': 'รางวัล',
+                                'achievements': 'ความสำเร็จ',
+                                'system': 'ระบบ'
+                            };
+                            
+                            const expectedType = typeMap[activeFilter];
+                            showElement = typeText === expectedType;
+                        }
+                    }
+                    
+                    // กรองตามการค้นหา
+                    if (showElement && searchQuery) {
+                        const title = element.querySelector('h3')?.textContent.toLowerCase() || '';
+                        const message = element.querySelector('p')?.textContent.toLowerCase() || '';
+                        
+                        if (!title.includes(searchQuery) && !message.includes(searchQuery)) {
+                            showElement = false;
+                        }
+                    }
+                    
+                    // แสดง/ซ่อน element
+                    if (showElement) {
+                        element.style.display = 'block';
+                    } else {
+                        element.style.display = 'none';
+                    }
+                });
+                
+                // เรียงลำดับ (ในเวอร์ชันจริงจะเรียงจากข้อมูลจริง)
+                console.log(`กรองด้วย: ${activeFilter}, ค้นหา: ${searchQuery}, เรียง: ${sortOption}`);
+            }
+
+            // รอให้ auth_status_manager ทำงานก่อนแล้วค่อยดึงข้อมูล
+            // เราจะรอประมาณ 1 วินาทีเพื่อให้แน่ใจว่า auth system พร้อม
+            setTimeout(() => {
+                fetchNotifications();
+                setupEventListeners();
+            }, 1000);
+            
+            // ตั้งค่า listener สำหรับการเปลี่ยนแปลงสถานะ auth
+            // (เช่นเดียวกับ missions.html)
+            if (window.supabaseClient) {
+                window.supabaseClient.auth.onAuthStateChange((event, session) => {
+                    console.log(`Auth state changed: ${event}`);
+                    if (event === 'SIGNED_IN') {
+                        // หากผู้ใช้ล็อกอินใหม่ ให้รีเฟรชข้อมูล
+                        setTimeout(() => {
+                            fetchNotifications();
+                        }, 500);
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

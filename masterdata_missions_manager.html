@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูล Missions | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 สำหรับ Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Select2 สำหรับ dropdown ที่ดี -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    <i class="fas fa-tasks mr-3"></i>จัดการข้อมูล Missions
+                </h1>
+                <p class="text-gray-600">เพิ่ม/แก้ไข/ลบ ข้อมูลภารกิจในระบบ</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <!-- ปุ่มกลับหน้า Dashboard -->
+                <a href="admin_dashboard.html" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+                <!-- ปุ่มเพิ่ม Mission ใหม่ -->
+                <button onclick="showAddMissionModal()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>เพิ่ม Mission ใหม่
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-tasks text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">รวม Missions</p>
+                        <p id="totalMissions" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-gamepad text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Missions ประเภท Game</p>
+                        <p id="gameMissions" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-medal text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Egg Reward สูงสุด</p>
+                        <p id="maxEggReward" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-layer-group text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">เฉลี่ยความซับซ้อน</p>
+                        <p id="avgComplexity" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="ค้นหาตามชื่อภารกิจ, คำอธิบาย, prompt..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="missionTypeFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 w-40">
+                        <option value="all">ทุกประเภท</option>
+                        <!-- จะถูกเติมด้วย JavaScript -->
+                    </select>
+                    
+                    <select id="complexityFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 w-32">
+                        <option value="all">ทุกระดับความซับซ้อน</option>
+                        <option value="easy">ง่าย</option>
+                        <option value="medium">ปานกลาง</option>
+                        <option value="hard">ยาก</option>
+                        <option value="expert">ผู้เชี่ยวชาญ</option>
+                    </select>
+                    
+                    <button onclick="loadMissions()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล Missions...
+        </div>
+
+        <!-- Missions Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-flag mr-1"></i>ชื่อภารกิจ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-tag mr-1"></i>ประเภท
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-chart-line mr-1"></i>ความซับซ้อน
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-egg mr-1"></i>รางวัลไข่
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-graduation-cap mr-1"></i>ระดับเป้าหมาย
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-1"></i>สร้างเมื่อ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-1"></i>จัดการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="missionsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Data Message (hidden by default) -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูล Missions</h3>
+            <p class="text-gray-400 mb-6">เริ่มต้นด้วยการเพิ่ม Mission ใหม่</p>
+            <button onclick="showAddMissionModal()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-plus mr-2"></i>เพิ่ม Mission ใหม่
+            </button>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="admin_dashboard.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้า Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Add/Edit Mission Modal (hidden by default) -->
+    <div id="missionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-700"></h3>
+                <button onclick="closeMissionModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="missionForm" onsubmit="saveMission(event)">
+                    <input type="hidden" id="missionId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Mission Title -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-flag mr-1"></i>ชื่อภารกิจ *
+                            </label>
+                            <input type="text" id="missionTitle" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: วาดภาพสัตว์ทะเล"
+                                   required>
+                        </div>
+
+                        <!-- Mission Type -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-tag mr-1"></i>ประเภทภารกิจ *
+                            </label>
+                            <select id="missionType" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                <option value="">เลือกประเภทภารกิจ</option>
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </select>
+                        </div>
+
+                        <!-- Complexity Level -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-chart-line mr-1"></i>ระดับความซับซ้อน *
+                            </label>
+                            <select id="complexityLevel" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    required>
+                                <option value="easy">ง่าย</option>
+                                <option value="medium" selected>ปานกลาง</option>
+                                <option value="hard">ยาก</option>
+                                <option value="expert">ผู้เชี่ยวชาญ</option>
+                            </select>
+                        </div>
+
+                        <!-- Egg Reward -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-egg mr-1"></i>รางวัลไข่ *
+                            </label>
+                            <input type="number" id="eggReward" min="0" max="1000"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   value="10"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">จำนวนไข่ที่ได้รับเมื่อทำภารกิจสำเร็จ</p>
+                        </div>
+
+                        <!-- Target Grade Level -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-graduation-cap mr-1"></i>ระดับเป้าหมาย
+                            </label>
+                            <select id="targetGradeLevel" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">ทั้งหมด</option>
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </select>
+                        </div>
+
+                        <!-- Lesson ID -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-book mr-1"></i>บทเรียน (Lesson)
+                            </label>
+                            <select id="lessonId" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">ไม่ระบุ</option>
+                                <!-- จะถูกเติมด้วย JavaScript -->
+                            </select>
+                        </div>
+
+                        <!-- Schema Version -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-code-branch mr-1"></i>Schema Version
+                            </label>
+                            <input type="text" id="schemaVersion" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   value="1.0.0"
+                                   placeholder="1.0.0">
+                        </div>
+
+                        <!-- Prompt Template -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-comment-dots mr-1"></i>Prompt Template *
+                            </label>
+                            <textarea id="promptTemplate" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                                      placeholder="ตัวอย่าง: วาดภาพสัตว์ทะเลตามจินตนาการ..."
+                                      required></textarea>
+                            <p class="text-xs text-gray-500 mt-1">คำสั่งหรือคำแนะนำสำหรับภารกิจ</p>
+                        </div>
+
+                        <!-- Audio Script -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-microphone mr-1"></i>สคริปต์เสียง
+                            </label>
+                            <textarea id="audioScript" rows="2"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="สคริปต์สำหรับเสียงบรรยายภารกิจ..."></textarea>
+                        </div>
+
+                        <!-- Creator UID -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-user-edit mr-1"></i>ผู้สร้าง (Creator UID)
+                            </label>
+                            <input type="text" id="creatorUid" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="UUID ของผู้สร้างภารกิจ">
+                            <p class="text-xs text-gray-500 mt-1">หากไม่ระบุจะใช้ผู้ใช้ปัจจุบัน</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closeMissionModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="submitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    
+    <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("🔐 Checking admin permission for this page...");
+            
+            // ตรวจสอบสิทธิ์ admin
+            const hasPermission = await checkAdminPermission();
+            
+            if (!hasPermission) {
+                // Redirect ไปหน้า dashboard
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีสิทธิ์เข้าถึง',
+                    text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+                    confirmButtonText: 'กลับไปหน้า Dashboard',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'admin_dashboard.html';
+                    }
+                });
+                return;
+            }
+            
+            // ถ้ามีสิทธิ์ ให้โหลดเนื้อหาหลัก
+            loadPageContent();
+        });
+
+        // ===============================================
+        // ฟังก์ชันตรวจสอบ admin permission
+        // ===============================================
+        async function checkAdminPermission() {
+            try {
+                console.log("🔍 Checking admin permission...");
+                
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    console.error("❌ Supabase client not available");
+                    return false;
+                }
+                
+                // ตรวจสอบ session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    console.error("❌ Session error:", sessionError);
+                    return false;
+                }
+                
+                if (!session || !session.user) {
+                    console.warn("⚠️ No user session found");
+                    return false;
+                }
+                
+                console.log("👤 User logged in:", session.user.email);
+                
+                // ใช้ fetchUserProfile
+                if (typeof window.fetchUserProfile !== 'function') {
+                    console.error("❌ fetchUserProfile function not available");
+                    return false;
+                }
+                
+                const profile = await window.fetchUserProfile(session.user);
+                console.log("📊 User profile:", profile);
+                
+                if (!profile) {
+                    console.error("❌ Cannot fetch user profile");
+                    return false;
+                }
+                
+                // ตรวจสอบว่า role เป็น admin หรือไม่
+                const isAdmin = profile.role === 'admin' || 
+                               profile.role === 'administrator' || 
+                               profile.role === 'superadmin';
+                
+                if (isAdmin) {
+                    console.log("✅ Admin permission granted");
+                } else {
+                    console.warn("⚠️ User is not an admin, role:", profile.role);
+                }
+                
+                return isAdmin;
+                
+            } catch (error) {
+                console.error("❌ Error in checkAdminPermission:", error);
+                return false;
+            }
+        }
+
+        // ฟังก์ชันโหลดเนื้อหาหลัก
+        async function loadPageContent() {
+            console.log("✅ Admin permission verified, loading page content...");
+            
+            // โหลดข้อมูลที่จำเป็นสำหรับ dropdowns
+            await loadDropdownData();
+            
+            // ตั้งค่า Event Listeners
+            document.getElementById('searchInput').addEventListener('keyup', filterMissions);
+            document.getElementById('missionTypeFilter').addEventListener('change', filterMissions);
+            document.getElementById('complexityFilter').addEventListener('change', filterMissions);
+            
+            // โหลดข้อมูล Missions
+            await loadMissions();
+            
+            // Initialize Debug Logger
+            initDebugLogger();
+        }
+
+        // ===============================================
+        // Missions Management JavaScript
+        // ===============================================
+        let currentMissions = [];
+        let isEditMode = false;
+        let missionTypes = [];
+        let grades = [];
+        let lessons = [];
+        
+        // Debug Logger wrapper functions
+        function logSuccess(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.success === 'function') {
+                window.DebugLogger.success(message);
+            } else {
+                console.log('✅ ' + message);
+            }
+        }
+        
+        function logError(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.error === 'function') {
+                window.DebugLogger.error(message);
+            } else {
+                console.error('❌ ' + message);
+            }
+        }
+        
+        function logInfo(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.info === 'function') {
+                window.DebugLogger.info(message);
+            } else {
+                console.info('ℹ️ ' + message);
+            }
+        }
+        
+        function logWarning(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.warning === 'function') {
+                window.DebugLogger.warning(message);
+            } else {
+                console.warn('⚠️ ' + message);
+            }
+        }
+        
+        // Fallback Debug Logger
+        if (!window.DebugLogger) {
+            console.log('⚠️ DebugLogger not found, using fallback logger');
+            window.DebugLogger = {
+                init: function() { console.log('Fallback DebugLogger initialized'); },
+                log: function(msg, type) { 
+                    const icon = type === 'success' ? '✅' : 
+                                type === 'error' ? '❌' : 
+                                type === 'warning' ? '⚠️' : 
+                                type === 'info' ? '🔵' : '📝';
+                    console.log(`${icon} ${msg}`);
+                },
+                success: function(msg) { console.log('✅ ' + msg); },
+                error: function(msg) { console.error('❌ ' + msg); },
+                warning: function(msg) { console.warn('⚠️ ' + msg); },
+                info: function(msg) { console.info('ℹ️ ' + msg); },
+                debug: function(msg) { console.debug('🐛 ' + msg); }
+            };
+        }
+        
+        function initDebugLogger() {
+            if (window.DebugLogger && typeof window.DebugLogger.init === 'function') {
+                try {
+                    window.DebugLogger.init();
+                    console.log('✅ DebugLogger initialized');
+                } catch (e) {
+                    console.warn('⚠️ DebugLogger init failed:', e);
+                }
+            }
+        }
+
+        // โหลดข้อมูลสำหรับ dropdowns
+        async function loadDropdownData() {
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) return;
+
+                // โหลด mission types
+                const { data: types, error: typesError } = await supabase
+                    .from('mission_types')
+                    .select('type_key, type_name_th')
+                    .eq('is_active', true)
+                    .order('display_order');
+                
+                if (!typesError) {
+                    missionTypes = types;
+                    populateMissionTypeDropdowns();
+                }
+                
+                // โหลด grades
+                const { data: gradesData, error: gradesError } = await supabase
+                    .from('grades')
+                    .select('grade_level, grade_name_th')
+                    .eq('is_active', true)
+                    .order('grade_level');
+                
+                if (!gradesError) {
+                    grades = gradesData;
+                    populateGradesDropdown();
+                }
+                
+                // โหลด lessons (เลือกเฉพาะข้อมูลที่จำเป็น)
+                const { data: lessonsData, error: lessonsError } = await supabase
+                    .from('lessons')
+                    .select('lesson_id, story_summary')
+                    .limit(50); // Limit to prevent too many options
+                
+                if (!lessonsError) {
+                    lessons = lessonsData;
+                    populateLessonsDropdown();
+                }
+                
+            } catch (error) {
+                console.error('Error loading dropdown data:', error);
+            }
+        }
+
+        function populateMissionTypeDropdowns() {
+            // สำหรับ filter dropdown
+            const filterSelect = document.getElementById('missionTypeFilter');
+            filterSelect.innerHTML = '<option value="all">ทุกประเภท</option>';
+            
+            // สำหรับ form dropdown
+            const formSelect = document.getElementById('missionType');
+            formSelect.innerHTML = '<option value="">เลือกประเภทภารกิจ</option>';
+            
+            missionTypes.forEach(type => {
+                // Add to filter dropdown
+                const filterOption = document.createElement('option');
+                filterOption.value = type.type_key;
+                filterOption.textContent = type.type_name_th;
+                filterSelect.appendChild(filterOption);
+                
+                // Add to form dropdown
+                const formOption = document.createElement('option');
+                formOption.value = type.type_key;
+                formOption.textContent = type.type_name_th;
+                formSelect.appendChild(formOption);
+            });
+        }
+
+        function populateGradesDropdown() {
+            const select = document.getElementById('targetGradeLevel');
+            select.innerHTML = '<option value="">ทั้งหมด</option>';
+            
+            grades.forEach(grade => {
+                const option = document.createElement('option');
+                option.value = grade.grade_level;
+                option.textContent = `ระดับ ${grade.grade_level}: ${grade.grade_name_th}`;
+                select.appendChild(option);
+            });
+        }
+
+        function populateLessonsDropdown() {
+            const select = document.getElementById('lessonId');
+            select.innerHTML = '<option value="">ไม่ระบุ</option>';
+            
+            lessons.forEach(lesson => {
+                const option = document.createElement('option');
+                option.value = lesson.lesson_id;
+                
+                // ตัดข้อความถ้ายาวเกิน
+                let displayText = lesson.story_summary || `Lesson ${lesson.lesson_id.substring(0, 8)}`;
+                if (displayText.length > 50) {
+                    displayText = displayText.substring(0, 47) + '...';
+                }
+                
+                option.textContent = displayText;
+                option.title = lesson.story_summary || lesson.lesson_id;
+                select.appendChild(option);
+            });
+        }
+
+        // โหลดข้อมูล Missions จาก Supabase
+        async function loadMissions() {
+            const loadingStatus = document.getElementById('loadingStatus');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const tableBody = document.getElementById('missionsTableBody');
+            
+            loadingStatus.classList.remove('hidden');
+            tableBody.innerHTML = '';
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                // ดึงข้อมูล missions พร้อม join กับ mission_types
+                const { data: missions, error } = await supabase
+                    .from('missions')
+                    .select(`
+                        *,
+                        mission_types:mission_type (type_name_th)
+                    `)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                currentMissions = missions || [];
+                
+                // อัปเดตสถิติ
+                updateStats(currentMissions);
+                
+                // แสดงข้อมูลในตาราง
+                if (currentMissions.length > 0) {
+                    renderMissionsTable(currentMissions);
+                    noDataMessage.classList.add('hidden');
+                } else {
+                    tableBody.innerHTML = '';
+                    noDataMessage.classList.remove('hidden');
+                }
+                
+                loadingStatus.classList.add('hidden');
+                
+                logSuccess(`โหลดข้อมูล Missions สำเร็จ: ${currentMissions.length} รายการ`);
+                
+            } catch (error) {
+                loadingStatus.classList.add('hidden');
+                showError('ไม่สามารถดึงข้อมูล Missions ได้: ' + error.message);
+                logError('Error loading missions: ' + error.message);
+            }
+        }
+
+        // แสดงข้อมูลในตาราง
+        function renderMissionsTable(missions) {
+            const tableBody = document.getElementById('missionsTableBody');
+            tableBody.innerHTML = '';
+            
+            missions.forEach((mission, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                // ฟอร์แมตวันที่
+                const createdDate = new Date(mission.created_at).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // กำหนดสีตามระดับความซับซ้อน
+                let complexityColor = 'bg-green-100 text-green-800';
+                let complexityText = 'ง่าย';
+                
+                switch(mission.complexity_level) {
+                    case 'medium': 
+                        complexityColor = 'bg-yellow-100 text-yellow-800';
+                        complexityText = 'ปานกลาง';
+                        break;
+                    case 'hard': 
+                        complexityColor = 'bg-orange-100 text-orange-800';
+                        complexityText = 'ยาก';
+                        break;
+                    case 'expert': 
+                        complexityColor = 'bg-red-100 text-red-800';
+                        complexityText = 'ผู้เชี่ยวชาญ';
+                        break;
+                }
+                
+                // ฟอร์แมต prompt template
+                let promptPreview = mission.prompt_template || '-';
+                if (promptPreview.length > 50) {
+                    promptPreview = promptPreview.substring(0, 47) + '...';
+                }
+                
+                // กำหนดสีประเภทภารกิจ
+                let typeColor = 'bg-blue-100 text-blue-800';
+                if (mission.mission_type === 'game') {
+                    typeColor = 'bg-purple-100 text-purple-800';
+                } else if (mission.mission_type === 'quiz') {
+                    typeColor = 'bg-green-100 text-green-800';
+                } else if (mission.mission_type === 'creative') {
+                    typeColor = 'bg-pink-100 text-pink-800';
+                }
+                
+                // ชื่อประเภทภารกิจ
+                const missionTypeName = mission.mission_types?.type_name_th || mission.mission_type;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">${mission.mission_title}</div>
+                        <div class="text-xs text-gray-500 truncate max-w-xs" title="${mission.prompt_template || ''}">
+                            ${promptPreview}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${typeColor}">
+                            ${missionTypeName}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${complexityColor}">
+                            ${complexityText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-700">
+                        <i class="fas fa-egg mr-1"></i>${mission.egg_reward || 0}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${mission.target_grade_level_id ? `ระดับ ${mission.target_grade_level_id}` : 'ทั้งหมด'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>${createdDate}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewMissionDetails('${mission.mission_id}')" 
+                                class="text-blue-600 hover:text-blue-900 mr-3" title="ดูรายละเอียด">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button onclick="editMission('${mission.mission_id}')" 
+                                class="text-green-600 hover:text-green-900 mr-3" title="แก้ไข">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteMission('${mission.mission_id}', '${mission.mission_title}')" 
+                                class="text-red-600 hover:text-red-900" title="ลบ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // ดูรายละเอียด Mission
+        async function viewMissionDetails(missionId) {
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const { data: mission, error } = await supabase
+                    .from('missions')
+                    .select(`
+                        *,
+                        mission_types:mission_type (type_name_th, type_name_en, description),
+                        lessons:lesson_id (story_summary),
+                        grades:target_grade_level_id (grade_name_th)
+                    `)
+                    .eq('mission_id', missionId)
+                    .single();
+                
+                if (error) throw error;
+                
+                // สร้างข้อความสำหรับแสดง
+                let detailsHtml = `
+                    <div class="text-left space-y-3">
+                        <div>
+                            <h4 class="font-bold text-blue-700">ชื่อภารกิจ:</h4>
+                            <p class="text-gray-700">${mission.mission_title}</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <h4 class="font-bold text-blue-700">ประเภท:</h4>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    ${mission.mission_types?.type_name_th || mission.mission_type}
+                                </span>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-blue-700">ระดับความซับซ้อน:</h4>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    ${mission.complexity_level}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <h4 class="font-bold text-blue-700">รางวัลไข่:</h4>
+                                <p class="text-yellow-700 font-bold"><i class="fas fa-egg mr-1"></i>${mission.egg_reward || 0}</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-blue-700">ระดับเป้าหมาย:</h4>
+                                <p>${mission.target_grade_level_id ? `ระดับ ${mission.target_grade_level_id}` : 'ทั้งหมด'}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-bold text-blue-700">Prompt Template:</h4>
+                            <div class="bg-gray-50 p-3 rounded border font-mono text-sm">
+                                ${mission.prompt_template || '-'}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 class="font-bold text-blue-700">Audio Script:</h4>
+                            <div class="bg-gray-50 p-3 rounded border">
+                                ${mission.audio_script || '-'}
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <h4 class="font-bold text-blue-700">Schema Version:</h4>
+                                <p>${mission.schema_version}</p>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-bold text-blue-700">สร้างเมื่อ:</h4>
+                                <p>${new Date(mission.created_at).toLocaleDateString('th-TH')}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                Swal.fire({
+                    title: 'รายละเอียดภารกิจ',
+                    html: detailsHtml,
+                    width: 700,
+                    confirmButtonText: 'ปิด',
+                    showCloseButton: true
+                });
+                
+            } catch (error) {
+                console.error('Error viewing mission details:', error);
+                showError('ไม่สามารถดึงรายละเอียดภารกิจได้: ' + error.message);
+            }
+        }
+
+        // อัปเดตสถิติ
+        function updateStats(missions) {
+            const total = missions.length;
+            const gameMissions = missions.filter(m => m.mission_type === 'game').length;
+            
+            // หารางวัลสูงสุด
+            const eggRewards = missions.map(m => m.egg_reward || 0);
+            const maxEggReward = eggRewards.length > 0 ? Math.max(...eggRewards) : 0;
+            
+            // คำนวณเฉลี่ยความซับซ้อน (แปลงเป็นตัวเลข)
+            const complexityValues = {
+                'easy': 1,
+                'medium': 2,
+                'hard': 3,
+                'expert': 4
+            };
+            
+            const complexityScores = missions.map(m => complexityValues[m.complexity_level] || 1);
+            const avgComplexity = complexityScores.length > 0 
+                ? (complexityScores.reduce((a, b) => a + b, 0) / complexityScores.length).toFixed(1)
+                : '0.0';
+            
+            document.getElementById('totalMissions').textContent = total;
+            document.getElementById('gameMissions').textContent = gameMissions;
+            document.getElementById('maxEggReward').textContent = maxEggReward;
+            document.getElementById('avgComplexity').textContent = avgComplexity;
+        }
+
+        // กรองข้อมูล Missions
+        function filterMissions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('missionTypeFilter').value;
+            const complexityFilter = document.getElementById('complexityFilter').value;
+            
+            let filtered = currentMissions;
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filtered = filtered.filter(mission => 
+                    mission.mission_title.toLowerCase().includes(searchTerm) ||
+                    mission.prompt_template?.toLowerCase().includes(searchTerm) ||
+                    mission.audio_script?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // กรองตามประเภทภารกิจ
+            if (typeFilter !== 'all') {
+                filtered = filtered.filter(mission => mission.mission_type === typeFilter);
+            }
+            
+            // กรองตามระดับความซับซ้อน
+            if (complexityFilter !== 'all') {
+                filtered = filtered.filter(mission => mission.complexity_level === complexityFilter);
+            }
+            
+            renderMissionsTable(filtered);
+        }
+
+        // แสดง Modal สำหรับเพิ่ม Mission
+        async function showAddMissionModal() {
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = 'เพิ่ม Mission ใหม่';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>บันทึกข้อมูล';
+            
+            // รีเซ็ตฟอร์ม
+            document.getElementById('missionForm').reset();
+            document.getElementById('missionId').value = '';
+            
+            // ตั้งค่า default values
+            document.getElementById('schemaVersion').value = '1.0.0';
+            document.getElementById('eggReward').value = '10';
+            document.getElementById('complexityLevel').value = 'medium';
+            
+            // ถ้ายังไม่ได้โหลด dropdown data ให้โหลด
+            if (missionTypes.length === 0) {
+                await loadDropdownData();
+            }
+            
+            // แสดง Modal
+            document.getElementById('missionModal').classList.remove('hidden');
+        }
+
+        // แสดง Modal สำหรับแก้ไข Mission
+        async function editMission(missionId) {
+            const mission = currentMissions.find(m => m.mission_id === missionId);
+            if (!mission) {
+                showError('ไม่พบข้อมูล Mission ที่ต้องการแก้ไข');
+                return;
+            }
+            
+            isEditMode = true;
+            document.getElementById('modalTitle').textContent = 'แก้ไข Mission';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>อัปเดตข้อมูล';
+            
+            // ถ้ายังไม่ได้โหลด dropdown data ให้โหลด
+            if (missionTypes.length === 0) {
+                await loadDropdownData();
+            }
+            
+            // เติมข้อมูลลงในฟอร์ม
+            document.getElementById('missionId').value = mission.mission_id;
+            document.getElementById('missionTitle').value = mission.mission_title;
+            document.getElementById('missionType').value = mission.mission_type;
+            document.getElementById('complexityLevel').value = mission.complexity_level;
+            document.getElementById('eggReward').value = mission.egg_reward || 10;
+            document.getElementById('targetGradeLevel').value = mission.target_grade_level_id || '';
+            document.getElementById('lessonId').value = mission.lesson_id || '';
+            document.getElementById('schemaVersion').value = mission.schema_version || '1.0.0';
+            document.getElementById('promptTemplate').value = mission.prompt_template || '';
+            document.getElementById('audioScript').value = mission.audio_script || '';
+            document.getElementById('creatorUid').value = mission.creator_uid || '';
+            
+            // แสดง Modal
+            document.getElementById('missionModal').classList.remove('hidden');
+        }
+
+        // ปิด Modal
+        function closeMissionModal() {
+            document.getElementById('missionModal').classList.add('hidden');
+        }
+
+        // บันทึกข้อมูล Mission
+        async function saveMission(event) {
+            event.preventDefault();
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const missionData = {
+                    mission_title: document.getElementById('missionTitle').value.trim(),
+                    mission_type: document.getElementById('missionType').value,
+                    complexity_level: document.getElementById('complexityLevel').value,
+                    egg_reward: parseInt(document.getElementById('eggReward').value) || 0,
+                    target_grade_level_id: document.getElementById('targetGradeLevel').value || null,
+                    lesson_id: document.getElementById('lessonId').value || null,
+                    schema_version: document.getElementById('schemaVersion').value.trim() || '1.0.0',
+                    prompt_template: document.getElementById('promptTemplate').value.trim(),
+                    audio_script: document.getElementById('audioScript').value.trim() || null,
+                    creator_uid: document.getElementById('creatorUid').value.trim() || null
+                };
+                
+                const missionId = document.getElementById('missionId').value;
+                
+                let result;
+                if (isEditMode && missionId) {
+                    // แก้ไขข้อมูล
+                    const { data, error } = await supabase
+                        .from('missions')
+                        .update(missionData)
+                        .eq('mission_id', missionId)
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`อัปเดต Mission สำเร็จ: ${missionData.mission_title}`);
+                    
+                } else {
+                    // เพิ่มข้อมูลใหม่
+                    const { data, error } = await supabase
+                        .from('missions')
+                        .insert([missionData])
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`เพิ่ม Mission สำเร็จ: ${missionData.mission_title}`);
+                }
+                
+                // ปิด Modal และรีเฟรชข้อมูล
+                closeMissionModal();
+                await loadMissions();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: `บันทึกข้อมูล Mission "${missionData.mission_title}" สำเร็จ`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error saving mission:', error);
+                
+                if (error.code === '23503') { // Foreign key violation
+                    showError('ไม่พบข้อมูลที่เกี่ยวข้อง (เช่น mission_type, lesson_id) กรุณาตรวจสอบอีกครั้ง');
+                } else if (error.code === '23505') { // Unique violation
+                    showError('ข้อมูลนี้มีอยู่ในระบบแล้ว');
+                } else {
+                    showError('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error saving mission: ' + error.message);
+            }
+        }
+
+        // ลบข้อมูล Mission
+        async function deleteMission(missionId, missionTitle) {
+            // ยืนยันการลบ
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: `คุณแน่ใจว่าต้องการลบ Mission "${missionTitle}" ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const { error } = await supabase
+                    .from('missions')
+                    .delete()
+                    .eq('mission_id', missionId);
+                
+                if (error) throw error;
+                
+                logSuccess(`ลบ Mission สำเร็จ: ${missionTitle}`);
+                
+                // รีเฟรชข้อมูล
+                await loadMissions();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบสำเร็จ!',
+                    text: `ลบ Mission "${missionTitle}" ออกจากระบบแล้ว`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error deleting mission:', error);
+                
+                // ตรวจสอบว่า Mission นี้ถูกใช้อยู่หรือไม่
+                if (error.code === '23503') { // Foreign key violation
+                    showError('ไม่สามารถลบ Mission นี้ได้ เนื่องจากถูกใช้งานอยู่ในระบบแล้ว (เช่น มีการส่งงาน, มีโปรเกรส)');
+                } else {
+                    showError('ลบข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error deleting mission: ' + error.message);
+            }
+        }
+
+        // แสดงข้อความแจ้งเตือน
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: message,
+                confirmButtonText: 'ตกลง'
+            });
+        }
+    </script>
+    
+    <style>
+        /* Custom styles */
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            ring: 2px;
+        }
+        
+        /* Scrollbar styling */
+        #missionsTableBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #missionsTableBody::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #missionsTableBody::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #missionsTableBody::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Complexity badges */
+        .badge-easy { background-color: #d1fae5; color: #065f46; border-color: #10b981; }
+        .badge-medium { background-color: #fef3c7; color: #92400e; border-color: #fbbf24; }
+        .badge-hard { background-color: #fed7aa; color: #9a3412; border-color: #f97316; }
+        .badge-expert { background-color: #fecaca; color: #991b1b; border-color: #ef4444; }
+    </style>
+</body>
+</html>

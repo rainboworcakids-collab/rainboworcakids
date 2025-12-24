@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์ผู้ใช้ | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <div class="max-w-6xl mx-auto py-8 px-4">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                <i class="fas fa-user-circle mr-2"></i>โปรไฟล์ผู้ใช้ (ระบบโมดูลแยกไฟล์)
+            </h1>
+            <p class="text-gray-600">ระบบโมดูลอิสระ - ทดสอบการเชื่อมต่อ Supabase และแสดงผลข้อมูลพื้นฐาน</p>
+            
+            <!-- Module Control Panel -->
+            <div class="mt-4 bg-white p-4 rounded-lg border border-blue-200">
+                <h3 class="font-medium text-blue-700 mb-2">
+                    <i class="fas fa-cogs mr-2"></i>แผงควบคุมระบบโมดูล
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <button id="refreshAllModulesBtn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรชทั้งหมด
+                    </button>
+                    <button id="checkModuleStatusBtn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg">
+                        <i class="fas fa-chart-bar mr-2"></i>ตรวจสอบสถานะ
+                    </button>
+                    <button id="forceAuthCheckBtn" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg">
+                        <i class="fas fa-shield-alt mr-2"></i>ตรวจสอบสิทธิ์ใหม่
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Status Card -->
+        <div class="mb-8 bg-white p-6 rounded-xl shadow-lg border border-blue-100">
+            <h2 class="text-xl font-bold text-blue-700 mb-4 flex items-center">
+                <i class="fas fa-chart-line text-green-500 mr-2"></i>
+                สถานะระบบโมดูล
+            </h2>
+            <div id="moduleStatus" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Module status will be displayed here -->
+                <div class="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-400 mr-2" id="authStatusDot"></div>
+                        <span class="font-medium">ระบบตรวจสอบสิทธิ์</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1" id="authStatusText">กำลังตรวจสอบ...</div>
+                </div>
+                
+                <div class="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-400 mr-2" id="profileStatusDot"></div>
+                        <span class="font-medium">ข้อมูลโปรไฟล์</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1" id="profileStatusText">รอดำเนินการ...</div>
+                </div>
+                
+                <div class="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-400 mr-2" id="missionsStatusDot"></div>
+                        <span class="font-medium">ภารกิจของฉัน</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1" id="missionsStatusText">รอดำเนินการ...</div>
+                </div>
+                
+                <div class="p-4 bg-gray-100 rounded-lg border border-gray-200">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 rounded-full bg-gray-400 mr-2" id="rewardsStatusDot"></div>
+                        <span class="font-medium">รางวัลและคะแนน</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1" id="rewardsStatusText">รอดำเนินการ...</div>
+                </div>
+            </div>
+            
+            <!-- Module Status Details -->
+            <div id="moduleStatusDetails" class="mt-4 hidden">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="font-medium text-gray-700">รายละเอียดสถานะโมดูล:</h4>
+                    <button id="closeStatusDetails" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <pre id="moduleStatusJson" class="bg-gray-800 text-gray-100 p-3 rounded text-sm overflow-auto max-h-40"></pre>
+            </div>
+        </div>
+        
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column - User Profile -->
+            <div class="lg:col-span-2">
+                <!-- User Info Module -->
+                <div id="userInfoModule" class="bg-white rounded-xl shadow-lg border border-blue-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-user mr-2"></i>
+                            ข้อมูลผู้ใช้จากระบบโมดูล
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="userInfoContent" class="space-y-4">
+                            <div class="flex items-center justify-center p-8 text-gray-500">
+                                <i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i>
+                                กำลังโหลดข้อมูลผู้ใช้จากระบบโมดูล...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Stats & Actions -->
+            <div class="space-y-8">
+                <!-- System Info Card -->
+                <div class="bg-white rounded-xl shadow-lg border border-green-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-4 text-white">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            ข้อมูลระบบ
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">สถานะระบบ:</span>
+                                <span id="coreStatus" class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">กำลังโหลด</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">จำนวนโมดูล:</span>
+                                <span id="moduleCount" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">เวอร์ชันระบบโมดูล:</span>
+                                <span class="font-mono" id="systemModuleVersion">2.0.1</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">เวอร์ชันข้อมูลผู้ใช้:</span>
+                                <span class="font-mono" id="moduleVersion">กำลังโหลด...</span>
+                            </div>
+
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">สถานะ Supabase:</span>
+                                <span id="supabaseStatus" class="px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm">กำลังตรวจสอบ</span>
+                            </div>
+                            <div class="pt-3 border-t border-gray-200">
+                                <p class="text-sm text-gray-500">
+                                    <i class="fas fa-lightbulb mr-1"></i>
+                                    ระบบโมดูลแบบแยกไฟล์ - แต่ละโมดูลทำงานอิสระ
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions Module -->
+                <div id="quickActionsModule" class="bg-white rounded-xl shadow-lg border border-red-100 overflow-hidden">
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-bolt mr-2"></i>
+                            การดำเนินการด่วน
+                        </h2>
+                    </div>
+                    <div class="p-6">
+                        <div id="quickActionsContent" class="space-y-3">
+                            <a href="missions.html" class="block w-full text-center bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-3 px-4 rounded-lg transition duration-150">
+                                <i class="fas fa-list-alt mr-2"></i>ดูภารกิจทั้งหมด
+                            </a>
+                            <a href="gallery.html" class="block w-full text-center bg-green-100 hover:bg-green-200 text-green-700 font-medium py-3 px-4 rounded-lg transition duration-150">
+                                <i class="fas fa-images mr-2"></i>แกลเลอรี่ผลงาน
+                            </a>
+                            <button id="refreshProfileBtn" class="w-full bg-yellow-100 hover:bg-yellow-200 text-yellow-700 font-medium py-3 px-4 rounded-lg transition duration-150">
+                                <i class="fas fa-sync-alt mr-2"></i>รีเฟรชข้อมูล
+                            </button>
+                            <button id="logoutBtn" class="w-full bg-red-100 hover:bg-red-200 text-red-700 font-medium py-3 px-4 rounded-lg transition duration-150">
+                                <i class="fas fa-sign-out-alt mr-2"></i>ออกจากระบบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts - โหลดตามลำดับที่ถูกต้อง -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    
+    <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <!-- Profile Modules Core -->
+    <script src="js/profile-modules.js"></script>
+    
+    <!-- Individual Modules (สามารถเพิ่มได้ตามต้องการ) -->
+    <script src="js/modules/user-info-module.js"></script>
+    
+    <!-- Custom Script for Profile Page -->
+    <script>
+        // Module status update function
+        function updateModuleStatus(moduleName, status, message) {
+            const dotElement = document.getElementById(`${moduleName}StatusDot`);
+            const textElement = document.getElementById(`${moduleName}StatusText`);
+            
+            if (!dotElement || !textElement) return;
+            
+            let color = 'gray';
+            switch(status) {
+                case 'loading':
+                    color = 'yellow';
+                    break;
+                case 'success':
+                    color = 'green';
+                    break;
+                case 'error':
+                    color = 'red';
+                    break;
+                case 'offline':
+                    color = 'gray';
+                    break;
+            }
+            
+            dotElement.className = `w-3 h-3 rounded-full bg-${color}-500 mr-2`;
+            textElement.textContent = message;
+            
+            // ใช้ DebugLogger สำหรับการบันทึก log
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                const logType = status === 'error' ? 'error' : 
+                              status === 'success' ? 'success' : 'info';
+                window.DebugLogger.log(`โมดูล ${moduleName}: ${message}`, logType);
+            }
+        }
+        
+        // Initialize module status
+        document.addEventListener('DOMContentLoaded', function() {
+            // ตั้งค่าสถานะเริ่มต้น
+            updateModuleStatus('auth', 'loading', 'กำลังตรวจสอบสิทธิ์...');
+            updateModuleStatus('profile', 'loading', 'รอดำเนินการ...');
+            updateModuleStatus('missions', 'loading', 'รอดำเนินการ...');
+            updateModuleStatus('rewards', 'loading', 'รอดำเนินการ...');
+            
+            // Log เมื่อหน้าโหลดสำเร็จ
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                window.DebugLogger.success('หน้าโปรไฟล์ระบบโมดูลโหลดสำเร็จ');
+            }
+        });
+        
+        // Event Listeners
+        document.getElementById('refreshAllModulesBtn')?.addEventListener('click', function() {
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                window.DebugLogger.info('กำลังรีเฟรชโมดูลทั้งหมด...');
+            }
+            
+            if (window.ProfileModules && window.ProfileModules.refreshAll) {
+                window.ProfileModules.refreshAll().then(() => {
+                    if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                        window.DebugLogger.success('รีเฟรชโมดูลทั้งหมดสำเร็จ');
+                    }
+                });
+            } else {
+                alert('ระบบโมดูลยังไม่พร้อมใช้งาน');
+            }
+        });
+        
+        document.getElementById('checkModuleStatusBtn')?.addEventListener('click', function() {
+            if (window.ProfileModules && window.ProfileModules.getAllModuleStatus) {
+                const status = window.ProfileModules.getAllModuleStatus();
+                const statusJson = JSON.stringify(status, null, 2);
+                
+                document.getElementById('moduleStatusJson').textContent = statusJson;
+                document.getElementById('moduleStatusDetails').classList.remove('hidden');
+                
+                // อัปเดต module count
+                document.getElementById('moduleCount').textContent = status.modules.length;
+                
+                if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                    window.DebugLogger.info('ตรวจสอบสถานะโมดูลแล้ว');
+                }
+            }
+        });
+        
+        document.getElementById('closeStatusDetails')?.addEventListener('click', function() {
+            document.getElementById('moduleStatusDetails').classList.add('hidden');
+        });
+        
+        document.getElementById('forceAuthCheckBtn')?.addEventListener('click', async function() {
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                window.DebugLogger.info('กำลังตรวจสอบสิทธิ์ใหม่...');
+            }
+            
+            updateModuleStatus('auth', 'loading', 'กำลังตรวจสอบใหม่...');
+            
+            try {
+                if (window.getSupabaseClient) {
+                    const supabase = await window.getSupabaseClient();
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    
+                    if (error) {
+                        throw new Error(`Auth error: ${error.message}`);
+                    }
+                    
+                    if (session && session.user) {
+                        updateModuleStatus('auth', 'success', `ล็อกอิน: ${session.user.email}`);
+                        
+                        if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                            window.DebugLogger.success(`ตรวจสอบสิทธิ์สำเร็จ: ${session.user.email}`);
+                        }
+                    } else {
+                        updateModuleStatus('auth', 'error', 'ไม่ได้ล็อกอิน');
+                    }
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                updateModuleStatus('auth', 'error', 'ตรวจสอบล้มเหลว');
+            }
+        });
+        
+        document.getElementById('refreshProfileBtn')?.addEventListener('click', function() {
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                window.DebugLogger.info('กำลังรีเฟรชข้อมูลโปรไฟล์...');
+            }
+            location.reload();
+        });
+        
+        document.getElementById('logoutBtn')?.addEventListener('click', function() {
+            if (window.handleLogout) {
+                window.handleLogout();
+            } else {
+                if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                    window.DebugLogger.error('ฟังก์ชัน logout ไม่พร้อมใช้งาน');
+                }
+                console.error('ฟังก์ชัน logout ไม่พร้อมใช้งาน');
+            }
+        });
+        
+        // ตรวจสอบการล็อกอินและเริ่มต้นโมดูล
+        document.addEventListener('DOMContentLoaded', async function() {
+            // รอให้ระบบทั้งหมดโหลดเสร็จ
+            setTimeout(async () => {
+                // อัปเดตสถานะระบบ
+                document.getElementById('coreStatus').className = 'px-2 py-1 bg-green-100 text-green-800 rounded text-sm';
+                document.getElementById('coreStatus').textContent = 'พร้อมใช้งาน';
+                
+                // ตรวจสอบสถานะ Supabase
+                if (window.supabaseClient) {
+                    document.getElementById('supabaseStatus').className = 'px-2 py-1 bg-green-100 text-green-800 rounded text-sm';
+                    document.getElementById('supabaseStatus').textContent = 'เชื่อมต่อสำเร็จ';
+                }
+                
+                // ตรวจสอบว่า ProfileModules พร้อมใช้งานหรือไม่
+                if (window.ProfileModules) {
+                    try {
+                        // เริ่มต้นโมดูลโปรไฟล์
+                        const success = await window.ProfileModules.init();
+                        
+                        if (success) {
+                            // อัปเดตจำนวนโมดูล
+                            const status = window.ProfileModules.getAllModuleStatus();
+                            document.getElementById('moduleCount').textContent = status.modules.length;
+                            
+                            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                                window.DebugLogger.success('ระบบโมดูลเริ่มต้นสำเร็จ');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('เกิดข้อผิดพลาดในการเริ่มต้นโมดูล:', error);
+                        if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                            window.DebugLogger.error(`เกิดข้อผิดพลาดในการเริ่มต้นโมดูล: ${error.message}`);
+                        }
+                    }
+                } else {
+                    console.error('ระบบโมดูลโปรไฟล์ไม่พร้อมใช้งาน');
+                    updateModuleStatus('profile', 'error', 'ระบบโมดูลไม่พร้อมใช้งาน');
+                    
+                    if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                        window.DebugLogger.error('ระบบโมดูลโปรไฟล์ไม่พร้อมใช้งาน');
+                    }
+                }
+            }, 1000);
+        });
+        
+        // ฟังก์ชันช่วยสำหรับการบันทึก debug
+        window.logProfileEvent = function(message, type = 'info') {
+            if (window.DebugLogger && window.DebugLogger.isInitialized) {
+                window.DebugLogger.log(message, type);
+            } else {
+                console.log(`[Profile] ${message}`);
+            }
+        };
+    </script>
+</body>
+</html>

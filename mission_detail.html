@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>รายละเอียดภารกิจ | Rainbow OrcaKids</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- App CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    
+    <style>
+        /* เพิ่มสไตล์เฉพาะสำหรับหน้า mission detail */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        .debug-log {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        .egg-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+    
+</head>
+<body class="font-sarabun">
+    <!-- Navigation bar จะถูกเพิ่มโดย js/nav.js -->
+    
+    <div class="app-container">
+        <div class="max-w-4xl mx-auto mt-10 p-6">
+            <h1 id="missionTitle" class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-200 pb-3">
+                กำลังโหลดรายละเอียดภารกิจ...
+            </h1>
+            
+            <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700">
+                ⏳ กำลังดึงข้อมูลภารกิจ...
+            </div>
+
+            <!-- Egg Reward Notification (จะแสดงเมื่อได้รับไข่) -->
+            <div id="eggNotification" class="hidden fixed top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-4 rounded-xl shadow-2xl z-50">
+                <div class="flex items-center">
+                    <div class="mr-3">
+                        <i class="fas fa-egg text-3xl egg-animation"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-lg">ยินดีด้วย!</div>
+                        <div class="text-sm">คุณได้รับ <span id="eggsAwarded" class="font-bold">0 ไข่</span></div>
+                        <div class="text-xs mt-1">ยอดรวม: <span id="newEggsTotal">0</span> ไข่</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="missionDetail" class="hidden">
+                
+                <!-- Video Container -->
+                <div id="videoContainer" class="aspect-video bg-gray-700 rounded-lg overflow-hidden mb-4 shadow-lg">
+                    <!-- Video will be loaded here -->
+                </div>
+                
+                <!-- Progress Status Section (Phase 2.5) -->
+                <div id="progressStatus" class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <h3 class="font-bold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-chart-line mr-2 text-blue-600"></i> สถานะความคืบหน้าของคุณ
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <!-- Video Watch Status -->
+                        <div id="videoStatus" class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-video text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-700">การดูวิดีโอ Story</div>
+                                <div id="videoStatusText" class="text-sm text-gray-500">กำลังตรวจสอบ...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submission Status -->
+                        <div id="submissionStatus" class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <i class="fas fa-paper-plane text-green-600"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-700">การส่งงาน</div>
+                                <div id="submissionStatusText" class="text-sm text-gray-500">กำลังตรวจสอบ...</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Egg Reward Display -->
+                    <div id="eggRewardDisplay" class="mb-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 hidden">
+                        <div class="flex items-center">
+                            <div class="mr-3">
+                                <i class="fas fa-egg text-2xl text-yellow-500"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-700">รางวัลไข่สำหรับภารกิจนี้</div>
+                                <div class="text-lg font-bold text-yellow-600">
+                                    <span id="missionEggReward">0</span> ไข่
+                                </div>
+                                <div class="text-xs text-gray-500">ส่งงานสำเร็จเพื่อรับไข่!</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="mt-4">
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium">ความคืบหน้าทั้งหมด:</span>
+                            <span id="overallProgress" class="font-bold">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-2.5 rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">
+                            <span id="progressText">เริ่มภารกิจเลย!</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mission Info -->
+                <p id="courseInfo" class="text-sm text-gray-500 mb-2"></p>
+
+                <h2 class="text-xl font-bold text-gray-700 mt-6 mb-2 border-b pb-1">คำสั่งภารกิจ</h2>
+                <div id="missionPrompt" class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-gray-700 whitespace-pre-wrap">
+                    <!-- Mission prompt will be loaded here -->
+                </div>
+
+                <h2 class="text-xl font-bold text-green-700 mt-8 mb-4 border-b pb-1">ส่งผลงาน (วิดีโอ)</h2>
+                <form id="submissionForm" class="bg-gray-50 p-6 rounded-lg shadow-inner">
+                    <div class="mb-4">
+                        <label for="videoFile" class="block text-gray-700 font-semibold mb-2">อัปโหลดไฟล์วิดีโอผลงาน (.mp4, .mov)</label>
+                        <input type="file" id="videoFile" name="videoFile" accept="video/*" required 
+                               class="form-input w-full">
+                    </div>
+                    
+                    <div id="uploadStatus" class="text-sm mb-4">
+                        <p class="text-red-600">⚠️ กรุณาล็อกอินเพื่อส่งงาน</p>
+                    </div>
+
+                    <button type="submit" id="submitBtn" disabled
+                            class="btn-primary w-full py-3 disabled:opacity-50">
+                        🔒 รอการล็อกอิน
+                    </button>
+                    
+                    <!-- Success Message (hidden by default) -->
+                    <div id="successMessage" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                        <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                        <h3 class="text-lg font-bold text-green-700 mb-1">ส่งผลงานสำเร็จ!</h3>
+                        <p class="text-green-600">คุณจะได้รับไข่เป็นรางวัล</p>
+                        <div class="mt-2">
+                            <a href="profile.html" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-user mr-1"></i> ไปที่โปรไฟล์เพื่อดูไข่
+                            </a>
+                        </div>
+                    </div>
+                </form>
+                
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Scripts - โหลดตามลำดับที่ถูกต้อง -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/debug-manager.js"></script>
+
+    <!-- เพิ่ม progress.js และ eggs.js ก่อน main script -->
+    <script src="js/progress.js"></script>
+    <script src="js/eggs.js"></script>
+
+    <!-- แก้ไขส่วน script ของ mission_detail.html เป็น: -->
+<script>
+    // Mission detail specific JavaScript code
+    // ใช้ระบบเดียวกับ missions.html โดยตรง
+    const loadingStatus = document.getElementById('loadingStatus');
+    const missionDetail = document.getElementById('missionDetail');
+    const submitBtn = document.getElementById('submitBtn');
+    let currentMissionId = null;
+    let currentMissionEggs = 0;
+
+    // ฟังก์ชันสำหรับ log ข้อความ debug
+    function missionLog(message, type = 'info') {
+        const logMessage = `[MISSION-DETAIL] ${message}`;
+        
+        if (window.DebugManager && window.DebugManager.isDebugMode) {
+            if (type === 'error') {
+                console.error(logMessage);
+            } else if (type === 'warning') {
+                console.warn(logMessage);
+            } else {
+                console.log(logMessage);
+            }
+        } else if (type === 'error') {
+            console.error(logMessage);
+        }
+    }
+
+    // ฟังก์ชันดึง mission ID จาก URL
+    function getMissionIdFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('id');
+    }
+
+    // ฟังก์ชันดึงข้อมูลภารกิจ
+    async function fetchMissionDetails(missionId) {
+        missionLog(`กำลังดึงข้อมูลภารกิจ ID: ${missionId}`, 'info');
+        
+        try {
+            // ใช้ getSupabaseClient จาก auth_status_manager.js โดยตรง
+            const supabase = window.getSupabaseClient ? await window.getSupabaseClient() : null;
+            
+            if (!supabase) {
+                missionLog('Supabase client not available', 'error');
+                loadingStatus.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <strong class="font-bold">ผิดพลาด!</strong>
+                        <span class="block sm:inline"> ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้</span>
+                    </div>
+                `;
+                return null;
+            }
+            
+            // ดึงข้อมูลภารกิจพร้อมกับข้อมูล lessons และ courses
+            const { data: mission, error } = await supabase
+                .from('missions')
+                .select(`
+                    *,
+                    lessons (*, courses (*))
+                `)
+                .eq('mission_id', missionId)
+                .single();
+
+            if (error) {
+                missionLog(`เกิดข้อผิดพลาดในการดึงข้อมูลภารกิจ: ${error.message}`, 'error');
+                loadingStatus.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <strong class="font-bold">ผิดพลาด!</strong>
+                        <span class="block sm:inline"> ไม่สามารถดึงข้อมูลภารกิจได้: ${error.message}</span>
+                    </div>
+                `;
+                return null;
+            }
+
+            missionLog(`ดึงข้อมูลภารกิจสำเร็จ: ${mission.mission_title}`, 'success');
+            return mission;
+        } catch (error) {
+            missionLog(`Exception ใน fetchMissionDetails: ${error.message}`, 'error');
+            return null;
+        }
+    }
+
+    // ฟังก์ชันแสดงข้อมูลภารกิจ
+    function displayMissionDetails(mission) {
+        if (!mission) return;
+        
+        // ตั้งค่าข้อมูลพื้นฐาน
+        document.getElementById('missionTitle').textContent = mission.mission_title;
+        document.getElementById('courseInfo').textContent = 
+            `หลักสูตร: ${mission.lessons?.courses?.title || 'ไม่ระบุ'} | บทเรียน: ${mission.lessons?.lesson_title || 'ไม่ระบุ'}`;
+        document.getElementById('missionPrompt').textContent = mission.prompt_template;
+        
+        // แสดงไข่รางวัล
+        currentMissionEggs = mission.egg_reward || 10;
+        if (currentMissionEggs > 0) {
+            document.getElementById('missionEggReward').textContent = currentMissionEggs;
+            document.getElementById('eggRewardDisplay').classList.remove('hidden');
+        }
+        
+        // แสดงวิดีโอ (ถ้ามี)
+        const videoContainer = document.getElementById('videoContainer');
+        if (mission.lessons?.video_url_story) {
+            videoContainer.innerHTML = `
+                <video controls class="w-full h-full object-contain bg-black">
+                    <source src="${mission.lessons.video_url_story}" type="video/mp4">
+                    เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
+                </video>
+            `;
+        } else {
+            videoContainer.innerHTML = `
+                <div class="w-full h-full flex items-center justify-center text-white">
+                    <div class="text-center">
+                        <i class="fas fa-video-slash text-4xl mb-2"></i>
+                        <p>ไม่มีวิดีโอสำหรับบทเรียนนี้</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // แสดงข้อมูล mission detail
+        missionDetail.classList.remove('hidden');
+        loadingStatus.classList.add('hidden');
+        
+        missionLog('แสดงข้อมูลภารกิจสำเร็จ', 'success');
+    }
+
+    // ฟังก์ชันตรวจสอบสถานะ progress ของผู้ใช้
+    async function checkUserProgress(missionId) {
+        missionLog('กำลังตรวจสอบสถานะความคืบหน้าของผู้ใช้...', 'info');
+        
+        try {
+            const supabase = window.getSupabaseClient ? await window.getSupabaseClient() : null;
+            
+            if (!supabase) {
+                updateProgressUI(false);
+                return;
+            }
+            
+            // ดึงข้อมูล session
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                missionLog('ผู้ใช้ไม่ได้ล็อกอิน', 'warning');
+                updateProgressUI(false);
+                return;
+            }
+            
+            const userId = session.user.id;
+            
+            // ตรวจสอบว่าเคยดูวิดีโอหรือยัง (จาก student_progress)
+            const { data: progressData, error: progressError } = await supabase
+                .from('student_progress')
+                .select('*')
+                .eq('student_uid', userId)
+                .eq('mission_id', missionId)
+                .maybeSingle();
+            
+            // ตรวจสอบว่าส่งงานแล้วหรือยัง (จาก student_submissions)
+            const { data: submission, error: submissionError } = await supabase
+                .from('student_submissions')
+                .select('*')
+                .eq('student_uid', userId)
+                .eq('mission_id', missionId)
+                .maybeSingle();
+            
+            if (progressError) {
+                missionLog(`ข้อผิดพลาดในการดึง progress: ${progressError.message}`, 'error');
+            }
+            
+            if (submissionError) {
+                missionLog(`ข้อผิดพลาดในการดึง submission: ${submissionError.message}`, 'error');
+            }
+            
+            updateProgressUI(true, {
+                progressData: progressData,
+                hasSubmitted: !!submission,
+                submissionData: submission
+            });
+        } catch (error) {
+            missionLog(`Exception ใน checkUserProgress: ${error.message}`, 'error');
+            updateProgressUI(false);
+        }
+    }
+
+    // ฟังก์ชันอัปเดต UI ความคืบหน้า
+    function updateProgressUI(isLoggedIn, progress = null) {
+        const videoStatusText = document.getElementById('videoStatusText');
+        const submissionStatusText = document.getElementById('submissionStatusText');
+        const progressBar = document.getElementById('progressBar');
+        const overallProgress = document.getElementById('overallProgress');
+        const progressText = document.getElementById('progressText');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (!isLoggedIn) {
+            videoStatusText.textContent = 'กรุณาล็อกอินเพื่อตรวจสอบ';
+            submissionStatusText.textContent = 'กรุณาล็อกอินเพื่อตรวจสอบ';
+            overallProgress.textContent = '0%';
+            progressBar.style.width = '0%';
+            progressText.textContent = 'เริ่มภารกิจเลย!';
+            uploadStatus.innerHTML = '<p class="text-red-600">⚠️ กรุณาล็อกอินเพื่อส่งงาน</p>';
+            submitBtn.disabled = true;
+            submitBtn.textContent = '🔒 รอการล็อกอิน';
+            return;
+        }
+        
+        if (!progress) {
+            videoStatusText.textContent = 'กำลังตรวจสอบ...';
+            submissionStatusText.textContent = 'กำลังตรวจสอบ...';
+            return;
+        }
+        
+        // อัปเดตสถานะวิดีโอ
+        if (progress.progressData && progress.progressData.is_video_watched) {
+            videoStatusText.innerHTML = '<span class="text-green-600">✅ ดูวิดีโอแล้ว</span>';
+        } else {
+            videoStatusText.innerHTML = '<span class="text-yellow-600">⏳ ยังไม่ได้ดูวิดีโอ</span>';
+        }
+        
+        // อัปเดตสถานะการส่งงาน
+        if (progress.hasSubmitted) {
+            const submittedDate = new Date(progress.submissionData.created_at).toLocaleDateString('th-TH');
+            submissionStatusText.innerHTML = `<span class="text-green-600">✅ ส่งงานแล้ว (${submittedDate})</span>`;
+            submitBtn.disabled = true;
+            submitBtn.textContent = '✅ ส่งงานแล้ว';
+            uploadStatus.innerHTML = '<p class="text-green-600">คุณได้ส่งงานเรียบร้อยแล้ว</p>';
+            
+            // แสดงข้อมูลไข่ที่ได้รับ (ถ้ามี)
+            if (progress.submissionData.eggs_basic_received > 0) {
+                uploadStatus.innerHTML += `
+                    <p class="text-yellow-600 mt-1">
+                        <i class="fas fa-egg mr-1"></i> 
+                        คุณได้รับ ${progress.submissionData.eggs_basic_received} ไข่จากภารกิจนี้
+                    </p>
+                `;
+            }
+        } else {
+            submissionStatusText.innerHTML = '<span class="text-red-600">❌ ยังไม่ได้ส่งงาน</span>';
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📤 ส่งงานวิดีโอ';
+            uploadStatus.innerHTML = '<p class="text-gray-600">อัปโหลดไฟล์วิดีโอผลงาน (.mp4, .mov) ขนาดไม่เกิน 100MB</p>';
+        }
+        
+        // คำนวณ progress โดยรวม
+        let progressPercentage = 0;
+        if (progress.progressData && progress.progressData.is_video_watched) progressPercentage += 50;
+        if (progress.hasSubmitted) progressPercentage += 50;
+        
+        overallProgress.textContent = `${progressPercentage}%`;
+        progressBar.style.width = `${progressPercentage}%`;
+        
+        if (progressPercentage === 100) {
+            progressText.innerHTML = '<span class="text-green-600">🎉 ภารกิจสำเร็จสมบูรณ์!</span>';
+        } else if (progressPercentage === 50) {
+            progressText.textContent = 'ดูวิดีโอแล้ว รอส่งงาน!';
+        } else {
+            progressText.textContent = 'เริ่มภารกิจเลย!';
+        }
+    }
+
+    // ฟังก์ชันแสดงการแจ้งเตือนเมื่อได้รับไข่
+    function showEggNotification(eggsAwarded, newTotal) {
+        const notification = document.getElementById('eggNotification');
+        document.getElementById('eggsAwarded').textContent = `${eggsAwarded} ไข่`;
+        document.getElementById('newEggsTotal').textContent = newTotal;
+        
+        notification.classList.remove('hidden');
+        notification.classList.add('animate-bounce');
+        
+        // ซ่อนการแจ้งเตือนหลังจาก 5 วินาที
+        setTimeout(() => {
+            notification.classList.add('hidden');
+            notification.classList.remove('animate-bounce');
+        }, 5000);
+    }
+
+    // ฟังก์ชันตั้งค่าฟอร์มส่งงาน
+    function setupSubmissionForm(missionId) {
+        const form = document.getElementById('submissionForm');
+        const videoFileInput = document.getElementById('videoFile');
+        const successMessage = document.getElementById('successMessage');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const supabase = window.getSupabaseClient ? await window.getSupabaseClient() : null;
+                if (!supabase) {
+                    alert('ระบบฐานข้อมูลไม่พร้อม กรุณาลองใหม่');
+                    return;
+                }
+                
+                // ตรวจสอบการล็อกอิน
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session) {
+                    alert('กรุณาล็อกอินก่อนส่งงาน');
+                    window.location.href = 'login_supabase.html';
+                    return;
+                }
+                
+                const userId = session.user.id;
+                const file = videoFileInput.files[0];
+                if (!file) {
+                    alert('กรุณาเลือกไฟล์วิดีโอ');
+                    return;
+                }
+                
+                // ตรวจสอบประเภทไฟล์
+                const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
+                if (!validTypes.includes(file.type)) {
+                    alert('กรุณาอัปโหลดไฟล์วิดีโอเท่านั้น (MP4, MOV, AVI)');
+                    return;
+                }
+                
+                // ตรวจสอบขนาดไฟล์ (ไม่เกิน 100MB)
+                if (file.size > 100 * 1024 * 1024) {
+                    alert('ไฟล์วิดีโอต้องมีขนาดไม่เกิน 100MB');
+                    return;
+                }
+                
+                // Disable ปุ่มส่ง
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังอัปโหลด...';
+                
+                try {
+                    missionLog('เริ่มอัปโหลดวิดีโอ...', 'info');
+                    
+                    // อัปโหลดไฟล์ไปยัง Supabase Storage
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                    const filePath = `submissions/${userId}/${fileName}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('videos')
+                        .upload(filePath, file);
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    // ดึง URL ของไฟล์ที่อัปโหลด
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('videos')
+                        .getPublicUrl(filePath);
+                    
+                    missionLog(`อัปโหลดสำเร็จ: ${publicUrl}`, 'success');
+                    
+                    // 1. บันทึกข้อมูลการส่งงานลงฐานข้อมูล student_submissions
+                    const { data: submissionData, error: submissionError } = await supabase
+                        .from('student_submissions')
+                        .insert({
+                            student_uid: userId,
+                            mission_id: missionId,
+                            video_url: publicUrl,
+                            status: 'pending',
+                            created_at: new Date().toISOString()
+                        })
+                        .select()
+                        .single();
+                    
+                    if (submissionError) throw submissionError;
+                    
+                    missionLog(`บันทึก submission สำเร็จ: ${submissionData.submission_id}`, 'success');
+                    
+                    // 2. ใช้ ProgressSystem ในการบันทึกความคืบหน้า
+                    // (เราต้องแน่ใจว่า ProgressSystem ถูกโหลดมาก่อน)
+                    if (typeof ProgressSystem !== 'undefined') {
+                        missionLog('กำลังบันทึก progress และให้ไข่...', 'info');
+                        
+                        const progressResult = await ProgressSystem.recordProgress(
+                            userId,
+                            missionId,
+                            'completed',
+                            { 
+                                submission_time: new Date().toISOString(),
+                                submission_id: submissionData.submission_id 
+                            }
+                        );
+                        
+                        if (!progressResult.success) {
+                            missionLog(`บันทึก progress ไม่สำเร็จ: ${progressResult.error}`, 'error');
+                        } else {
+                            missionLog('บันทึก progress สำเร็จ', 'success');
+                            
+                            // 3. รับไข่รางวัล
+                            const eggsResult = await ProgressSystem.awardEggsForCompletion(userId, missionId);
+                            
+                            if (eggsResult.success) {
+                                missionLog(`ได้รับไข่: ${eggsResult.eggsAwarded} ฟอง`, 'success');
+                                
+                                // 4. อัปเดต submission ด้วยจำนวนไข่ที่ได้รับ
+                                await supabase
+                                    .from('student_submissions')
+                                    .update({
+                                        eggs_basic_received: eggsResult.eggsAwarded
+                                    })
+                                    .eq('submission_id', submissionData.submission_id);
+                                
+                                // แสดงการแจ้งเตือนไข่
+                                showEggNotification(eggsResult.eggsAwarded, eggsResult.newTotal);
+                            }
+                        }
+                    } else {
+                        missionLog('ProgressSystem ไม่พร้อมใช้งาน', 'warning');
+                    }
+                    
+                    // 5. แสดงข้อความสำเร็จและซ่อนฟอร์ม
+                    form.classList.add('hidden');
+                    successMessage.classList.remove('hidden');
+                    
+                    // 6. รีเฟรชสถานะ
+                    setTimeout(() => {
+                        checkUserProgress(missionId);
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    missionLog(`ข้อผิดพลาดในการส่งงาน: ${error.message}`, 'error');
+                    alert('❌ เกิดข้อผิดพลาดในการส่งงาน: ' + error.message);
+                    
+                    const submitBtn = document.getElementById('submitBtn');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '📤 ส่งงานวิดีโอ';
+                }
+            } catch (error) {
+                missionLog(`Exception ใน form submit: ${error.message}`, 'error');
+                alert('❌ เกิดข้อผิดพลาด: ' + error.message);
+            }
+        });
+    }
+
+    // ฟังก์ชันตั้งค่าการติดตามการดูวิดีโอ
+    async function setupVideoTracking(missionId) {
+        const videoElement = document.querySelector('video');
+        if (!videoElement) return;
+        
+        let hasRecordedProgress = false;
+        
+        videoElement.addEventListener('timeupdate', async () => {
+            // ถ้าดูไปแล้ว 80% ของวิดีโอ ถือว่าดูจบ
+            if (!hasRecordedProgress && videoElement.currentTime >= videoElement.duration * 0.8) {
+                hasRecordedProgress = true;
+                
+                try {
+                    const supabase = window.getSupabaseClient ? await window.getSupabaseClient() : null;
+                    if (!supabase) return;
+                    
+                    // ตรวจสอบการล็อกอิน
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) return;
+                    
+                    const userId = session.user.id;
+                    
+                    // บันทึกความคืบหน้าใน student_progress
+                    try {
+                        // ตรวจสอบว่ามี record อยู่แล้วหรือไม่
+                        const { data: existingProgress } = await supabase
+                            .from('student_progress')
+                            .select('progress_id')
+                            .eq('student_uid', userId)
+                            .eq('mission_id', missionId)
+                            .maybeSingle();
+                        
+                        if (existingProgress) {
+                            // อัปเดต record ที่มีอยู่
+                            const { error } = await supabase
+                                .from('student_progress')
+                                .update({
+                                    is_video_watched: true,
+                                    last_video_watch_time: new Date().toISOString(),
+                                    updated_at: new Date().toISOString()
+                                })
+                                .eq('progress_id', existingProgress.progress_id);
+                            
+                            if (!error) {
+                                missionLog('บันทึกความคืบหน้าการดูวิดีโอสำเร็จ (อัปเดต)', 'success');
+                                checkUserProgress(missionId);
+                            }
+                        } else {
+                            // สร้าง record ใหม่
+                            const { error } = await supabase
+                                .from('student_progress')
+                                .insert({
+                                    student_uid: userId,
+                                    mission_id: missionId,
+                                    is_video_watched: true,
+                                    last_video_watch_time: new Date().toISOString(),
+                                    video_views_count: 1,
+                                    is_submitted: false,
+                                    submission_count: 0,
+                                    updated_at: new Date().toISOString()
+                                });
+                            
+                            if (!error) {
+                                missionLog('บันทึกความคืบหน้าการดูวิดีโอสำเร็จ (ใหม่)', 'success');
+                                checkUserProgress(missionId);
+                            }
+                        }
+                    } catch (error) {
+                        missionLog(`ข้อผิดพลาดในการบันทึกความคืบหน้า: ${error.message}`, 'error');
+                    }
+                } catch (error) {
+                    missionLog(`Exception ใน video tracking: ${error.message}`, 'error');
+                }
+            }
+        });
+    }
+
+    // ฟังก์ชันหลักเมื่อโหลดหน้าเสร็จ
+    document.addEventListener('DOMContentLoaded', async () => {
+        missionLog('DOM Content Loaded. Initializing mission detail page...');
+        
+        try {
+            // ดึง mission ID จาก URL
+            currentMissionId = getMissionIdFromURL();
+            
+            if (!currentMissionId) {
+                loadingStatus.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <strong class="font-bold">ผิดพลาด!</strong>
+                        <span class="block sm:inline"> ไม่พบ ID ภารกิจใน URL</span>
+                    </div>
+                `;
+                missionLog('ไม่พบ Mission ID ใน URL', 'error');
+                return;
+            }
+            
+            missionLog(`Mission ID จาก URL: ${currentMissionId}`, 'info');
+            
+            // รอให้ระบบอื่นโหลดเสร็จก่อน (เหมือน missions.html)
+            setTimeout(async () => {
+                try {
+                    // ดึงข้อมูลภารกิจ
+                    const mission = await fetchMissionDetails(currentMissionId);
+                    
+                    if (mission) {
+                        // แสดงข้อมูลภารกิจ
+                        displayMissionDetails(mission);
+                        
+                        // ตรวจสอบสถานะความคืบหน้าของผู้ใช้
+                        await checkUserProgress(currentMissionId);
+                        
+                        // ตั้งค่าฟอร์มส่งงาน
+                        setupSubmissionForm(currentMissionId);
+                        
+                        // ตั้งค่าการติดตามการดูวิดีโอ
+                        setupVideoTracking(currentMissionId);
+                    }
+                } catch (error) {
+                    missionLog(`เกิดข้อผิดพลาดในการโหลดหน้า: ${error.message}`, 'error');
+                }
+            }, 1000);
+            
+        } catch (error) {
+            missionLog(`เกิดข้อผิดพลาดในการเริ่มต้นหน้า: ${error.message}`, 'error');
+            loadingStatus.innerHTML = `
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <strong class="font-bold">ผิดพลาด!</strong>
+                    <span class="block sm:inline"> เกิดข้อผิดพลาด: ${error.message}</span>
+                </div>
+            `;
+        }
+    });
+</script>
+    
+</body>
+</html>

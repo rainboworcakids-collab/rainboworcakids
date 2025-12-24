@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>จัดการข้อมูล Disciplines | Rainbow OrcaKids</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- SweetAlert2 สำหรับ Dialog สวยงาม -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Color Picker -->
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css" />
+    
+</head>
+
+<body class="font-sarabun bg-gray-50">
+    <!-- Navigation จะถูกเพิ่มโดย nav.js -->
+    
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-700 mb-2">
+                    <i class="fas fa-book-open mr-3"></i>จัดการข้อมูล Disciplines
+                </h1>
+                <p class="text-gray-600">เพิ่ม/แก้ไข/ลบ ข้อมูลสาขาวิชาในระบบ</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <!-- ปุ่มกลับหน้า Dashboard -->
+                <a href="admin_dashboard.html" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+                <!-- ปุ่มเพิ่ม Discipline ใหม่ -->
+                <button onclick="showAddDisciplineModal()" 
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-plus mr-2"></i>เพิ่ม Discipline ใหม่
+                </button>
+                
+                <!-- ปุ่มแสดง Icon ช่วยเหลือ -->
+                <button onclick="showIconGuide()" 
+                        class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg flex items-center transition duration-200">
+                    <i class="fas fa-icons mr-2"></i>ช่วยเหลือ Icons
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Guide -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+                <i class="fas fa-lightbulb text-yellow-500 text-xl mt-1 mr-3"></i>
+                <div>
+                    <h3 class="font-bold text-blue-800 mb-1">Disciplines คืออะไร?</h3>
+                    <p class="text-sm text-blue-700">
+                        Disciplines คือสาขาวิชา/หมวดหมู่หลักของบทเรียน เช่น <span class="font-semibold">คณิตศาสตร์, วิทยาศาสตร์, ศิลปะ, ภาษาไทย, ภาษาอังกฤษ</span> 
+                        ใช้สำหรับจัดกลุ่มบทเรียนและภารกิจต่างๆ ในระบบ
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                        <i class="fas fa-book text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">รวม Disciplines</p>
+                        <p id="totalDisciplines" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ใช้งานอยู่</p>
+                        <p id="activeDisciplines" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-yellow-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                        <i class="fas fa-pause-circle text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">ไม่ใช้งาน</p>
+                        <p id="inactiveDisciplines" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
+                        <i class="fas fa-palette text-xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">เฉลี่ยสี</p>
+                        <p id="avgColorCount" class="text-2xl font-bold">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white p-4 rounded-lg shadow mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex-1">
+                    <div class="relative">
+                        <input type="text" id="searchInput" 
+                               placeholder="ค้นหาตามชื่อสาขาวิชา, คำอธิบาย, ไอคอน..."
+                               class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="statusFilter" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="all">สถานะทั้งหมด</option>
+                        <option value="active">ใช้งานอยู่</option>
+                        <option value="inactive">ไม่ใช้งาน</option>
+                    </select>
+                    
+                    <select id="sortBy" 
+                            class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        <option value="display_order">เรียงตามลำดับ</option>
+                        <option value="name_th">เรียงตามชื่อ</option>
+                        <option value="created_at">เรียงตามวันที่สร้าง</option>
+                    </select>
+                    
+                    <button onclick="loadDisciplines()" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>รีเฟรช
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดข้อมูล Disciplines...
+        </div>
+
+        <!-- Disciplines Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-sort mr-1"></i>ลำดับ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-id-card mr-1"></i>รหัส
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-book mr-1"></i>ชื่อสาขาวิชา
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-palette mr-1"></i>ไอคอน & สี
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-calendar mr-1"></i>สร้างเมื่อ
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-cogs mr-1"></i>จัดการ
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="disciplinesTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- No Data Message (hidden by default) -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-inbox text-gray-300 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูล Disciplines</h3>
+            <p class="text-gray-400 mb-6">เริ่มต้นด้วยการเพิ่ม Discipline ใหม่</p>
+            <button onclick="showAddDisciplineModal()" 
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-plus mr-2"></i>เพิ่ม Discipline ใหม่
+            </button>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center">
+            <a href="admin_dashboard.html" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้า Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Add/Edit Discipline Modal (hidden by default) -->
+    <div id="disciplineModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-700"></h3>
+                <button onclick="closeDisciplineModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6">
+                <form id="disciplineForm" onsubmit="saveDiscipline(event)">
+                    <input type="hidden" id="disciplineId">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Discipline ID -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-id-card mr-1"></i>รหัสสาขาวิชา *
+                            </label>
+                            <input type="text" id="disciplineKey" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: math, science, art"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">ภาษาอังกฤษเท่านั้น ใช้สำหรับอ้างอิงในระบบ</p>
+                        </div>
+
+                        <!-- Display Order -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-sort-numeric-up mr-1"></i>ลำดับการแสดงผล *
+                            </label>
+                            <input type="number" id="displayOrder" min="0" max="999"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   required>
+                        </div>
+
+                        <!-- Thai Name -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-font mr-1"></i>ชื่อสาขาวิชา (ไทย) *
+                            </label>
+                            <input type="text" id="disciplineNameTh" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="ตัวอย่าง: คณิตศาสตร์, วิทยาศาสตร์, ศิลปะ"
+                                   required>
+                        </div>
+
+                        <!-- Icon Class -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-icons mr-1"></i>ไอคอน (Font Awesome)
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="iconClass" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="ตัวอย่าง: fas fa-calculator">
+                                <button type="button" onclick="previewIcon()" 
+                                        class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2">
+                                <p id="iconPreview" class="text-2xl text-center text-gray-400">
+                                    <i class="fas fa-question-circle"></i>
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <a href="https://fontawesome.com/icons" target="_blank" class="text-blue-500 hover:underline">
+                                        <i class="fas fa-external-link-alt mr-1"></i>ค้นหาไอคอนเพิ่มเติม
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Color Code -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-palette mr-1"></i>สีประจำสาขา
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" id="colorCode" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="#3B82F6 หรือคลิกเลือกสี">
+                                <div id="colorPreview" class="w-10 h-10 rounded border border-gray-300"></div>
+                            </div>
+                            <div class="mt-2">
+                                <p class="text-xs text-gray-500">
+                                    <button type="button" onclick="openColorPicker()" class="text-blue-500 hover:underline mr-3">
+                                        <i class="fas fa-eye-dropper mr-1"></i>เลือกสี
+                                    </button>
+                                    <button type="button" onclick="suggestColor()" class="text-blue-500 hover:underline">
+                                        <i class="fas fa-magic mr-1"></i>แนะนำสีอัตโนมัติ
+                                    </button>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-align-left mr-1"></i>คำอธิบาย
+                            </label>
+                            <textarea id="description" rows="3"
+                                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                      placeholder="อธิบายรายละเอียดของสาขาวิชานี้..."></textarea>
+                        </div>
+
+                        <!-- Status -->
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                <i class="fas fa-toggle-on mr-1"></i>สถานะ
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="true" checked
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-green-600">
+                                        <i class="fas fa-check-circle mr-1"></i>ใช้งานอยู่
+                                    </span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="isActive" value="false"
+                                           class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-red-600">
+                                        <i class="fas fa-times-circle mr-1"></i>ไม่ใช้งาน
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Icons Suggestions -->
+                    <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-2 text-sm">
+                            <i class="fas fa-lightbulb mr-1"></i>ไอคอนแนะนำตามสาขาวิชา:
+                        </h4>
+                        <div class="grid grid-cols-3 md:grid-cols-6 gap-2 text-xs">
+                            <button type="button" onclick="setIcon('fas fa-calculator')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-calculator text-blue-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">คณิตศาสตร์</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-flask')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-flask text-green-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">วิทยาศาสตร์</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-paint-brush')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-paint-brush text-purple-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ศิลปะ</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-book')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-book text-red-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ภาษาไทย</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-globe')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-globe text-yellow-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ภาษาอังกฤษ</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-music')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-music text-pink-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ดนตรี</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-running')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-running text-orange-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">กีฬา</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-laptop-code')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-laptop-code text-indigo-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">คอมพิวเตอร์</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-brain')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-brain text-teal-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ตรรกะ</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-history')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-history text-gray-500 text-lg mb-1"></i>
+                                <div class="text-gray-600">ประวัติศาสตร์</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-map')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-map text-green-600 text-lg mb-1"></i>
+                                <div class="text-gray-600">ภูมิศาสตร์</div>
+                            </button>
+                            <button type="button" onclick="setIcon('fas fa-users')" class="p-2 bg-white rounded border hover:bg-blue-50 text-center">
+                                <i class="fas fa-users text-blue-600 text-lg mb-1"></i>
+                                <div class="text-gray-600">สังคมศึกษา</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex justify-end space-x-3 mt-8 pt-4 border-t">
+                        <button type="button" onclick="closeDisciplineModal()"
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                            ยกเลิก
+                        </button>
+                        <button type="submit" id="submitButton"
+                                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-save mr-2"></i>บันทึกข้อมูล
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Picker (hidden) -->
+    <div id="colorPickerContainer" class="hidden"></div>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    <script src="js/nav.js"></script>
+    
+    <!-- Debug Logger -->
+    <script src="js/debug-logger.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("🔐 Checking admin permission for this page...");
+            
+            // ตรวจสอบสิทธิ์ admin
+            const hasPermission = await checkAdminPermission();
+            
+            if (!hasPermission) {
+                // Redirect ไปหน้า dashboard
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีสิทธิ์เข้าถึง',
+                    text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+                    confirmButtonText: 'กลับไปหน้า Dashboard',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'admin_dashboard.html';
+                    }
+                });
+                return;
+            }
+            
+            // ถ้ามีสิทธิ์ ให้โหลดเนื้อหาหลัก
+            loadPageContent();
+        });
+
+        // ===============================================
+        // ฟังก์ชันตรวจสอบ admin permission
+        // ===============================================
+        async function checkAdminPermission() {
+            try {
+                console.log("🔍 Checking admin permission...");
+                
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    console.error("❌ Supabase client not available");
+                    return false;
+                }
+                
+                // ตรวจสอบ session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) {
+                    console.error("❌ Session error:", sessionError);
+                    return false;
+                }
+                
+                if (!session || !session.user) {
+                    console.warn("⚠️ No user session found");
+                    return false;
+                }
+                
+                console.log("👤 User logged in:", session.user.email);
+                
+                // ใช้ fetchUserProfile
+                if (typeof window.fetchUserProfile !== 'function') {
+                    console.error("❌ fetchUserProfile function not available");
+                    return false;
+                }
+                
+                const profile = await window.fetchUserProfile(session.user);
+                console.log("📊 User profile:", profile);
+                
+                if (!profile) {
+                    console.error("❌ Cannot fetch user profile");
+                    return false;
+                }
+                
+                // ตรวจสอบว่า role เป็น admin หรือไม่
+                const isAdmin = profile.role === 'admin' || 
+                               profile.role === 'administrator' || 
+                               profile.role === 'superadmin';
+                
+                if (isAdmin) {
+                    console.log("✅ Admin permission granted");
+                } else {
+                    console.warn("⚠️ User is not an admin, role:", profile.role);
+                }
+                
+                return isAdmin;
+                
+            } catch (error) {
+                console.error("❌ Error in checkAdminPermission:", error);
+                return false;
+            }
+        }
+
+        // ฟังก์ชันโหลดเนื้อหาหลัก
+        async function loadPageContent() {
+            console.log("✅ Admin permission verified, loading page content...");
+            
+            // ตั้งค่า Event Listeners
+            document.getElementById('searchInput').addEventListener('keyup', filterDisciplines);
+            document.getElementById('statusFilter').addEventListener('change', filterDisciplines);
+            document.getElementById('sortBy').addEventListener('change', filterDisciplines);
+            
+            // Setup icon preview
+            document.getElementById('iconClass').addEventListener('input', previewIcon);
+            document.getElementById('colorCode').addEventListener('input', previewColor);
+            
+            // โหลดข้อมูล Disciplines
+            await loadDisciplines();
+            
+            // Initialize Debug Logger
+            initDebugLogger();
+        }
+
+        // ===============================================
+        // Disciplines Management JavaScript
+        // ===============================================
+        let currentDisciplines = [];
+        let isEditMode = false;
+        let colorPicker = null;
+        
+        // Debug Logger wrapper functions
+        function logSuccess(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.success === 'function') {
+                window.DebugLogger.success(message);
+            } else {
+                console.log('✅ ' + message);
+            }
+        }
+        
+        function logError(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.error === 'function') {
+                window.DebugLogger.error(message);
+            } else {
+                console.error('❌ ' + message);
+            }
+        }
+        
+        function logInfo(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.info === 'function') {
+                window.DebugLogger.info(message);
+            } else {
+                console.info('ℹ️ ' + message);
+            }
+        }
+        
+        function logWarning(message) {
+            if (window.DebugLogger && typeof window.DebugLogger.warning === 'function') {
+                window.DebugLogger.warning(message);
+            } else {
+                console.warn('⚠️ ' + message);
+            }
+        }
+        
+        // Fallback Debug Logger
+        if (!window.DebugLogger) {
+            console.log('⚠️ DebugLogger not found, using fallback logger');
+            window.DebugLogger = {
+                init: function() { console.log('Fallback DebugLogger initialized'); },
+                log: function(msg, type) { 
+                    const icon = type === 'success' ? '✅' : 
+                                type === 'error' ? '❌' : 
+                                type === 'warning' ? '⚠️' : 
+                                type === 'info' ? '🔵' : '📝';
+                    console.log(`${icon} ${msg}`);
+                },
+                success: function(msg) { console.log('✅ ' + msg); },
+                error: function(msg) { console.error('❌ ' + msg); },
+                warning: function(msg) { console.warn('⚠️ ' + msg); },
+                info: function(msg) { console.info('ℹ️ ' + msg); },
+                debug: function(msg) { console.debug('🐛 ' + msg); }
+            };
+        }
+        
+        function initDebugLogger() {
+            if (window.DebugLogger && typeof window.DebugLogger.init === 'function') {
+                try {
+                    window.DebugLogger.init();
+                    console.log('✅ DebugLogger initialized');
+                } catch (e) {
+                    console.warn('⚠️ DebugLogger init failed:', e);
+                }
+            }
+        }
+
+        // ฟังก์ชันจัดการไอคอนและสี
+        function setIcon(iconClass) {
+            document.getElementById('iconClass').value = iconClass;
+            previewIcon();
+        }
+        
+        function previewIcon() {
+            const iconClass = document.getElementById('iconClass').value;
+            const previewElement = document.getElementById('iconPreview');
+            
+            if (iconClass && iconClass.trim() !== '') {
+                previewElement.innerHTML = `<i class="${iconClass}"></i>`;
+                previewElement.className = 'text-2xl text-center text-blue-600';
+            } else {
+                previewElement.innerHTML = '<i class="fas fa-question-circle"></i>';
+                previewElement.className = 'text-2xl text-center text-gray-400';
+            }
+        }
+        
+        function previewColor() {
+            const colorCode = document.getElementById('colorCode').value;
+            const previewElement = document.getElementById('colorPreview');
+            
+            if (colorCode && colorCode.trim() !== '') {
+                previewElement.style.backgroundColor = colorCode;
+                previewElement.style.borderColor = '#d1d5db';
+            } else {
+                previewElement.style.backgroundColor = '#f3f4f6';
+                previewElement.style.borderColor = '#d1d5db';
+            }
+        }
+        
+        function openColorPicker() {
+            if (!colorPicker) {
+                colorPicker = Pickr.create({
+                    el: document.getElementById('colorPickerContainer'),
+                    theme: 'nano',
+                    default: '#3B82F6',
+                    swatches: [
+                        '#EF4444', '#F97316', '#F59E0B', '#10B981',
+                        '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899',
+                        '#6B7280', '#000000'
+                    ],
+                    components: {
+                        preview: true,
+                        opacity: true,
+                        hue: true,
+                        interaction: {
+                            hex: true,
+                            rgba: true,
+                            input: true,
+                            save: true
+                        }
+                    }
+                });
+                
+                colorPicker.on('save', (color, instance) => {
+                    if (color) {
+                        const hexColor = color.toHEXA().toString();
+                        document.getElementById('colorCode').value = hexColor;
+                        previewColor();
+                        colorPicker.hide();
+                    }
+                });
+            }
+            
+            // Show color picker
+            const container = document.getElementById('colorPickerContainer');
+            container.classList.remove('hidden');
+            colorPicker.show();
+        }
+        
+        function suggestColor() {
+            // สุ่มเลือกสีจากชุดสีที่แนะนำ
+            const suggestedColors = [
+                '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+                '#06B6D4', '#EC4899', '#84CC16', '#F97316', '#6366F1'
+            ];
+            
+            const randomColor = suggestedColors[Math.floor(Math.random() * suggestedColors.length)];
+            document.getElementById('colorCode').value = randomColor;
+            previewColor();
+        }
+        
+        function showIconGuide() {
+            Swal.fire({
+                title: 'คำแนะนำการใช้ไอคอน Font Awesome',
+                html: `
+                    <div class="text-left">
+                        <h4 class="font-bold text-blue-700 mb-3">รูปแบบการเขียนไอคอน:</h4>
+                        <ul class="list-disc pl-5 space-y-2 mb-4">
+                            <li><strong>fas fa-icon-name</strong> - ไอคอนทึบ (Solid)</li>
+                            <li><strong>far fa-icon-name</strong> - ไอคอนร่าง (Regular)</li>
+                            <li><strong>fal fa-icon-name</strong> - ไอคอนบาง (Light)</li>
+                            <li><strong>fab fa-icon-name</strong> - ไอคอนแบรนด์ (Brand)</li>
+                        </ul>
+                        
+                        <h4 class="font-bold text-blue-700 mb-2">ตัวอย่างไอคอนยอดนิยม:</h4>
+                        <div class="grid grid-cols-4 gap-2 text-xs">
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-book text-lg mb-1 text-blue-500"></i>
+                                <div>fa-book</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-calculator text-lg mb-1 text-green-500"></i>
+                                <div>fa-calculator</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-flask text-lg mb-1 text-purple-500"></i>
+                                <div>fa-flask</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-paint-brush text-lg mb-1 text-red-500"></i>
+                                <div>fa-paint-brush</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-music text-lg mb-1 text-yellow-500"></i>
+                                <div>fa-music</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-globe text-lg mb-1 text-indigo-500"></i>
+                                <div>fa-globe</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-brain text-lg mb-1 text-teal-500"></i>
+                                <div>fa-brain</div>
+                            </div>
+                            <div class="p-2 bg-gray-50 rounded text-center">
+                                <i class="fas fa-laptop-code text-lg mb-1 text-gray-700"></i>
+                                <div>fa-laptop-code</div>
+                            </div>
+                        </div>
+                        
+                        <p class="mt-4 text-sm text-gray-600">
+                            <i class="fas fa-external-link-alt mr-1"></i>
+                            <a href="https://fontawesome.com/icons" target="_blank" class="text-blue-500 hover:underline">
+                                คลิกที่นี่เพื่อค้นหาไอคอนเพิ่มเติม
+                            </a>
+                        </p>
+                    </div>
+                `,
+                width: 600,
+                confirmButtonText: 'เข้าใจแล้ว'
+            });
+        }
+
+        // โหลดข้อมูล Disciplines จาก Supabase
+        async function loadDisciplines() {
+            const loadingStatus = document.getElementById('loadingStatus');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const tableBody = document.getElementById('disciplinesTableBody');
+            
+            loadingStatus.classList.remove('hidden');
+            tableBody.innerHTML = '';
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                // ดึงข้อมูล disciplines เรียงตาม display_order
+                const { data: disciplines, error } = await supabase
+                    .from('disciplines')
+                    .select('*')
+                    .order('display_order', { ascending: true });
+                
+                if (error) throw error;
+                
+                currentDisciplines = disciplines || [];
+                
+                // อัปเดตสถิติ
+                updateStats(currentDisciplines);
+                
+                // แสดงข้อมูลในตาราง
+                if (currentDisciplines.length > 0) {
+                    renderDisciplinesTable(currentDisciplines);
+                    noDataMessage.classList.add('hidden');
+                } else {
+                    tableBody.innerHTML = '';
+                    noDataMessage.classList.remove('hidden');
+                }
+                
+                loadingStatus.classList.add('hidden');
+                
+                logSuccess(`โหลดข้อมูล Disciplines สำเร็จ: ${currentDisciplines.length} รายการ`);
+                
+            } catch (error) {
+                loadingStatus.classList.add('hidden');
+                showError('ไม่สามารถดึงข้อมูล Disciplines ได้: ' + error.message);
+                logError('Error loading disciplines: ' + error.message);
+            }
+        }
+
+        // แสดงข้อมูลในตาราง
+        function renderDisciplinesTable(disciplines) {
+            const tableBody = document.getElementById('disciplinesTableBody');
+            tableBody.innerHTML = '';
+            
+            // ใช้การเรียงตาม dropdown
+            const sortBy = document.getElementById('sortBy').value;
+            let sortedDisciplines = [...disciplines];
+            
+            if (sortBy === 'name_th') {
+                sortedDisciplines.sort((a, b) => a.name_th.localeCompare(b.name_th, 'th'));
+            } else if (sortBy === 'created_at') {
+                sortedDisciplines.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else {
+                // display_order (default)
+                sortedDisciplines.sort((a, b) => a.display_order - b.display_order);
+            }
+            
+            sortedDisciplines.forEach((discipline, index) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                // ฟอร์แมตวันที่
+                const createdDate = new Date(discipline.created_at).toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // สร้าง badge สำหรับสี
+                let colorBadge = '';
+                if (discipline.color_code) {
+                    colorBadge = `
+                        <div class="inline-block w-4 h-4 rounded-full border border-gray-300 mr-2" 
+                             style="background-color: ${discipline.color_code}"></div>
+                        <span class="text-xs font-mono">${discipline.color_code}</span>
+                    `;
+                } else {
+                    colorBadge = '<span class="text-gray-400 text-xs">-</span>';
+                }
+                
+                // ไอคอนและสี
+                let iconDisplay = '';
+                if (discipline.icon_class) {
+                    iconDisplay = `
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg" 
+                                 style="background-color: ${discipline.color_code || '#f3f4f6'}">
+                                <i class="${discipline.icon_class} text-white"></i>
+                            </div>
+                            <div>
+                                ${colorBadge}
+                                <div class="text-xs text-gray-500 mt-1">${discipline.icon_class || '-'}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    iconDisplay = '<span class="text-gray-400">-</span>';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                        ${discipline.display_order}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            ${discipline.discipline_id}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">${discipline.name_th}</div>
+                        <div class="text-sm text-gray-500 truncate max-w-xs">${discipline.description || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${iconDisplay}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${discipline.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${discipline.is_active ? 'ใช้งาน' : 'ไม่ใช้งาน'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <i class="far fa-clock mr-1"></i>${createdDate}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="editDiscipline('${discipline.discipline_id}')" 
+                                class="text-blue-600 hover:text-blue-900 mr-3" title="แก้ไข">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteDiscipline('${discipline.discipline_id}', '${discipline.name_th}')" 
+                                class="text-red-600 hover:text-red-900" title="ลบ">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // อัปเดตสถิติ
+        function updateStats(disciplines) {
+            const total = disciplines.length;
+            const active = disciplines.filter(d => d.is_active).length;
+            const inactive = total - active;
+            
+            // นับ disciplines ที่มีสี
+            const withColor = disciplines.filter(d => d.color_code && d.color_code.trim() !== '').length;
+            const avgColorCount = total > 0 ? Math.round((withColor / total) * 100) : 0;
+            
+            document.getElementById('totalDisciplines').textContent = total;
+            document.getElementById('activeDisciplines').textContent = active;
+            document.getElementById('inactiveDisciplines').textContent = inactive;
+            document.getElementById('avgColorCount').textContent = `${avgColorCount}%`;
+        }
+
+        // กรองข้อมูล Disciplines
+        function filterDisciplines() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            let filtered = currentDisciplines;
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filtered = filtered.filter(discipline => 
+                    discipline.discipline_id.toLowerCase().includes(searchTerm) ||
+                    discipline.name_th.toLowerCase().includes(searchTerm) ||
+                    discipline.description?.toLowerCase().includes(searchTerm) ||
+                    discipline.icon_class?.toLowerCase().includes(searchTerm) ||
+                    discipline.color_code?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // กรองตามสถานะ
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(discipline => 
+                    statusFilter === 'active' ? discipline.is_active : !discipline.is_active
+                );
+            }
+            
+            // เรียงลำดับใหม่ตาม dropdown
+            const sortBy = document.getElementById('sortBy').value;
+            if (sortBy === 'name_th') {
+                filtered.sort((a, b) => a.name_th.localeCompare(b.name_th, 'th'));
+            } else if (sortBy === 'created_at') {
+                filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            } else {
+                // display_order (default)
+                filtered.sort((a, b) => a.display_order - b.display_order);
+            }
+            
+            renderDisciplinesTable(filtered);
+        }
+
+        // แสดง Modal สำหรับเพิ่ม Discipline
+        function showAddDisciplineModal() {
+            isEditMode = false;
+            document.getElementById('modalTitle').textContent = 'เพิ่ม Discipline ใหม่';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>บันทึกข้อมูล';
+            
+            // รีเซ็ตฟอร์ม
+            document.getElementById('disciplineForm').reset();
+            document.getElementById('disciplineId').value = '';
+            
+            // ตั้งค่า display order ถัดไป
+            const maxOrder = currentDisciplines.length > 0 ? Math.max(...currentDisciplines.map(d => d.display_order)) : 0;
+            document.getElementById('displayOrder').value = maxOrder + 1;
+            
+            // ตั้งค่า default color
+            document.getElementById('colorCode').value = '#3B82F6';
+            
+            // รีเซ็ต preview
+            previewIcon();
+            previewColor();
+            
+            // แสดง Modal
+            document.getElementById('disciplineModal').classList.remove('hidden');
+        }
+
+        // แสดง Modal สำหรับแก้ไข Discipline
+        async function editDiscipline(disciplineId) {
+            const discipline = currentDisciplines.find(d => d.discipline_id === disciplineId);
+            if (!discipline) {
+                showError('ไม่พบข้อมูล Discipline ที่ต้องการแก้ไข');
+                return;
+            }
+            
+            isEditMode = true;
+            document.getElementById('modalTitle').textContent = 'แก้ไข Discipline';
+            document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>อัปเดตข้อมูล';
+            
+            // เติมข้อมูลลงในฟอร์ม
+            document.getElementById('disciplineId').value = discipline.discipline_id;
+            document.getElementById('disciplineKey').value = discipline.discipline_id;
+            document.getElementById('disciplineKey').readOnly = true; // ไม่ให้แก้ไข key ในโหมดแก้ไข
+            document.getElementById('displayOrder').value = discipline.display_order;
+            document.getElementById('disciplineNameTh').value = discipline.name_th;
+            document.getElementById('iconClass').value = discipline.icon_class || '';
+            document.getElementById('colorCode').value = discipline.color_code || '#3B82F6';
+            document.getElementById('description').value = discipline.description || '';
+            
+            // ตั้งค่าสถานะ
+            const activeRadio = document.querySelector(`input[name="isActive"][value="${discipline.is_active}"]`);
+            if (activeRadio) {
+                activeRadio.checked = true;
+            }
+            
+            // อัปเดต preview
+            previewIcon();
+            previewColor();
+            
+            // แสดง Modal
+            document.getElementById('disciplineModal').classList.remove('hidden');
+        }
+
+        // ปิด Modal
+        function closeDisciplineModal() {
+            document.getElementById('disciplineModal').classList.add('hidden');
+            document.getElementById('disciplineKey').readOnly = false; // เปิดให้แก้ไข key ใหม่
+            
+            // ปิด color picker ถ้าเปิดอยู่
+            if (colorPicker) {
+                colorPicker.hide();
+                document.getElementById('colorPickerContainer').classList.add('hidden');
+            }
+        }
+
+        // บันทึกข้อมูล Discipline
+        async function saveDiscipline(event) {
+            event.preventDefault();
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const disciplineData = {
+                    discipline_id: document.getElementById('disciplineKey').value.trim(),
+                    name_th: document.getElementById('disciplineNameTh').value.trim(),
+                    display_order: parseInt(document.getElementById('displayOrder').value),
+                    icon_class: document.getElementById('iconClass').value.trim() || null,
+                    color_code: document.getElementById('colorCode').value.trim() || null,
+                    description: document.getElementById('description').value.trim() || null,
+                    is_active: document.querySelector('input[name="isActive"]:checked').value === 'true'
+                };
+                
+                const disciplineId = document.getElementById('disciplineId').value;
+                
+                let result;
+                if (isEditMode && disciplineId) {
+                    // แก้ไขข้อมูล
+                    const { data, error } = await supabase
+                        .from('disciplines')
+                        .update(disciplineData)
+                        .eq('discipline_id', disciplineId)
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`อัปเดต Discipline สำเร็จ: ${disciplineData.name_th}`);
+                    
+                } else {
+                    // เพิ่มข้อมูลใหม่
+                    const { data, error } = await supabase
+                        .from('disciplines')
+                        .insert([disciplineData])
+                        .select();
+                    
+                    if (error) throw error;
+                    result = data[0];
+                    
+                    logSuccess(`เพิ่ม Discipline สำเร็จ: ${disciplineData.name_th}`);
+                }
+                
+                // ปิด Modal และรีเฟรชข้อมูล
+                closeDisciplineModal();
+                await loadDisciplines();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'สำเร็จ!',
+                    text: `บันทึกข้อมูล Discipline "${disciplineData.name_th}" สำเร็จ`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error saving discipline:', error);
+                
+                if (error.code === '23505') { // Unique violation
+                    showError('รหัสสาขาวิชานี้มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่น');
+                } else {
+                    showError('บันทึกข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error saving discipline: ' + error.message);
+            }
+        }
+
+        // ลบข้อมูล Discipline
+        async function deleteDiscipline(disciplineId, disciplineName) {
+            // ยืนยันการลบ
+            const result = await Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: `คุณแน่ใจว่าต้องการลบ Discipline "${disciplineName}" ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            });
+            
+            if (!result.isConfirmed) return;
+            
+            try {
+                const supabase = await getSupabaseClient();
+                if (!supabase) {
+                    showError('ไม่สามารถเชื่อมต่อกับฐานข้อมูลได้');
+                    return;
+                }
+                
+                const { error } = await supabase
+                    .from('disciplines')
+                    .delete()
+                    .eq('discipline_id', disciplineId);
+                
+                if (error) throw error;
+                
+                logSuccess(`ลบ Discipline สำเร็จ: ${disciplineName}`);
+                
+                // รีเฟรชข้อมูล
+                await loadDisciplines();
+                
+                // แสดงข้อความสำเร็จ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบสำเร็จ!',
+                    text: `ลบ Discipline "${disciplineName}" ออกจากระบบแล้ว`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+            } catch (error) {
+                console.error('Error deleting discipline:', error);
+                
+                // ตรวจสอบว่า Discipline นี้ถูกใช้อยู่หรือไม่
+                if (error.code === '23503') { // Foreign key violation
+                    showError('ไม่สามารถลบ Discipline นี้ได้ เนื่องจากถูกใช้งานอยู่ในระบบแล้ว (เช่น มีคอร์สที่ใช้สาขานี้)');
+                } else {
+                    showError('ลบข้อมูลไม่สำเร็จ: ' + error.message);
+                }
+                
+                logError('Error deleting discipline: ' + error.message);
+            }
+        }
+
+        // แสดงข้อความแจ้งเตือน
+        function showError(message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: message,
+                confirmButtonText: 'ตกลง'
+            });
+        }
+    </script>
+    
+    <style>
+        /* Custom styles */
+        .hover-scale {
+            transition: transform 0.2s ease-in-out;
+        }
+        .hover-scale:hover {
+            transform: translateY(-2px);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            ring: 2px;
+        }
+        
+        /* Scrollbar styling */
+        #disciplinesTableBody::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #disciplinesTableBody::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #disciplinesTableBody::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #disciplinesTableBody::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        
+        /* Color picker positioning */
+        .pickr {
+            position: absolute;
+            z-index: 100;
+        }
+    </style>
+</body>
+</html>
