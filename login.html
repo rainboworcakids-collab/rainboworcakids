@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ระบบไข่ตุ๋ย</title>
+    
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- โหลดไฟล์การตั้งค่าและจัดการสถานะที่มีอยู่ -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+        }
+        
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #5568d3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        #message {
+            margin-top: 1rem;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+        
+        #message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        
+        #message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        
+        /* ✅ NEW: Register link style */
+        .register-link {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>🥚 เข้าสู่ระบบไข่ตุ๋ย</h2>
+        
+        <form id="login-form">
+            <input type="email" id="email" placeholder="อีเมล" required autocomplete="email">
+            <input type="password" id="password" placeholder="รหัสผ่าน" required autocomplete="current-password">
+            <button type="submit" id="submit-btn">🔐 เข้าสู่ระบบ</button>
+        </form>
+        
+        <div id="message"></div>
+        
+        <!-- ✅ NEW: Register link -->
+        <div class="register-link">
+            ยังไม่มีบัญชี? 
+            <a href="register.html">ลงทะเบียนผู้ใช้ใหม่</a>
+        </div>
+    </div>
+
+    <script>
+        console.log("📁 Login page loaded");
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('login-form');
+            const messageEl = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                
+                submitBtn.disabled = true;
+                submitBtn.textContent = '⏳ กำลังเข้าสู่ระบบ...';
+                messageEl.style.display = 'none';
+
+                try {
+                    const supabase = await getSupabaseClient();
+                    
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        messageEl.textContent = `❌ เข้าสู่ระบบไม่สำเร็จ: ${error.message}`;
+                        messageEl.className = 'error';
+                        messageEl.style.display = 'block';
+                    } else {
+                        messageEl.textContent = '✅ เข้าสู่ระบบสำเร็จ! กำลังเปลี่ยนหน้า...';
+                        messageEl.className = 'success';
+                        messageEl.style.display = 'block';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    }
+                } catch (err) {
+                    messageEl.textContent = `💥 เกิดข้อผิดพลาด: ${err.message}`;
+                    messageEl.className = 'error';
+                    messageEl.style.display = 'block';
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '🔐 เข้าสู่ระบบ';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
