@@ -1,8 +1,11 @@
-// Psychomatrix.js - Version 1.0
-// รวม script.js เดิม + AJAX เรียก Edge Functions
-// สำหรับ GitHub Pages + Supabase Edge Functions
+// Psychomatrix.js - Version 2.1
+// Complete rewrite for GitHub Pages + Supabase Edge Functions
+// Features: localStorage, Modal Management, API Integration, Debug Mode
+// Created: 2025-12-24
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Psychomatrix.js v2.1 Initializing...');
+    
     // ==================== GLOBAL VARIABLES ====================
     const mainForm = document.querySelector('form');
     const mainSearchNameInput = document.getElementById('search_name');
@@ -30,22 +33,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==================== EDGE FUNCTION CONFIG ====================
     const SUPABASE_URL = 'oibubvhuiuurkxhnefsw.supabase.co';
     const PSYCHOMATRIX_FUNCTION = `https://${SUPABASE_URL}/functions/v1/psychomatrix-calculate`;
-    const DESTINY_FUNCTION = `https://${SUPABASE_URL}/functions/v1/destiny-calculate`;
 
     // ==================== HELPER FUNCTIONS ====================
 
     function getStoredUserData() {
-        const data = localStorage.getItem(USER_DATA_STORAGE_KEY);
-        return data ? JSON.parse(data) : {};
+        try {
+            const data = localStorage.getItem(USER_DATA_STORAGE_KEY);
+            const parsed = data ? JSON.parse(data) : {};
+            console.log('📦 Loaded stored data:', Object.keys(parsed).length, 'entries');
+            return parsed;
+        } catch (error) {
+            console.error('❌ Error loading stored data:', error);
+            alert('❌ เกิดข้อผิดพลาดในการโหลดข้อมูลที่บันทึกไว้');
+            return {};
+        }
     }
 
     function saveUserData(data) {
-        localStorage.setItem(USER_DATA_STORAGE_KEY, JSON.stringify(data));
+        try {
+            localStorage.setItem(USER_DATA_STORAGE_KEY, JSON.stringify(data));
+            console.log('💾 Data saved successfully. Total entries:', Object.keys(data).length);
+        } catch (error) {
+            console.error('❌ Error saving data:', error);
+            alert('❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล อาจเกิน quota');
+        }
     }
 
     function loadData(searchName) {
         if (!searchName) {
-            alert('โปรดระบุ Search Name ที่ต้องการโหลด.');
+            alert('⚠️ โปรดระบุชื่อที่ต้องการโหลด');
             clearAllFormAndModalFields();
             return;
         }
@@ -54,28 +70,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = storedData[searchName];
 
         if (!data) {
-            alert(`ไม่พบข้อมูลสำหรับ Search Name: "${searchName}"`);
+            alert(`❌ ไม่พบข้อมูลสำหรับ: "${searchName}"`);
             clearAllFormAndModalFields();
             mainSearchNameInput.value = searchName;
             return;
         }
 
+        console.log('📂 Loading data for:', searchName);
+
         // Populate main form fields
         if (data.main_data) {
             document.querySelector('select[name="birth_day"]').value = data.main_data.birth_day || '';
             document.querySelector('select[name="birth_month"]').value = data.main_data.birth_month || '';
-            document.querySelector('select[name="birth_century"]').value = data.main_data.birth_century || '';
+            document.querySelector('select[name="birth_century"]').value = data.main_data.birth_century || '20';
             document.querySelector('select[name="birth_year"]').value = data.main_data.birth_year || '';
             document.querySelector('select[name="birth_hour"]').value = data.main_data.birth_hour || '00';
             document.querySelector('select[name="birth_minute"]').value = data.main_data.birth_minute || '00';
             document.querySelector('input[name="id_card"]').value = data.main_data.id_card || '';
             mainFullNameInput.value = data.main_data.full_name || '';
             
+            // Handle option selection
             const optionSelect = document.querySelector('select[name="option"]');
             if (optionSelect) {
                 const savedOption = data.main_data.option || 'BD';
                 const optionExists = Array.from(optionSelect.options).some(opt => opt.value === savedOption);
-                optionSelect.value = optionExists ? savedOption : optionSelect.options[0].value;
+                optionSelect.value = optionExists ? savedOption : 'BD';
             }
             mainSearchNameInput.value = searchName;
         } else {
@@ -83,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
             mainSearchNameInput.value = searchName;
         }
 
-        // Populate surrounding data fields in modal
+        // Populate surrounding data fields
         if (data.surrounding_data) {
             for (let i = 1; i <= 20; i++) {
                 const fieldName = `surrounding_${String(i).padStart(2, '0')}`;
@@ -92,16 +111,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     modalField.value = data.surrounding_data[fieldName] || '';
                 }
             }
+            console.log('📎 Loaded surrounding data:', Object.keys(data.surrounding_data).filter(k => data.surrounding_data[k]).length, 'fields');
         } else {
             clearSurroundingModalFields();
         }
+        
         modalSearchNameInput.value = searchName;
+        alert('✅ โหลดข้อมูลเรียบร้อยแล้ว!');
     }
 
     function clearMainFormFieldsExceptSearchName() {
         document.querySelector('select[name="birth_day"]').value = '';
         document.querySelector('select[name="birth_month"]').value = '';
-        document.querySelector('select[name="birth_century"]').value = '';
+        document.querySelector('select[name="birth_century"]').value = '20';
         document.querySelector('select[name="birth_year"]').value = '';
         document.querySelector('select[name="birth_hour"]').value = '00';
         document.querySelector('select[name="birth_minute"]').value = '00';
@@ -112,7 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function clearSurroundingModalFields() {
         for (let i = 1; i <= 20; i++) {
-            document.getElementById(`modal_surrounding_${String(i).padStart(2, '0')}`).value = '';
+            const field = document.getElementById(`modal_surrounding_${String(i).padStart(2, '0')}`);
+            if (field) field.value = '';
         }
     }
 
@@ -127,232 +150,248 @@ document.addEventListener('DOMContentLoaded', function() {
         const storedData = getStoredUserData();
         searchSelect.innerHTML = '<option value="">-- เลือกชื่อที่บันทึกไว้ --</option>';
 
-        for (const searchName in storedData) {
+        const names = Object.keys(storedData).sort();
+        for (const searchName of names) {
             const option = document.createElement('option');
             option.value = searchName;
             option.textContent = searchName;
             searchSelect.appendChild(option);
         }
+        
+        console.log('📋 Search select populated with', names.length, 'items');
+    }
+
+    function generateSurroundingFields() {
+        const container = document.getElementById('surroundingFieldsContainer');
+        if (!container) {
+            console.error('❌ Error: surroundingFieldsContainer not found!');
+            return;
+        }
+        
+        container.innerHTML = ''; // Clear any existing fields
+        
+        for (let i = 1; i <= 20; i++) {
+            const fieldNumber = String(i).padStart(2, '0');
+            const div = document.createElement('div');
+            div.className = 'mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200';
+            div.innerHTML = `
+                <label for="modal_surrounding_${fieldNumber}" class="block text-sm font-medium text-gray-700 mb-2">
+                    <span class="text-purple-600 font-bold">#${fieldNumber}</span> ข้อมูลพลังตัวเลข:
+                </label>
+                <input type="text" id="modal_surrounding_${fieldNumber}" 
+                       name="surrounding_${fieldNumber}"
+                       placeholder="เช่น: เลขบ้าน, ทะเบียนรถ, เบอร์โทร..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 
+                              focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all">
+            `;
+            container.appendChild(div);
+        }
+        
+        console.log('✅ Generated 20 surrounding fields successfully');
     }
 
     function showLoading(show = true) {
-        let loadingEl = document.getElementById('loadingIndicator');
+        const loadingEl = document.getElementById('loadingIndicator');
         if (!loadingEl) {
-            loadingEl = document.createElement('div');
-            loadingEl.id = 'loadingIndicator';
-            loadingEl.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
-            loadingEl.innerHTML = '<div class="bg-white p-6 rounded shadow-lg"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p class="mt-4 text-center">กำลังคำนวณ...</p></div>';
-            document.body.appendChild(loadingEl);
+            // Create if doesn't exist
+            const div = document.createElement('div');
+            div.id = 'loadingIndicator';
+            div.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50';
+            div.innerHTML = `
+                <div class="bg-white p-6 rounded-xl shadow-2xl mx-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto"></div>
+                    <p class="mt-4 text-center font-medium text-gray-700">กำลังคำนวณ...</p>
+                </div>
+            `;
+            document.body.appendChild(div);
         }
-        loadingEl.style.display = show ? 'flex' : 'none';
+        
+        const el = document.getElementById('loadingIndicator');
+        el.style.display = show ? 'flex' : 'none';
+        console.log(show ? '⏳ Loading shown' : '✅ Loading hidden');
     }
-
-    // ==================== NEW: AJAX TO EDGE FUNCTION ====================
 
     async function callPsychomatrixAPI(formData) {
         try {
             showLoading(true);
-            
+            console.log('📤 Sending data to:', PSYCHOMATRIX_FUNCTION);
+            console.log('📦 Payload:', formData);
+
             const response = await fetch(PSYCHOMATRIX_FUNCTION, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify(formData),
+                mode: 'cors',
+                cache: 'no-cache'
             });
 
+            console.log('📥 Response received:', response.status, response.statusText);
+
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorText}`);
             }
 
             const result = await response.json();
-            
-            // Store result in localStorage for result.html to read
+            console.log('✅ API Success:', result);
+
+            // Store result in sessionStorage
             sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
             
-            // Redirect to result.html
+            // Redirect
+            console.log('🔄 Redirecting to result.html...');
             window.location.href = 'result.html';
             
         } catch (error) {
-            console.error('API Error:', error);
-            alert('เกิดข้อผิดพลาดในการคำนวณ: ' + error.message);
-        } finally {
+            console.error('❌ API Call Failed:', error);
             showLoading(false);
+            alert(`❌ เกิดข้อผิดพลาดในการคำนวณ:\n\n${error.message}\n\nข้อควรตรวจสอบ:\n1. Edge Function ทำงานอยู่\n2. CORS เปิดถูกต้อง\n3. ข้อมูลที่ส่งถูกต้อง`);
+        } finally {
+            // Ensure loading is hidden after delay
+            setTimeout(() => showLoading(false), 1000);
         }
     }
 
     // ==================== EVENT LISTENERS ====================
 
+    // Form submission handling
     if (mainForm) {
         mainForm.addEventListener('submit', function(e) {
-            const action = e.submitter ? e.submitter.value : '';
-            const searchName = mainSearchNameInput.value.trim();
-
-            if (action === 'save') {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('📝 Form submission prevented, handling manually...');
+        });
+        
+        // Handle button clicks instead
+        const submitButtons = mainForm.querySelectorAll('button[type="submit"]');
+        submitButtons.forEach(button => {
+            button.addEventListener('click', async function(e) {
                 e.preventDefault();
-
-                if (!searchName) {
-                    alert('โปรดระบุ Search Name เพื่อบันทึกข้อมูล.');
-                    return;
-                }
-
-                // Validate time
-                const birthHour = document.querySelector('select[name="birth_hour"]').value;
-                const birthMinute = document.querySelector('select[name="birth_minute"]').value;
-                if (birthHour && (parseInt(birthHour) < 0 || parseInt(birthHour) > 23)) {
-                    alert('โปรดระบุชั่วโมงที่ถูกต้อง (00-23).');
-                    return;
-                }
-                if (birthMinute && (parseInt(birthMinute) < 0 || parseInt(birthMinute) > 59)) {
-                    alert('โปรดระบุนาทีที่ถูกต้อง (00-59).');
-                    return;
-                }
-
-                const storedData = getStoredUserData();
-                storedData[searchName] = storedData[searchName] || {};
-
-                // Collect main form data
-                const mainData = {
-                    birth_day: document.querySelector('select[name="birth_day"]').value,
-                    birth_month: document.querySelector('select[name="birth_month"]').value,
-                    birth_century: document.querySelector('select[name="birth_century"]').value,
-                    birth_year: document.querySelector('select[name="birth_year"]').value,
-                    birth_hour: birthHour,
-                    birth_minute: birthMinute,
-                    id_card: document.querySelector('input[name="id_card"]').value,
-                    full_name: mainFullNameInput.value,
-                    option: document.querySelector('select[name="option"]').value
-                };
-                storedData[searchName].main_data = mainData;
-
-                saveUserData(storedData);
-                alert('บันทึกข้อมูลหลักเรียบร้อยแล้ว.');
-                populateSearchSelect();
-
-            } else if (action === 'analyze') {
-                e.preventDefault();
+                e.stopImmediatePropagation();
                 
-                // Prepare data for API
-                const formData = {
-                    action: 'analyze',
-                    search_name: searchName,
-                    use_average: document.querySelector('#use_average').checked,
-                    option: document.querySelector('select[name="option"]').value,
-                    birth_day: document.querySelector('select[name="birth_day"]').value,
-                    birth_month: document.querySelector('select[name="birth_month"]').value,
-                    birth_century: document.querySelector('select[name="birth_century"]').value,
-                    birth_year: document.querySelector('select[name="birth_year"]').value,
-                    birth_hour: document.querySelector('select[name="birth_hour"]').value,
-                    birth_minute: document.querySelector('select[name="birth_minute"]').value,
-                    id_card: document.querySelector('input[name="id_card"]').value,
-                    full_name: mainFullNameInput.value
-                };
-
-                // Add surrounding data
-                const storedData = getStoredUserData();
-                if (searchName && storedData[searchName] && storedData[searchName].surrounding_data) {
-                    formData.surrounding_data = storedData[searchName].surrounding_data;
+                const action = this.value;
+                const formSubmitEvent = new Event('submit', { bubbles: false, cancelable: true });
+                formSubmitEvent.submitter = this;
+                mainForm.dispatchEvent(formSubmitEvent);
+                
+                // Trigger the main handler
+                const handler = mainForm['onsubmit'] || mainForm.onSubmit;
+                if (handler) {
+                    await handler.call(mainForm, formSubmitEvent);
                 }
-
-                // Call Edge Function
-                callPsychomatrixAPI(formData);
-            }
+            });
         });
     }
 
+    // Load search modal
     if (loadMainButton && searchModal) {
         loadMainButton.addEventListener('click', function() {
             populateSearchSelect();
             searchModal.classList.remove('hidden');
+            console.log('📂 Search modal opened');
         });
     }
 
+    // Cancel search modal
     if (cancelSearchModalBtn && searchModal) {
         cancelSearchModalBtn.addEventListener('click', function() {
             searchModal.classList.add('hidden');
         });
     }
 
+    // Select saved search
     if (selectSearchBtn && searchSelect && mainSearchNameInput) {
         selectSearchBtn.addEventListener('click', function() {
-            const selectedSearchName = searchSelect.value;
-            if (selectedSearchName) {
-                mainSearchNameInput.value = selectedSearchName;
+            const selected = searchSelect.value;
+            if (selected) {
+                mainSearchNameInput.value = selected;
                 searchModal.classList.add('hidden');
-                loadData(selectedSearchName);
+                loadData(selected);
             } else {
-                alert('กรุณาเลือกชื่อที่บันทึกไว้.');
+                alert('⚠️ กรุณาเลือกชื่อที่บันทึกไว้');
             }
         });
     }
 
+    // Delete saved search
     if (deleteSearchBtn && searchSelect) {
         deleteSearchBtn.addEventListener('click', function() {
             const searchNameToDelete = searchSelect.value;
             if (!searchNameToDelete) {
-                alert('โปรดเลือกชื่อที่บันทึกไว้เพื่อลบ.');
+                alert('⚠️ โปรดเลือกชื่อที่จะลบ');
                 return;
             }
 
-            if (!confirm(`คุณแน่ใจหรือไม่ที่จะลบข้อมูลที่บันทึกไว้ "${searchNameToDelete}"?`)) {
+            if (!confirm(`❌ คุณแน่ใจหรือไม่ที่จะลบข้อมูล "${searchNameToDelete}"?`)) {
                 return;
             }
 
-            let storedData = getStoredUserData();
+            const storedData = getStoredUserData();
             if (storedData[searchNameToDelete]) {
                 delete storedData[searchNameToDelete];
                 saveUserData(storedData);
-                alert(`ข้อมูล "${searchNameToDelete}" ถูกลบเรียบร้อยแล้ว.`);
+                alert(`✅ ลบ "${searchNameToDelete}" เรียบร้อยแล้ว`);
                 populateSearchSelect();
                 if (mainSearchNameInput.value === searchNameToDelete) {
                     clearAllFormAndModalFields();
                 }
                 searchModal.classList.add('hidden');
             } else {
-                alert('ไม่พบข้อมูลที่จะลบ.');
+                alert('❌ ไม่พบข้อมูลที่จะลบ');
             }
         });
     }
 
+    // Open surrounding data modal
     if (openSurroundingDataModalBtn && surroundingDataModal && modalSearchNameInput && mainSearchNameInput) {
         openSurroundingDataModalBtn.addEventListener('click', function() {
             const currentSearchName = mainSearchNameInput.value.trim();
             if (!currentSearchName) {
-                alert('โปรดระบุ Search Name ที่ฟอร์มหลักก่อน เพื่อใช้เชื่อมโยงข้อมูลพลังตัวเลขรอบตัว');
+                alert('⚠️ กรุณาระบุชื่อที่ฟอร์มหลักก่อน');
+                mainSearchNameInput.focus();
                 return;
             }
+            
             modalSearchNameInput.value = currentSearchName;
             const storedData = getStoredUserData();
+            
+            // Load existing data
             if (storedData[currentSearchName] && storedData[currentSearchName].surrounding_data) {
                 for (let i = 1; i <= 20; i++) {
                     const fieldName = `surrounding_${String(i).padStart(2, '0')}`;
-                const modalField = document.getElementById(`modal_${fieldName}`);
-                if (modalField && storedData[currentSearchName].surrounding_data[fieldName]) {
-                    modalField.value = storedData[currentSearchName].surrounding_data[fieldName];
-                }
-
+                    const modalField = document.getElementById(`modal_${fieldName}`);
+                    if (modalField) {
+                        modalField.value = storedData[currentSearchName].surrounding_data[fieldName] || '';
+                    }
                 }
             } else {
                 clearSurroundingModalFields();
             }
+            
             surroundingDataModal.classList.remove('hidden');
-            console.log('Modal opened for:', currentSearchName);
+            console.log('🧲 Surrounding modal opened for:', currentSearchName);
         });
     }
 
+    // Cancel surrounding modal
     if (cancelSurroundingDataBtn && surroundingDataModal) {
         cancelSurroundingDataBtn.addEventListener('click', function() {
             surroundingDataModal.classList.add('hidden');
         });
     }
 
+    // Save surrounding data
     if (surroundingDataForm) {
         surroundingDataForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const searchName = document.getElementById('modal_search_name').value.trim();
+            const searchName = modalSearchNameInput.value.trim();
             if (!searchName) {
-                alert('ไม่พบ Search Name ใน Modal กรุณาลองใหม่');
+                alert('❌ ไม่พบชื่อในระบบ');
                 return;
             }
 
@@ -366,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (!hasData) {
-                alert('กรุณากรอกข้อมูลรอบตัวอย่างน้อย 1 ช่อง');
+                alert('⚠️ กรอกข้อมูลอย่างน้อย 1 ช่อง');
                 return;
             }
 
@@ -377,8 +416,9 @@ document.addEventListener('DOMContentLoaded', function() {
             storedData[searchName].surrounding_data = surroundingData;
 
             saveUserData(storedData);
-            alert('บันทึกข้อมูลพลังตัวเลขรอบตัวเรียบร้อยแล้ว.');
+            alert('✅ บันทึกข้อมูลรอบตัวเรียบร้อยแล้ว');
             surroundingDataModal.classList.add('hidden');
+            console.log('💾 Surrounding data saved for:', searchName);
         });
     }
 
@@ -387,19 +427,21 @@ document.addEventListener('DOMContentLoaded', function() {
         saveLocalStorageFileBtn.addEventListener('click', function() {
             const userData = localStorage.getItem(USER_DATA_STORAGE_KEY);
             if (!userData) {
-                alert('ไม่พบข้อมูลที่จะบันทึกใน LocalStorage.');
+                alert('⚠️ ไม่พบข้อมูลใน LocalStorage');
                 return;
             }
 
             const blob = new Blob([userData], { type: 'text/plain;charset=utf-8' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'psychomatrix_backup_[DATE].txt'.replace('[DATE]', new Date().toISOString().split('T')[0]);
+            a.download = `psychomatrix_backup_${new Date().toISOString().split('T')[0]}.txt`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(a.href);
-            alert('ข้อมูล LocalStorage ถูกบันทึกลงไฟล์เรียบร้อยแล้ว.');
+            
+            alert('✅ บันทึกไฟล์สำรองเรียบร้อยแล้ว');
+            console.log('💾 Backup saved to file');
         });
     }
 
@@ -410,9 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         loadLocalStorageFileInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
+            if (!file) return;
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -420,51 +460,35 @@ document.addEventListener('DOMContentLoaded', function() {
                     const fileContent = e.target.result;
                     const parsedData = JSON.parse(fileContent);
                     saveUserData(parsedData);
-                    alert('ข้อมูล LocalStorage ถูกโหลดจากไฟล์เรียบร้อยแล้ว. โปรดเลือกชื่อเพื่อโหลดข้อมูล.');
+                    alert('✅ โหลดข้อมูลจากไฟล์สำเร็จ');
                     populateSearchSelect();
                     searchModal.classList.add('hidden');
+                    console.log('📥 Data loaded from file:', Object.keys(parsedData).length, 'entries');
                 } catch (error) {
-                    alert('เกิดข้อผิดพลาดในการอ่านหรือแยกวิเคราะห์ไฟล์: ตรวจสอบว่าไฟล์เป็นไฟล์ข้อความ JSON ที่ถูกต้อง.');
-                    console.error('File read/parse error:', error);
+                    console.error('❌ File parse error:', error);
+                    alert('❌ ไฟล์ไม่ถูกต้อง ต้องเป็น JSON format');
                 }
             };
             reader.readAsText(file);
         });
     }
 
-    // Initial population
-    populateSearchSelect();
-
-    // ==================== สร้าง 20 Fields สำหรับ Surrounding Data ====================
+    // ==================== INITIAL SETUP ====================
+    
+    // Generate surrounding fields
     generateSurroundingFields();
+    
+    // Populate search dropdown
+    populateSearchSelect();
+    
+    // Log ready status
+    console.log('✅ Psychomatrix.js v2.1 Fully Initialized');
+    console.log('📌 Debug Mode: Check console for all operations');
 
-    function generateSurroundingFields() {
-        const container = document.getElementById('surroundingFieldsContainer');
-        if (!container) {
-            console.error('Error: surroundingFieldsContainer not found!');
-            return;
-        }
-        
-        container.innerHTML = ''; // Clear ทุกครั้งที่โหลด
-        
-        for (let i = 1; i <= 20; i++) {
-            const fieldNumber = String(i).padStart(2, '0');
-            const div = document.createElement('div');
-            div.className = 'mb-4'; // Add margin
-            div.innerHTML = `
-                <label for="modal_surrounding_${fieldNumber}" class="block text-sm font-medium text-gray-700 mb-2">
-                    ข้อมูลรอบตัว #${fieldNumber}:
-                </label>
-                <input type="text" id="modal_surrounding_${fieldNumber}" 
-                       name="surrounding_${fieldNumber}"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-            `;
-            container.appendChild(div);
-        }
-        
-        console.log('✅ Generated 20 surrounding fields');
-    }
-
-
+    // ==================== DEBUG INFORMATION ====================
+    console.log('=== DEBUG INFO ===');
+    console.log('Form element:', mainForm);
+    console.log('API Endpoint:', PSYCHOMATRIX_FUNCTION);
+    console.log('Storage key:', USER_DATA_STORAGE_KEY);
+    console.log('==================');
 });
