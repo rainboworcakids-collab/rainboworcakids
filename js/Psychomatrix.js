@@ -326,12 +326,17 @@ document.addEventListener('DOMContentLoaded', function() {
             if (storedData[currentSearchName] && storedData[currentSearchName].surrounding_data) {
                 for (let i = 1; i <= 20; i++) {
                     const fieldName = `surrounding_${String(i).padStart(2, '0')}`;
-                    document.getElementById(`modal_${fieldName}`).value = storedData[currentSearchName].surrounding_data[fieldName] || '';
+                const modalField = document.getElementById(`modal_${fieldName}`);
+                if (modalField && storedData[currentSearchName].surrounding_data[fieldName]) {
+                    modalField.value = storedData[currentSearchName].surrounding_data[fieldName];
+                }
+
                 }
             } else {
                 clearSurroundingModalFields();
             }
             surroundingDataModal.classList.remove('hidden');
+            console.log('Modal opened for:', currentSearchName);
         });
     }
 
