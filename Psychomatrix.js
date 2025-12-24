@@ -1,10 +1,10 @@
-// Psychomatrix.js - Version 2.1
-// Complete rewrite for GitHub Pages + Supabase Edge Functions
-// Features: localStorage, Modal Management, API Integration, Debug Mode
+// Psychomatrix.js - Version 2.2 (FINAL)
+// Complete implementation for GitHub Pages + Supabase Edge Functions
+// Features: localStorage, Modal Management, API Integration, Debug Logging
 // Created: 2025-12-24
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Psychomatrix.js v2.1 Initializing...');
+    console.log('🚀 Psychomatrix.js v2.2 Initializing...');
     
     // ==================== GLOBAL VARIABLES ====================
     const mainForm = document.querySelector('form');
@@ -89,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('input[name="id_card"]').value = data.main_data.id_card || '';
             mainFullNameInput.value = data.main_data.full_name || '';
             
-            // Handle option selection
             const optionSelect = document.querySelector('select[name="option"]');
             if (optionSelect) {
                 const savedOption = data.main_data.option || 'BD';
@@ -193,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function showLoading(show = true) {
         const loadingEl = document.getElementById('loadingIndicator');
         if (!loadingEl) {
-            // Create if doesn't exist
             const div = document.createElement('div');
             div.id = 'loadingIndicator';
             div.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50';
@@ -212,10 +210,62 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function callPsychomatrixAPI(formData) {
+        console.log('==================== API CALL START ====================');
+        console.log('📤 Function: callPsychomatrixAPI()');
+        console.log('📡 Endpoint:', PSYCHOMATRIX_FUNCTION);
+        console.log('🕐 Time:', new Date().toLocaleString('th-TH'));
+        
         try {
             showLoading(true);
-            console.log('📤 Sending data to:', PSYCHOMATRIX_FUNCTION);
-            console.log('📦 Payload:', formData);
+            
+            // Log raw input
+            console.log('📥 Raw Input Data:', formData);
+            console.log('📊 Data Types:');
+            Object.entries(formData).forEach(([key, val]) => {
+                console.log(`   ${key}: ${typeof val} = ${val}`);
+            });
+
+            // Build payload
+            const payload = {
+                action: 'analyze',
+                search_name: formData.search_name || '',
+                use_average: Boolean(formData.use_average),
+                option: formData.option || 'BD',
+                birth_day: String(formData.birth_day || ''),
+                birth_month: String(formData.birth_month || ''),
+                birth_century: String(formData.birth_century || '20'),
+                birth_year: String(formData.birth_year || ''),
+                birth_hour: String(formData.birth_hour || '00'),
+                birth_minute: String(formData.birth_minute || '00'),
+                id_card: String(formData.id_card || ''),
+                full_name: String(formData.full_name || '')
+            };
+
+            // Add surrounding data if exists
+            if (formData.surrounding_data && typeof formData.surrounding_data === 'object') {
+                const filtered = {};
+                Object.entries(formData.surrounding_data).forEach(([k, v]) => {
+                    if (v && String(v).trim()) filtered[k] = String(v).trim();
+                });
+                
+                if (Object.keys(filtered).length > 0) {
+                    payload.surrounding_data = filtered;
+                    console.log('📎 Surrounding data added:', Object.keys(filtered).length, 'fields');
+                } else {
+                    console.log('📎 No surrounding data to add (all empty)');
+                }
+            } else {
+                console.log('📎 No surrounding data in formData');
+            }
+
+            console.log('📦 FINAL PAYLOAD:');
+            console.log('Method: POST');
+            console.log('Content-Type: application/json');
+            console.log('Body:', JSON.stringify(payload, null, 2));
+            
+            // Show payload size
+            const payloadSize = JSON.stringify(payload).length;
+            console.log(`📊 Payload size: ${payloadSize} bytes`);
 
             const response = await fetch(PSYCHOMATRIX_FUNCTION, {
                 method: 'POST',
@@ -223,36 +273,197 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(payload),
                 mode: 'cors',
                 cache: 'no-cache'
             });
 
-            console.log('📥 Response received:', response.status, response.statusText);
+            console.log('📥 Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                headers: Object.fromEntries([...response.headers.entries()])
+            });
 
             if (!response.ok) {
+                console.error('❌ Response NOT OK');
                 const errorText = await response.text();
-                console.error('❌ API Error Response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorText}`);
+                console.error('Error body:', errorText);
+                
+                // Try to parse as JSON
+                let errorDetails = errorText;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error('Parsed error JSON:', errorJson);
+                    errorDetails = JSON.stringify(errorJson, null, 2);
+                } catch (e) {
+                    console.error('Could not parse error as JSON, using raw text');
+                }
+                
+                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorDetails}`);
             }
 
             const result = await response.json();
-            console.log('✅ API Success:', result);
-
-            // Store result in sessionStorage
+            console.log('✅ SUCCESS! Response data:', result);
+            
+            // Store in sessionStorage
+            console.log('💾 Storing result in sessionStorage...');
             sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
+            console.log('✅ Stored successfully');
             
             // Redirect
-            console.log('🔄 Redirecting to result.html...');
+            console.log('🔄 Redirecting to result.html');
             window.location.href = 'result.html';
             
         } catch (error) {
-            console.error('❌ API Call Failed:', error);
+            console.error('❌ CATCH BLOCK - API CALL FAILED:');
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Stack trace:', error.stack);
+            
             showLoading(false);
-            alert(`❌ เกิดข้อผิดพลาดในการคำนวณ:\n\n${error.message}\n\nข้อควรตรวจสอบ:\n1. Edge Function ทำงานอยู่\n2. CORS เปิดถูกต้อง\n3. ข้อมูลที่ส่งถูกต้อง`);
+            
+            // Enhanced error message
+            let errorMessage = error.message;
+            if (error.message.includes('400')) {
+                errorMessage += '\n\n💡 สาเหตุที่เป็นไปได้:\n' +
+                               '1. ข้อมูลขาด field ที่จำเป็นต้องใช้งาน\n' +
+                               '2. ชนิดข้อมูลไม่ถูกต้อง\n' +
+                               '3. Edge Function ไม่พบ field ที่ต้องการ\n\n' +
+                               '🔍 ตรวจสอบข้อมูลใน Debug Logger ที่มุมล่างขวา';
+            }
+            
+            alert(`❌ เกิดข้อผิดพลาด:\n\n${errorMessage}`);
         } finally {
-            // Ensure loading is hidden after delay
+            console.log('==================== API CALL END ====================');
             setTimeout(() => showLoading(false), 1000);
+        }
+    }
+
+    // ==================== MAIN FORM HANDLER ====================
+
+    async function handleFormSubmission(submitter) {
+        console.log('🔧 handleFormSubmission() called with submitter:', submitter);
+        
+        const action = submitter ? submitter.value : '';
+        const searchName = mainSearchNameInput.value.trim();
+        
+        console.log('📊 Action:', action, '| Search Name:', searchName);
+
+        if (action === 'save') {
+            // ==================== SAVE ACTION ====================
+            console.log('💾 Processing SAVE action...');
+            
+            if (!searchName) {
+                alert('⚠️ กรุณาระบุชื่อสำหรับบันทึกข้อมูล');
+                mainSearchNameInput.focus();
+                return;
+            }
+
+            // Validate time fields
+            const birthHour = document.querySelector('select[name="birth_hour"]').value;
+            const birthMinute = document.querySelector('select[name="birth_minute"]').value;
+            
+            if (birthHour && (parseInt(birthHour) < 0 || parseInt(birthHour) > 23)) {
+                alert('⚠️ โปรดระบุชั่วโมงที่ถูกต้อง (00-23)');
+                return;
+            }
+            if (birthMinute && (parseInt(birthMinute) < 0 || parseInt(birthMinute) > 59)) {
+                alert('⚠️ โปรดระบุนาทีที่ถูกต้อง (00-59)');
+                return;
+            }
+
+            const storedData = getStoredUserData();
+            storedData[searchName] = storedData[searchName] || {};
+
+            // Collect main form data
+            const mainData = {
+                birth_day: document.querySelector('select[name="birth_day"]').value,
+                birth_month: document.querySelector('select[name="birth_month"]').value,
+                birth_century: document.querySelector('select[name="birth_century"]').value,
+                birth_year: document.querySelector('select[name="birth_year"]').value,
+                birth_hour: birthHour,
+                birth_minute: birthMinute,
+                id_card: document.querySelector('input[name="id_card"]').value,
+                full_name: mainFullNameInput.value,
+                option: document.querySelector('select[name="option"]').value
+            };
+            
+            storedData[searchName].main_data = mainData;
+
+            saveUserData(storedData);
+            alert('✅ บันทึกข้อมูลหลักเรียบร้อยแล้ว');
+            populateSearchSelect();
+            console.log('💾 SAVE completed for:', searchName);
+            
+        } else if (action === 'analyze') {
+            // ==================== ANALYZE ACTION ====================
+            console.log('🔮 Processing ANALYZE action...');
+            
+            // Validate required fields based on option
+            const option = document.querySelector('select[name="option"]').value;
+            const birthDay = document.querySelector('select[name="birth_day"]').value;
+            const birthMonth = document.querySelector('select[name="birth_month"]').value;
+            const idCard = document.querySelector('input[name="id_card"]').value;
+            const fullName = document.querySelector('input[name="full_name"]').value;
+            
+            console.log('📋 Validation for option:', option);
+            console.log('📋 Birth Date:', birthDay, birthMonth);
+            console.log('📋 ID Card:', idCard);
+            console.log('📋 Full Name:', fullName);
+
+            if (option.includes('BD') && (!birthDay || !birthMonth)) {
+                alert('⚠️ กรุณากรอกวันเกิดให้ครบถ้วน');
+                return;
+            }
+            if (option.includes('IDC') && !idCard) {
+                alert('⚠️ กรุณากรอกเลขบัตรประชาชน');
+                return;
+            }
+            if (option.includes('FullName') && !fullName) {
+                alert('⚠️ กรุณากรอกชื่อ-สกุล');
+                return;
+            }
+
+            // Prepare data for API
+            const formData = {
+                action: 'analyze',
+                search_name: searchName,
+                use_average: document.querySelector('#use_average').checked,
+                option: option,
+                birth_day: birthDay,
+                birth_month: birthMonth,
+                birth_century: document.querySelector('select[name="birth_century"]').value,
+                birth_year: document.querySelector('select[name="birth_year"]').value,
+                birth_hour: document.querySelector('select[name="birth_hour"]').value,
+                birth_minute: document.querySelector('select[name="birth_minute"]').value,
+                id_card: idCard,
+                full_name: fullName
+            };
+
+            console.log('📦 COMPLETE FORM DATA:');
+            console.log(JSON.stringify(formData, null, 2));
+
+            // Add surrounding data if exists
+            const storedData = getStoredUserData();
+            if (searchName && storedData[searchName] && storedData[searchName].surrounding_data) {
+                const surrounding = storedData[searchName].surrounding_data;
+                const filtered = {};
+                Object.entries(surrounding).forEach(([k,v]) => {
+                    if (v && v.trim()) filtered[k] = v.trim();
+                });
+                if (Object.keys(filtered).length > 0) {
+                    formData.surrounding_data = filtered;
+                    console.log('📎 Added surrounding data:', Object.keys(filtered).length, 'fields');
+                }
+            }
+
+            // Call API
+            console.log('🚀 Calling API with prepared data...');
+            await callPsychomatrixAPI(formData);
+            
+        } else {
+            console.warn('⚠️ Unknown action:', action);
         }
     }
 
@@ -260,31 +471,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form submission handling
     if (mainForm) {
-        mainForm.addEventListener('submit', function(e) {
+        console.log('🎯 Setting up form submission handlers...');
+        
+        // Handle form submit event
+        mainForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('📝 Form submission prevented, handling manually...');
+            console.log('🎯 Form submit event triggered');
+            await handleFormSubmission(e.submitter || document.activeElement);
         });
         
-        // Handle button clicks instead
-        const submitButtons = mainForm.querySelectorAll('button[type="submit"]');
-        submitButtons.forEach(button => {
-            button.addEventListener('click', async function(e) {
+        // Also handle direct button clicks for extra reliability
+        const analyzeBtn = mainForm.querySelector('button[value="analyze"]');
+        const saveBtn = mainForm.querySelector('button[value="save"]');
+        
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', async function(e) {
                 e.preventDefault();
-                e.stopImmediatePropagation();
-                
-                const action = this.value;
-                const formSubmitEvent = new Event('submit', { bubbles: false, cancelable: true });
-                formSubmitEvent.submitter = this;
-                mainForm.dispatchEvent(formSubmitEvent);
-                
-                // Trigger the main handler
-                const handler = mainForm['onsubmit'] || mainForm.onSubmit;
-                if (handler) {
-                    await handler.call(mainForm, formSubmitEvent);
-                }
+                e.stopPropagation();
+                console.log('🎯 Analyze button clicked directly');
+                await handleFormSubmission(this);
             });
-        });
+        }
+        
+        if (saveBtn) {
+            saveBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🎯 Save button clicked directly');
+                await handleFormSubmission(this);
+            });
+        }
     }
 
     // Load search modal
@@ -482,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function() {
     populateSearchSelect();
     
     // Log ready status
-    console.log('✅ Psychomatrix.js v2.1 Fully Initialized');
+    console.log('✅ Psychomatrix.js v2.2 Fully Initialized');
     console.log('📌 Debug Mode: Check console for all operations');
 
     // ==================== DEBUG INFORMATION ====================
