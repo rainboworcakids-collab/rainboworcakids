@@ -11,9 +11,6 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Chart.js (สำหรับ Pinnacle) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
@@ -131,7 +128,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v2.0-Psychomatrix-Result-4Sections
+            v3.0-Psychomatrix-Result-FULL
         </div>
 
         <!-- Loading Status -->
@@ -165,7 +162,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v2.0-Psychomatrix-Result-4Sections';
+        const VERSION = 'v3.0-Psychomatrix-Result-FULL';
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
@@ -195,22 +192,17 @@
                     throw new Error(data.error || 'API returned error');
                 }
 
-                // สร้าง HTML สำหรับแต่ละประเภทข้อมูล
+                // 🔧 **FIXED: รองรับ results array**
                 let html = '';
                 
-                // 1. Birth Date Results
-                if (data.birth_date && data.destiny_number) {
-                    html += createResultSection('birth-date', '📅 ข้อมูลวันเกิด', data, 'birth');
-                }
-                
-                // 2. ID Card Results
-                if (data.id_card && data.destiny_number) {
-                    html += createResultSection('id-card', '🪪 ข้อมูลบัตรประชาชน', data, 'idcard');
-                }
-                
-                // 3. Full Name Results
-                if (data.full_name && data.destiny_number) {
-                    html += createResultSection('full-name', '✍️ ข้อมูลชื่อ-สกุล', data, 'name');
+                if (data.results && Array.isArray(data.results) && data.results.length > 0) {
+                    // แสดงทุก result ใน array
+                    data.results.forEach(result => {
+                        html += createResultSectionFromResult(result);
+                    });
+                } else {
+                    // Fallback: รองรับ object เดี่ยว (backward compatibility)
+                    html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
                 }
 
                 resultsContainer.innerHTML = html;
@@ -235,10 +227,19 @@
             }
         }
 
+        // 🔧 **FIXED: สร้าง section จาก result object ใน array**
+        function createResultSectionFromResult(result) {
+            const type = result.type || 'unknown';
+            const title = result.title || '📊 ผลการวิเคราะห์';
+            const data = result.data || {};
+            const databaseData = result.database_data || null;
+            
+            return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
+        }
+
         function createResultSection(id, title, data, type) {
             const sectionId = `section-${id}`;
             const pythagoreanId = `pythagorean-${id}`;
-            const pinnacleId = `pinnacle-${id}`;
             
             return `
                 <div class="result-section" id="${sectionId}">
