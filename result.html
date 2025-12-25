@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis - RainbowOrcaKids</title>
+    <title>Psychomatrix Analysis - Event Log Version</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -28,7 +28,7 @@
     
     <!-- VERSION INDICATOR -->
     <script>
-        const RESULT_PAGE_VERSION = "2.0.1-DEBUG-LOGGING";
+        const RESULT_PAGE_VERSION = "2.0.2-EVENT-LOGGING";
     </script>
 </head>
 <body class="tw-bg-gray-100 tw-p-4">
@@ -36,49 +36,49 @@
     <div id="nav-container"></div>
 
     <!-- VERSION DISPLAY -->
-    <div class="tw-fixed tw-bottom-4 tw-right-4 tw-bg-gray-800 tw-text-white tw-px-3 tw-py-1 tw-rounded tw-text-xs tw-opacity-75">
-        Ver: <span id="version-display">2.0.1</span>
+    <div class="tw-fixed tw-bottom-4 tw-right-4 tw-bg-gray-800 tw-text-white tw-px-3 tw-py-1 tw-rounded tw-text-xs tw-opacity-75 tw-z-50">
+        Version: <span id="version-display">2.0.2</span>
     </div>
 
     <div class="tw-max-w-4xl tw-mx-auto tw-mt-6">
-        <!-- Tabs -->
+        <!-- TABS -->
         <div class="tw-flex tw-border-b tw-border-gray-300">
             <button class="tablink active" onclick="switchTab('Main', this)">Main</button>
             <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
         </div>
 
-        <!-- Main Tab -->
+        <!-- MAIN TAB -->
         <div id="Main" class="tabcontent active tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-4">
             <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-6">
                 <img src="https://rainboworcakids-collab.github.io/rainboworcakids/images/PsychomatixAnalize.png" 
                      alt="Logo" class="tw-h-16 tw-w-16 tw-inline tw-mr-3">
-                Psychomatrix Analysis
+                Psychomatrix Analysis - Event Log
             </h1>
             
-            <!-- DEBUG INFO DASHBOARD -->
-            <div id="debug-dashboard" class="tw-bg-yellow-50 tw-border tw-border-yellow-300 tw-p-4 tw-rounded tw-mb-6" style="display: block;">
-                <div class="tw-font-bold tw-mb-3 tw-text-yellow-800 tw-flex tw-items-center">
-                    <i class="fas fa-bug tw-mr-2"></i>🔍 DEBUG LOGGING DASHBOARD
+            <!-- EVENT LOG PANEL -->
+            <div id="event-log-panel" class="tw-bg-blue-50 tw-border tw-border-blue-300 tw-p-4 tw-rounded tw-mb-6" style="display: block;">
+                <div class="tw-font-bold tw-mb-3 tw-text-blue-800 tw-flex tw-items-center">
+                    <i class="fas fa-history tw-mr-2"></i>📋 EVENT LOG
                 </div>
-                <div id="debug-content" class="tw-font-mono tw-text-xs tw-space-y-1 tw-max-h-40 tw-overflow-y-auto"></div>
+                <div id="event-log-content" class="tw-font-mono tw-text-xs tw-space-y-1 tw-max-h-60 tw-overflow-y-auto tw-bg-white tw-p-3 tw-rounded tw-border"></div>
             </div>
-            
+
             <!-- LOADING STATE -->
             <div id="loading-state" class="tw-text-center tw-py-8">
-                <div class="tw-animate-pulse tw-text-gray-500">
+                <div class="tw-animate-pulse tw-text-gray-600">
                     <i class="fas fa-spinner tw-spin tw-mr-2"></i>
-                    <span id="loading-text">กำลังโหลดข้อมูลจากระบบ...</span>
+                    <span id="loading-status">กำลังเริ่มต้นระบบ...</span>
                 </div>
-                <div id="loading-details" class="tw-text-xs tw-text-gray-400 tw-mt-2"></div>
+                <div id="loading-details" class="tw-text-xs tw-text-gray-400 tw-mt-2 tw-font-mono"></div>
             </div>
 
             <!-- RESULT CONTENT -->
             <div id="result-content" style="display: none;">
-                <!-- เนื้อหาจะถูก render ที่นี่ -->
+                <!-- Content will be rendered here -->
             </div>
         </div>
 
-        <!-- Explained Tab -->
+        <!-- EXPLAINED TAB -->
         <div id="Explained" class="tabcontent tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-4">
             <div id="explained-content">
                 <p class="tw-text-gray-500 tw-text-center tw-py-8">
@@ -90,29 +90,33 @@
     </div>
 
     <script>
-        // ==================== VERSION & DEBUG LOGGING ====================
-        const RESULT_PAGE_VERSION = "2.0.1-DEBUG-LOGGING";
-        
-        // Centralized debug logging
-        const debugLog = (message, type = 'info') => {
-            const timestamp = new Date().toLocaleTimeString('th-TH');
-            const debugContent = document.getElementById('debug-content');
-            const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-600';
-            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : '🔍';
-            
-            debugContent.innerHTML += `<div class="${color}">${icon} [${timestamp}] ${message}</div>`;
-            DebugLogger.log(`[${type.toUpperCase()}] ${message}`);
-            
-            // Scroll to bottom
-            debugContent.scrollTop = debugContent.scrollHeight;
-        };
+        // ==================== EVENT LOGGING SYSTEM ====================
+        const RESULT_PAGE_VERSION = "2.0.2-EVENT-LOGGING";
+        const eventLog = [];
 
-        const updateLoadingText = (text) => {
-            document.getElementById('loading-text').textContent = text;
-        };
-
-        const updateLoadingDetails = (details) => {
-            document.getElementById('loading-details').textContent = details;
+        const logEvent = (step, message, data = null, type = 'info') => {
+            const timestamp = new Date().toLocaleTimeString('th-TH', { hour12: false });
+            const icon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '🔍';
+            const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-blue-600';
+            
+            const logEntry = {
+                timestamp,
+                step,
+                message,
+                data,
+                type
+            };
+            
+            eventLog.push(logEntry);
+            
+            // Display in UI
+            const logContent = document.getElementById('event-log-content');
+            const dataStr = data ? `<pre class="tw-text-gray-500 tw-whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>` : '';
+            logContent.innerHTML += `<div class="${color} tw-mb-2"><strong>${icon} [${timestamp}] ${step}:</strong> ${message}${dataStr}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+            
+            // Log to console
+            console.log(`[${type.toUpperCase()}] ${step}: ${message}`, data || '');
         };
 
         // ==================== TAB SYSTEM ====================
@@ -123,14 +127,12 @@
             el.classList.add('active');
         }
 
-        // ==================== DATA FETCHING ====================
-        // 1. Get data from URL
+        // ==================== STEP 1: GET URL PARAMETERS ====================
         function getDataFromURL() {
-            debugLog('🔄 Fetching URL parameters...', 'info');
+            logEvent('URL_PARSER', 'เริ่มดึงข้อมูลจาก URL parameters');
             
             const params = new URLSearchParams(window.location.search);
             const data = {
-                success: true,
                 birth_date: params.get('bd') || "",
                 birth_numbers: params.get('bn') || "",
                 birth_day: params.get('day') || "",
@@ -143,357 +145,270 @@
                 option: params.get('opt') || "BD"
             };
             
-            debugLog(`📥 URL Data: ${JSON.stringify(data)}`, 'success');
+            logEvent('URL_PARSER', 'ดึงข้อมูลสำเร็จ', data);
             
-            // Validate
-            if (!data.birth_date) debugLog('⚠️ Warning: birth_date not found in URL', 'error');
-            if (!data.destiny_number) debugLog('⚠️ Warning: destiny_number not found in URL', 'error');
-            if (!data.life_path_number) debugLog('⚠️ Warning: life_path_number not found in URL', 'error');
+            // Validation
+            if (!data.birth_date) {
+                logEvent('VALIDATION', '⚠️ พบปัญหา: ไม่มี birth_date ใน URL', null, 'warning');
+            }
+            if (!data.destiny_number) {
+                logEvent('VALIDATION', '⚠️ พบปัญหา: ไม่มี destiny_number ใน URL', null, 'warning');
+            }
+            if (!data.life_path_number) {
+                logEvent('VALIDATION', '⚠️ พบปัญหา: ไม่มี life_path_number ใน URL', null, 'warning');
+            }
             
             return data;
         }
 
-        // 2. Query Supabase - SQL: SELECT * FROM numerology_search_index WHERE element_type='LifePath' AND root_number=?
+        // ==================== STEP 2: PREPARE SUPABASE QUERY ====================
         async function fetchLifePathFromSupabase(rootNumber) {
-            debugLog(`🗄️ Preparing Supabase query for LifePath ${rootNumber}...`, 'info');
+            logEvent('SUPABASE_QUERY', `เริ่มต้น query LifePath ${rootNumber} จาก Supabase`);
             
             if (!rootNumber || rootNumber < 1 || rootNumber > 9) {
-                debugLog(`❌ Invalid LifePath number: ${rootNumber}`, 'error');
-                return { 
-                    success: false, 
-                    error: "Invalid LifePath number",
-                    summary: "เลขเส้นทางชีวิตไม่ถูกต้อง",
-                    html_path: ""
-                };
+                const errorMsg = `Invalid LifePath number: ${rootNumber}`;
+                logEvent('SUPABASE_QUERY', `❌ ${errorMsg}`, null, 'error');
+                return { success: false, error: errorMsg, summary: "เลขเส้นทางชีวิตไม่ถูกต้อง" };
             }
 
             try {
-                // Construct query URL
-                const query = `element_type=eq.LifePath&root_number=eq.${rootNumber}&select=*`;
-                const url = `${window.SUPABASE_URL}/rest/v1/numerology_search_index?${query}`;
+                // Build query
+                const queryParams = [
+                    `element_type=eq.LifePath`,
+                    `root_number=eq.${rootNumber}`,
+                    `select=*`
+                ].join('&');
                 
-                debugLog(`🔗 SQL URL: ${url}`, 'info');
-                debugLog(`📝 SQL Query: SELECT * FROM numerology_search_index WHERE element_type='LifePath' AND root_number=${rootNumber}`, 'info');
-                updateLoadingText(`กำลังดึงข้อมูล LifePath ${rootNumber} จาก Supabase...`);
+                const url = `${window.SUPABASE_URL}/rest/v1/numerology_search_index?${queryParams}`;
+                logEvent('SUPABASE_QUERY', `SQL Query URL: ${url}`);
+                logEvent('SUPABASE_QUERY', `SQL Command: SELECT * FROM numerology_search_index WHERE element_type='LifePath' AND root_number=${rootNumber}`);
                 
-                const response = await fetch(url, {
-                    headers: {
-                        'apikey': window.SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
-                    }
-                });
-                
-                debugLog(`📡 HTTP Response Status: ${response.status} ${response.statusText}`, 'info');
-                
+                // Show HTTP request details
+                const headers = {
+                    'apikey': window.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+                };
+                logEvent('SUPABASE_QUERY', `HTTP Headers (API Key shown partially): ${JSON.stringify({ ...headers, apikey: headers.apikey.substring(0, 10) + '...' })}`);
+
+                updateLoadingStatus(`กำลังส่ง request ไป Supabase...`);
+
+                const response = await fetch(url, { headers });
+
+                // Log HTTP response
+                logEvent('SUPABASE_RESPONSE', `HTTP Status: ${response.status} ${response.statusText}`);
+                logEvent('SUPABASE_RESPONSE', `HTTP Headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`);
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status} - ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
-                debugLog(`📦 Raw Supabase Response: ${JSON.stringify(data)}`, 'success');
-                
+                logEvent('SUPABASE_RESPONSE', `Raw Response Data:`, data);
+
                 if (data && data.length > 0 && data[0]) {
                     const row = data[0];
-                    debugLog(`✅ Found LifePath record: ID=${row.id}, Title=${row.title}`, 'success');
-                    debugLog(`📝 Summary: ${row.summary ? row.summary.substring(0, 100) + '...' : 'No summary'}`, 'success');
+                    logEvent('SUPABASE_SUCCESS', `✅ พบข้อมูล LifePath`, {
+                        id: row.id,
+                        title: row.title,
+                        summary_preview: row.summary ? row.summary.substring(0, 100) + '...' : 'No summary'
+                    });
                     
                     return {
                         success: true,
                         id: row.id,
-                        element_type: row.element_type,
-                        root_number: row.root_number,
                         title: row.title,
                         summary: row.summary || "⚠️ ยังไม่มีความหมายในระบบ",
-                        html_content: row.html_content,
-                        html_path: row.html_path || `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
+                        html_path: row.html_path
                     };
                 }
-                
-                debugLog(`⚠️ No records found for LifePath ${rootNumber}`, 'warning');
-                debugLog(`🔄 Will use GitHub fallback`, 'info');
-                
+
+                logEvent('SUPABASE_NOT_FOUND', '⚠️ ไม่พบข้อมูลใน Supabase จะใช้ GitHub fallback', null, 'warning');
                 return {
                     success: false,
-                    error: "No data found",
-                    summary: "⚠️ ไม่พบข้อมูลในระบบ Supabase กำลังโหลดจาก GitHub...",
+                    summary: "⚠️ ไม่พบข้อมูลในระบบ กำลังโหลดจาก GitHub...",
                     html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
                 };
+
             } catch (error) {
-                debugLog(`❌ Supabase Error: ${error.message}`, 'error');
-                debugLog(`🔄 Falling back to GitHub`, 'info');
-                
+                logEvent('SUPABASE_ERROR', `❌ Error: ${error.message}`, { error: error.toString() }, 'error');
                 return {
                     success: false,
-                    error: error.message,
-                    summary: `⚠️ เกิดข้อผิดพลาด: ${error.message} กำลังโหลดจาก GitHub...`,
+                    summary: `❌ Error: ${error.message} กำลังใช้ GitHub fallback...`,
                     html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
                 };
             }
         }
 
-        // 3. Load from GitHub (Fallback)
+        // ==================== STEP 3: GITHUB FALLBACK ====================
         async function fetchGitHubContent(path) {
-            debugLog(`🌐 Loading from GitHub: ${path}`, 'info');
-            updateLoadingText(`กำลังโหลดเนื้อหาจาก GitHub...`);
+            logEvent('GITHUB_LOAD', `เริ่มโหลดเนื้อหาจาก GitHub: ${path}`);
             
             try {
                 const url = `https://rainboworcakids-collab.github.io/rainboworcakids${path}`;
-                debugLog(`🌐 Full URL: ${url}`, 'info');
+                logEvent('GITHUB_LOAD', `Full GitHub URL: ${url}`);
                 
                 const response = await fetch(url);
-                debugLog(`📡 GitHub HTTP Status: ${response.status}`, 'info');
+                logEvent('GITHUB_RESPONSE', `HTTP Status: ${response.status} ${response.statusText}`);
                 
                 if (!response.ok) {
-                    throw new Error(`GitHub HTTP ${response.status} - ${response.statusText}`);
+                    throw new Error(`GitHub HTTP ${response.status}`);
                 }
                 
                 const content = await response.text();
-                debugLog(`✅ GitHub content loaded: ${content.length} characters`, 'success');
+                logEvent('GITHUB_SUCCESS', `✅ โหลดสำเร็จ: ${content.length} characters`);
                 
                 return content;
             } catch (error) {
-                debugLog(`❌ GitHub Error: ${error.message}`, 'error');
-                return `<div class="tw-text-red-500 tw-p-4 tw-bg-red-50 tw-rounded tw-border tw-border-red-200">
-                    <p class="tw-font-bold"><i class="fas fa-exclamation-circle tw-mr-2"></i>ไม่สามารถโหลดเนื้อหาได้</p>
-                    <p class="tw-text-sm tw-mt-1">${error.message}</p>
-                </div>`;
+                logEvent('GITHUB_ERROR', `❌ ${error.message}`, null, 'error');
+                return `<div class="tw-text-red-500 tw-p-4"><p>ไม่สามารถโหลดเนื้อหาได้</p><p class="tw-text-xs">${error.message}</p></div>`;
             }
         }
 
         // ==================== RENDERING ====================
         function renderNumerologyTable(data) {
+            logEvent('RENDER_TABLE', 'เริ่ม render Numerology Table');
+            
             if (!data.destiny_number || !data.life_path_number) {
-                debugLog('❌ Cannot render table: missing destiny or life_path number', 'error');
-                return '<div class="tw-text-red-500 tw-text-center tw-p-4">❌ ข้อมูลไม่ครบถ้วน ไม่สามารถแสดงตารางได้</div>';
+                logEvent('RENDER_TABLE', '❌ ไม่สามารถ render ได้: ข้อมูลไม่ครบ', data, 'error');
+                return '<div class="tw-text-red-500 tw-text-center tw-p-4">ข้อมูลไม่ครบถ้วน ไม่สามารถแสดงตารางได้</div>';
             }
 
             const destinyLink = `/PsychomatrixContents/Destiny${data.destiny_number}.html`;
             const lifePathLink = `/PsychomatrixContents/LifePathNumber${data.life_path_number}.html`;
 
-            debugLog(`📊 Rendering Numerology Table: Destiny=${data.destiny_number}, LifePath=${data.life_path_number}`, 'info');
-
-            return `
+            const html = `
                 <div class="tw-overflow-x-auto tw-my-6">
-                    <table class="tw-w-full tw-border-collapse tw-border tw-border-gray-300 tw-shadow-sm">
+                    <table class="tw-w-full tw-border-collapse tw-border tw-border-gray-300">
                         <thead>
-                            <tr class="tw-bg-gradient-to-r tw-from-blue-50 tw-to-green-50">
-                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">วันเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">เดือนเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">ปีเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">โชคชะตา</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">เส้นทางชีวิต</th>
+                            <tr class="tw-bg-gray-100">
+                                <th class="tw-border tw-border-gray-300 tw-p-3">วันเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3">เดือนเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3">ปีเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3">โชคชะตา</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3">เส้นทางชีวิต</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="hover:tw-bg-gray-50">
+                            <tr>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_day || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_month || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_year || '-'}</td>
-                                <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-blue-50 hover:tw-bg-blue-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link hover:tw-text-blue-800" 
-                                       data-href="${destinyLink}" data-tab="Explained">
-                                        ${data.destiny_number}
-                                    </a>
+                                <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-blue-50">
+                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link" 
+                                       data-href="${destinyLink}" data-tab="Explained">${data.destiny_number}</a>
                                 </td>
-                                <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-green-50 hover:tw-bg-green-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link hover:tw-text-green-800" 
-                                       data-href="${lifePathLink}" data-tab="Explained">
-                                        ${data.life_path_number}
-                                    </a>
+                                <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-green-50">
+                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link" 
+                                       data-href="${lifePathLink}" data-tab="Explained">${data.life_path_number}</a>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             `;
-        }
 
-        function renderPythagoreanSquare(counts) {
-            if (!counts || Object.keys(counts).length === 0) {
-                debugLog('⚠️ No counts data for Pythagorean Square', 'warning');
-                return '<div class="tw-text-gray-500 tw-text-center">ไม่มีข้อมูลพลังงานตัวเลข</div>';
-            }
-
-            debugLog(`📐 Rendering Pythagorean Square: ${JSON.stringify(counts)}`, 'info');
-
-            return `
-                <div class="tw-grid tw-grid-cols-4 tw-gap-3 tw-max-w-xs tw-mx-auto tw-my-6">
-                    ${[1,2,3,4,5,6,7,8,9].map(num => 
-                        `<div class="tw-border-2 tw-border-gray-400 tw-p-5 tw-text-center tw-font-bold tw-bg-white hover:tw-bg-gray-50 tw-transition-all">
-                            <div class="tw-text-2xl">${counts[num] || 0}</div>
-                            <div class="tw-text-xs tw-text-gray-500">${num}</div>
-                        </div>`
-                    ).join('')}
-                    <div class="tw-col-span-4 tw-text-center tw-text-xs tw-text-gray-500 tw-mt-2 tw-font-semibold">
-                        พลังงานตัวเลข 1-9 (เซลล์ที่ 1-9)
-                    </div>
-                </div>
-            `;
+            logEvent('RENDER_TABLE', '✅ Render สำเร็จ', { destiny: data.destiny_number, lifepath: data.life_path_number });
+            return html;
         }
 
         function renderResult(data, lifePathData) {
-            debugLog(`🎨 Rendering Result Page...`, 'info');
-
+            logEvent('RENDER_PAGE', 'เริ่ม render เนื้อหาหลัก');
+            
             return `
                 <div class="tw-mb-6">
-                    <h2 class="tw-text-2xl tw-font-bold tw-mb-4 tw-text-center tw-text-gray-800">
-                        📅 วันเวลาเกิด: ${data.birth_date || 'ไม่ระบุ'}
-                    </h2>
+                    <h2 class="tw-text-2xl tw-font-bold tw-mb-4">วันเวลาเกิด: ${data.birth_date}</h2>
                     
-                    <!-- Summary Cards -->
-                    <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-8">
-                        <div class="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-6 tw-rounded-lg tw-shadow-sm">
-                            <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800 tw-mb-2">เลขภาระกิจ (Destiny)</h3>
-                            <p class="tw-text-4xl tw-font-bold tw-text-blue-600 tw-mb-1">${data.destiny_number || '?'}</p>
+                    <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-6">
+                        <div class="tw-bg-blue-50 tw-p-4 tw-rounded">
+                            <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800">เลขภาระกิจ</h3>
+                            <p class="tw-text-3xl tw-font-bold tw-text-blue-600">${data.destiny_number}</p>
                         </div>
-                        <div class="tw-bg-green-50 tw-border-l-4 tw-border-green-500 tw-p-6 tw-rounded-lg tw-shadow-sm">
-                            <h3 class="tw-text-lg tw-font-semibold tw-text-green-800 tw-mb-2">เลขเส้นทางชีวิต (Life Path)</h3>
-                            <p class="tw-text-4xl tw-font-bold tw-text-green-600 tw-mb-1">${data.life_path_number || '?'}</p>
+                        <div class="tw-bg-green-50 tw-p-4 tw-rounded">
+                            <h3 class="tw-text-lg tw-font-semibold tw-text-green-800">เลขเส้นทางชีวิต</h3>
+                            <p class="tw-text-3xl tw-font-bold tw-text-green-600">${data.life_path_number}</p>
                         </div>
                     </div>
 
-                    <!-- Life Path Meaning -->
-                    <div class="tw-bg-gradient-to-r tw-from-purple-50 tw-to-pink-50 tw-p-6 tw-rounded-lg tw-border-l-4 tw-border-purple-500 tw-mb-8">
-                        <h3 class="tw-font-semibold tw-mb-3 tw-text-gray-800 tw-flex tw-items-center">
-                            <i class="fas fa-book-open tw-mr-2 tw-text-purple-600"></i>
-                            ความหมายเส้นทางชีวิต (จาก Supabase):
-                        </h3>
-                        <p class="tw-text-gray-700 tw-leading-relaxed tw-whitespace-pre-line">${lifePathData.summary || lifePathData}</p>
+                    <div class="tw-bg-gray-50 tw-p-4 tw-rounded tw-mb-6">
+                        <h3 class="tw-font-semibold tw-mb-2">ความหมายเส้นทางชีวิต:</h3>
+                        <p class="tw-text-gray-700">${lifePathData.summary}</p>
                         ${lifePathData.success ? 
-                            `<div class="tw-text-xs tw-text-green-600 tw-mt-2"><i class="fas fa-check-circle tw-mr-1"></i>โหลดจาก Supabase สำเร็จ</div>` :
-                            `<div class="tw-text-xs tw-text-yellow-600 tw-mt-2"><i class="fas fa-exclamation-triangle tw-mr-1"></i>ใช้ Fallback (GitHub)</div>`
+                            `<div class="tw-text-xs tw-text-green-600 tw-mt-2">✅ โหลดจาก Supabase</div>` :
+                            `<div class="tw-text-xs tw-text-yellow-600 tw-mt-2">⚠️ ใช้ GitHub fallback</div>`
                         }
                     </div>
 
                     ${renderNumerologyTable(data)}
-
-                    <div class="tw-mt-10">
-                        <h3 class="tw-text-2xl tw-font-semibold tw-mb-6 tw-text-center tw-text-gray-800">
-                            <i class="fas fa-th tw-mr-2 tw-text-blue-600"></i>
-                            Pythagorean Square
-                        </h3>
-                        <div id="pythagorean-container" class="tw-text-center tw-py-6">
-                            <div class="tw-animate-pulse tw-text-gray-500">
-                                <i class="fas fa-spinner tw-spin tw-mr-2"></i>
-                                กำลังคำนวณพลังงานตัวเลข...
-                            </div>
-                        </div>
-                    </div>
                 </div>
             `;
         }
 
         // ==================== MAIN EXECUTION ====================
         async function initializePage() {
-            try {
-                debugLog('=====================================', 'info');
-                debugLog(`🚀 PAGE INITIALIZATION START`, 'info');
-                debugLog(`📦 Version: ${RESULT_PAGE_VERSION}`, 'info');
-                debugLog(`🌐 URL: ${window.location.href}`, 'info');
-                debugLog(`🔍 URL Search Params: ${window.location.search}`, 'info');
-                
-                // แสดง version
-                document.getElementById('version-display').textContent = RESULT_PAGE_VERSION;
-                
-                // ดึงข้อมูลจาก URL
-                updateLoadingText('กำลังดึงข้อมูลจาก URL...');
-                const data = getDataFromURL();
-                debugLog(`✅ Data extracted from URL`, 'success');
-                
-                // ตรวจสอบข้อมูลพื้นฐาน
-                if (!data.birth_date || !data.destiny_number || !data.life_path_number) {
-                    throw new Error(`Missing required data: birth_date=${data.birth_date}, destiny=${data.destiny_number}, lifepath=${data.life_path_number}`);
-                }
-                
-                debugLog(`✅ Data validation passed`, 'success');
-
-                // ดึง LifePath จาก Supabase
-                updateLoadingText(`กำลังโหลด LifePath จาก Supabase...`);
-                debugLog(`🗄️ Starting Supabase query...`, 'info');
-                
-                const lifePathData = await fetchLifePathFromSupabase(data.life_path_number);
-                
-                if (lifePathData.success) {
-                    debugLog(`✅ Loaded LifePath from Supabase successfully`, 'success');
-                } else {
-                    debugLog(`⚠️ Using fallback for LifePath`, 'warning');
-                }
-
-                // Render เนื้อหา
-                updateLoadingText('กำลังแสดงผลข้อมูล...');
-                debugLog(`🎨 Rendering result content...`, 'info');
-                
-                document.getElementById('result-content').innerHTML = renderResult(data, lifePathData);
-                document.getElementById('loading-state').style.display = 'none';
-                document.getElementById('result-content').style.display = 'block';
-                
-                debugLog(`✅ Result content rendered`, 'success');
-
-                // คำนวณ Pythagorean Square
-                updateLoadingText('กำลังคำนวณ Pythagorean Square...');
-                debugLog(`🔢 Calculating Pythagorean Square...`, 'info');
-                
-                const birthNumbers = data.birth_date.replace(/[:\/ ]/g, '');
-                debugLog(`🔢 Birth numbers: ${birthNumbers}`, 'info');
-                
-                const counts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
-                birthNumbers.split('').forEach(d => {
-                    const num = parseInt(d);
-                    if(num >= 1 && num <= 9) counts[num]++;
-                });
-                
-                debugLog(`📊 Pythagorean counts: ${JSON.stringify(counts)}`, 'success');
-                document.getElementById('pythagorean-container').innerHTML = renderPythagoreanSquare(counts);
-                
-                debugLog(`✅ Pythagorean Square rendered`, 'success');
-                debugLog(`🎉 PAGE INITIALIZATION COMPLETE`, 'success');
-                debugLog('=====================================', 'info');
-
-            } catch (error) {
-                debugLog(`❌ FATAL ERROR: ${error.message}`, 'error');
-                DebugLogger.error(`Fatal error: ${error.message}`);
-                
-                document.getElementById('loading-state').innerHTML = 
-                    `<div class="tw-text-red-500 tw-text-center tw-p-6 tw-bg-red-50 tw-rounded-lg tw-border tw-border-red-200">
-                        <p class="tw-font-bold tw-text-xl tw-flex tw-items-center tw-justify-center">
-                            <i class="fas fa-exclamation-triangle tw-mr-2"></i>
-                            เกิดข้อผิดพลาดในการโหลดข้อมูล
-                        </p>
-                        <p class="tw-text-sm tw-mt-3 tw-text-red-600">${error.message}</p>
-                        <div class="tw-text-xs tw-mt-2 tw-bg-red-100 tw-p-2 tw-rounded tw-font-mono">
-                            ${error.stack || ''}
-                        </div>
-                        <button onclick="history.back()" class="tw-bg-blue-500 tw-text-white tw-px-6 tw-py-3 tw-rounded-lg tw-mt-4 hover:tw-bg-blue-600">
-                            <i class="fas fa-arrow-left tw-mr-2"></i>กลับไปกรอกข้อมูลใหม่
-                        </button>
-                    </div>`;
+            logEvent('PAGE_INIT', '=== PAGE INITIALIZATION STARTED ===');
+            logEvent('PAGE_INIT', `Version: ${RESULT_PAGE_VERSION}`);
+            logEvent('PAGE_INIT', `Page URL: ${window.location.href}`);
+            
+            // Display version
+            document.getElementById('version-display').textContent = RESULT_PAGE_VERSION;
+            
+            updateLoadingStatus('กำลังดึงข้อมูลจาก URL parameters...');
+            
+            // Get URL data
+            const data = getDataFromURL();
+            logEvent('PAGE_INIT', `Data extraction complete`, data);
+            
+            // Validate
+            if (!data.birth_date || !data.destiny_number || !data.life_path_number) {
+                const errorMsg = `Missing required data: birth_date=${data.birth_date}, destiny=${data.destiny_number}, lifepath=${data.life_path_number}`;
+                logEvent('VALIDATION', `❌ ${errorMsg}`, null, 'error');
+                throw new Error(errorMsg);
             }
+            
+            logEvent('VALIDATION', '✅ All required data present');
+            
+            // Fetch from Supabase
+            updateLoadingStatus(`กำลัง query Supabase สำหรับ LifePath ${data.life_path_number}...`);
+            const lifePathData = await fetchLifePathFromSupabase(data.life_path_number);
+            
+            // Render
+            updateLoadingStatus('กำลัง render เนื้อหา...');
+            document.getElementById('result-content').innerHTML = renderResult(data, lifePathData);
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('result-content').style.display = 'block';
+            
+            logEvent('PAGE_INIT', '=== PAGE INITIALIZATION COMPLETE ===');
         }
 
         // ==================== EVENT LISTENERS ====================
         document.addEventListener('DOMContentLoaded', () => {
-            debugLog('📝 DOM Content Loaded - Starting initialization...', 'info');
+            logEvent('DOM_READY', 'DOM Content Loaded - Starting page initialization');
             initializePage();
         });
 
-        // จัดการลิงก์ใน Numerology Table
+        // Link click handler
         document.addEventListener('click', async (e) => {
             const link = e.target.closest('.numerology-link');
             if (link) {
                 e.preventDefault();
                 const href = link.dataset.href;
-                debugLog(`🖱️ Link clicked: ${href}`, 'info');
+                logEvent('LINK_CLICK', `User clicked link: ${href}`);
                 
-                updateLoadingText(`กำลังโหลดเนื้อหาจาก ${href}...`);
+                updateLoadingStatus(`กำลังโหลดเนื้อหา: ${href}...`);
                 document.getElementById('explained-content').innerHTML = '<div class="tw-text-center tw-py-8"><i class="fas fa-spinner tw-spin tw-mr-2"></i>กำลังโหลด...</div>';
                 
                 const content = await fetchGitHubContent(href);
                 document.getElementById('explained-content').innerHTML = content;
-                
-                updateLoadingText('โหลดเสร็จสิ้น');
                 document.querySelector('[onclick*="Explained"]').click();
+                
+                logEvent('LINK_CLICK', `Content loaded for: ${href}`);
             }
         });
+
+        // Helper function
+        function updateLoadingStatus(status) {
+            document.getElementById('loading-status').textContent = status;
+        }
     </script>
 </body>
 </html>
