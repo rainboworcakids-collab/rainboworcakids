@@ -11,6 +11,9 @@
     <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     
@@ -22,10 +25,20 @@
     <script src="js/debug-logger.js"></script>
     <script src="js/auth_status_manager.js"></script>
     <script src="js/nav.js"></script>
+    
+    <!-- VERSION INDICATOR -->
+    <script>
+        const RESULT_PAGE_VERSION = "2.0.0-REAL-DATA-2025-12-25";
+    </script>
 </head>
 <body class="tw-bg-gray-100 tw-p-4">
     <!-- Navigation Bar -->
     <div id="nav-container"></div>
+
+    <!-- VERSION DISPLAY -->
+    <div class="tw-fixed tw-bottom-4 tw-right-4 tw-bg-gray-800 tw-text-white tw-px-3 tw-py-1 tw-rounded tw-text-xs tw-opacity-75">
+        Ver: <span id="version-display">2.0.0</span>
+    </div>
 
     <div class="tw-max-w-4xl tw-mx-auto tw-mt-6">
         <!-- Tabs -->
@@ -41,7 +54,15 @@
                      alt="Logo" class="tw-h-16 tw-w-16 tw-inline tw-mr-3">
                 Psychomatrix Analysis
             </h1>
+            
+            <!-- DEBUG INFO -->
+            <div id="debug-info" class="tw-bg-yellow-50 tw-border tw-border-yellow-300 tw-p-4 tw-rounded tw-mb-6 tw-font-mono tw-text-xs" style="display: none;">
+                <div class="tw-font-bold tw-mb-2">🔍 DEBUG INFO:</div>
+                <div id="debug-content"></div>
+            </div>
+            
             <div id="loading-message" class="tw-text-center tw-py-8 tw-text-gray-500">
+                <i class="fas fa-spinner tw-spin tw-mr-2"></i>
                 กำลังโหลดข้อมูลจากระบบ...
             </div>
             <div id="result-content" style="display: none;">
@@ -52,12 +73,26 @@
         <!-- Explained Tab -->
         <div id="Explained" class="tabcontent tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-4">
             <div id="explained-content">
-                <p class="tw-text-gray-500 tw-text-center">เลือกลิงก์จากตารางเพื่อดูรายละเอียดเพิ่มเติม</p>
+                <p class="tw-text-gray-500 tw-text-center tw-py-8">
+                    <i class="fas fa-hand-pointer tw-mr-2"></i>
+                    เลือกลิงก์จากตารางเพื่อดูรายละเอียดเพิ่มเติม
+                </p>
             </div>
         </div>
     </div>
 
     <script>
+        // ==================== VERSION & DEBUG ====================
+        const RESULT_PAGE_VERSION = "2.0.0-REAL-DATA-2025-12-25";
+        
+        function showDebug(message) {
+            const debugDiv = document.getElementById('debug-info');
+            const contentDiv = document.getElementById('debug-content');
+            debugDiv.style.display = 'block';
+            contentDiv.innerHTML += `<div class="tw-text-gray-600">[${new Date().toLocaleTimeString()}] ${message}</div>`;
+            DebugLogger.log(message);
+        }
+
         // ==================== UTILITY FUNCTIONS ====================
         function switchTab(tabName, el) {
             document.querySelectorAll('.tabcontent').forEach(tab => tab.classList.remove('active'));
@@ -70,9 +105,10 @@
         function getDataFromURL() {
             const params = new URLSearchParams(window.location.search);
             
-            return {
+            const data = {
                 success: true,
-                birth_date: params.get('bd') || "", // 13:05 22/05/1968
+                birth_date: params.get('bd') || "",
+                birth_numbers: params.get('bn') || "",
                 birth_day: params.get('day') || "",
                 birth_month: params.get('month') || "",
                 birth_year: params.get('year') || "",
@@ -82,71 +118,99 @@
                 full_name: params.get('name') || "",
                 option: params.get('opt') || "BD"
             };
+            
+            showDebug(`URL Parameters: ${JSON.stringify(data, null, 2)}`);
+            return data;
         }
 
-        // ดึง LifePath จาก Supabase
-        async function fetchLifePathMeaning(rootNumber) {
+        // Query Supabase จริง - SQL: SELECT * FROM numerology_search_index WHERE element_type='LifePath' AND root_number=?
+        async function fetchLifePathFromSupabase(rootNumber) {
             if (!rootNumber || rootNumber < 1 || rootNumber > 9) {
-                return { summary: "เลขเส้นทางชีวิตไม่ถูกต้อง" };
+                return { 
+                    success: false, 
+                    error: "Invalid LifePath number",
+                    summary: "เลขเส้นทางชีวิตไม่ถูกต้อง",
+                    html_path: ""
+                };
             }
 
             try {
-                DebugLogger.log(`🔍 Querying LifePath ${rootNumber} from Supabase`);
+                const query = `element_type=eq.LifePath&root_number=eq.${rootNumber}&select=*`;
+                const url = `${window.SUPABASE_URL}/rest/v1/numerology_search_index?${query}`;
                 
-                const response = await fetch(
-                    `${window.SUPABASE_URL}/rest/v1/numerology_search_index?` + 
-                    `element_type=eq.LifePath&root_number=eq.${rootNumber}`, 
-                    {
-                        headers: {
-                            'apikey': window.SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
-                        }
+                showDebug(`SQL Query: SELECT * FROM numerology_search_index WHERE element_type='LifePath' AND root_number=${rootNumber}`);
+                showDebug(`Fetching from: ${url}`);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': window.SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
                     }
-                );
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+                }
                 
                 const data = await response.json();
+                showDebug(`Response: ${JSON.stringify(data, null, 2)}`);
                 
-                if (data && data[0]) {
-                    DebugLogger.log(`✅ Found LifePath data: ${data[0].title}`);
+                if (data && data.length > 0 && data[0]) {
+                    const row = data[0];
+                    showDebug(`✅ Found LifePath data: ID=${row.id}, Title=${row.title}`);
                     return {
-                        summary: data[0].summary || "ยังไม่มีความหมาย",
-                        html_path: data[0].html_path || `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
+                        success: true,
+                        id: row.id,
+                        element_type: row.element_type,
+                        root_number: row.root_number,
+                        title: row.title,
+                        summary: row.summary || "ยังไม่มีความหมายในระบบ",
+                        html_content: row.html_content,
+                        html_path: row.html_path || `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
                     };
                 }
                 
+                showDebug(`⚠️ No data found for LifePath ${rootNumber}`);
                 return {
-                    summary: "ยังไม่มีข้อมูลในระบบ",
+                    success: false,
+                    error: "No data found",
+                    summary: "ไม่พบข้อมูลในระบบ",
                     html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
                 };
             } catch (error) {
-                DebugLogger.error(`❌ Supabase fetch failed: ${error.message}`);
+                showDebug(`❌ Supabase Error: ${error.message}`);
+                DebugLogger.error(`Supabase fetch failed: ${error.message}`);
                 return {
-                    summary: "เกิดข้อผิดพลาดในการโหลดความหมาย",
+                    success: false,
+                    error: error.message,
+                    summary: "เกิดข้อผิดพลาดในการโหลดข้อมูลจากฐานข้อมูล",
                     html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
                 };
             }
         }
 
-        // โหลดเนื้อหาจาก GitHub Pages
+        // โหลดเนื้อหาจาก GitHub Pages (Fallback)
         async function fetchGitHubContent(path) {
             try {
                 const url = `https://rainboworcakids-collab.github.io/rainboworcakids${path}`;
-                DebugLogger.log(`📥 Loading from GitHub: ${url}`);
+                showDebug(`📥 Loading from GitHub: ${url}`);
                 
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
-                return await response.text();
+                const content = await response.text();
+                showDebug(`✅ GitHub content loaded: ${content.length} characters`);
+                return content;
             } catch (error) {
-                DebugLogger.error(`❌ GitHub fetch failed: ${error.message}`);
-                return `<p class="tw-text-red-500">ไม่สามารถโหลดเนื้อหาได้: ${error.message}</p>`;
+                showDebug(`❌ GitHub Error: ${error.message}`);
+                return `<p class="tw-text-red-500 tw-p-4">ไม่สามารถโหลดเนื้อหาได้: ${error.message}</p>`;
             }
         }
 
         // ==================== RENDERING ====================
         function renderNumerologyTable(data) {
             if (!data.destiny_number || !data.life_path_number) {
-                return '<div class="tw-text-red-500 tw-text-center tw-p-4">ข้อมูลไม่ครบถ้วน ไม่สามารถแสดงตารางได้</div>';
+                return '<div class="tw-text-red-500 tw-text-center tw-p-4">❌ ข้อมูลไม่ครบถ้วน ไม่สามารถแสดงตารางได้</div>';
             }
 
             const destinyLink = `/PsychomatrixContents/Destiny${data.destiny_number}.html`;
@@ -165,18 +229,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="hover:tw-bg-gray-50 tw-transition-colors">
+                            <tr class="hover:tw-bg-gray-50">
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_day || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_month || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_year || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-blue-50 hover:tw-bg-blue-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link hover:tw-text-blue-800 tw-underline" 
+                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link hover:tw-text-blue-800" 
                                        data-href="${destinyLink}" data-tab="Explained">
                                         ${data.destiny_number}
                                     </a>
                                 </td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-green-50 hover:tw-bg-green-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link hover:tw-text-green-800 tw-underline" 
+                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link hover:tw-text-green-800" 
                                        data-href="${lifePathLink}" data-tab="Explained">
                                         ${data.life_path_number}
                                     </a>
@@ -219,32 +283,21 @@
                     <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-8">
                         <div class="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-6 tw-rounded-lg tw-shadow-sm hover:tw-shadow-md tw-transition-shadow">
                             <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800 tw-mb-2">เลขภาระกิจ (Destiny)</h3>
-                            <p class="tw-text-4xl tw-font-bold tw-text-blue-600 tw-mb-1">
-                                ${data.destiny_number || '?'}
-                            </p>
-                            <p class="tw-text-sm tw-text-blue-500">
-                                ${data.destiny_number ? `${data.destiny_number} → ${data.destiny_number % 9 || 9}` : 'N/A'}
-                            </p>
+                            <p class="tw-text-4xl tw-font-bold tw-text-blue-600 tw-mb-1">${data.destiny_number || '?'}</p>
                         </div>
                         <div class="tw-bg-green-50 tw-border-l-4 tw-border-green-500 tw-p-6 tw-rounded-lg tw-shadow-sm hover:tw-shadow-md tw-transition-shadow">
                             <h3 class="tw-text-lg tw-font-semibold tw-text-green-800 tw-mb-2">เลขเส้นทางชีวิต (Life Path)</h3>
-                            <p class="tw-text-4xl tw-font-bold tw-text-green-600 tw-mb-1">
-                                ${data.life_path_number || '?'}
-                            </p>
-                            <p class="tw-text-sm tw-text-green-500">
-                                Life Path Number
-                            </p>
+                            <p class="tw-text-4xl tw-font-bold tw-text-green-600 tw-mb-1">${data.life_path_number || '?'}</p>
                         </div>
                     </div>
 
                     <!-- Life Path Meaning -->
                     <div class="tw-bg-gradient-to-r tw-from-purple-50 tw-to-pink-50 tw-p-6 tw-rounded-lg tw-border-l-4 tw-border-purple-500 tw-mb-8">
-                        <h3 class="tw-font-semibold tw-mb-3 tw-text-gray-800">
-                            <i class="fas fa-book-open tw-mr-2"></i>ความหมายเส้นทางชีวิต:
+                        <h3 class="tw-font-semibold tw-mb-3 tw-text-gray-800 tw-flex tw-items-center">
+                            <i class="fas fa-book-open tw-mr-2 tw-text-purple-600"></i>
+                            ความหมายเส้นทางชีวิต:
                         </h3>
-                        <p class="tw-text-gray-700 tw-leading-relaxed">
-                            ${lifePathData.summary || lifePathData}
-                        </p>
+                        <p class="tw-text-gray-700 tw-leading-relaxed tw-whitespace-pre-line">${lifePathData.summary || lifePathData}</p>
                     </div>
 
                     <!-- Numerology Table -->
@@ -252,8 +305,9 @@
 
                     <!-- Pythagorean Square -->
                     <div class="tw-mt-10">
-                        <h3 class="tw-text-2xl tw-font-semibold tw-mb-6 tw-text-center tw-text-gray-800">
-                            <i class="fas fa-th tw-mr-2"></i>Pythagorean Square
+                        <h3 class="tw-text-2xl tw-font-semibold tw-mb-6 tw-text-center tw-text-gray-800 tw-flex tw-items-center tw-justify-center">
+                            <i class="fas fa-th tw-mr-2 tw-text-blue-600"></i>
+                            Pythagorean Square
                         </h3>
                         <div id="pythagorean-container" class="tw-text-center tw-py-6">
                             <div class="tw-animate-pulse tw-text-gray-500">
@@ -269,21 +323,31 @@
         // ==================== MAIN EXECUTION ====================
         async function initializePage() {
             try {
-                DebugLogger.log('=== Initializing Result Page ===');
+                showDebug(`=== PAGE INITIALIZATION START ===`);
+                showDebug(`Version: ${RESULT_PAGE_VERSION}`);
+                
+                // แสดง version บนหน้า
+                document.getElementById('version-display').textContent = RESULT_PAGE_VERSION;
                 
                 // ดึงข้อมูลจาก URL
                 const data = getDataFromURL();
-                DebugLogger.log(`📥 URL Data: ${JSON.stringify(data)}`);
+                showDebug(`✅ Data from URL: ${JSON.stringify(data)}`);
 
                 // ตรวจสอบข้อมูลพื้นฐาน
                 if (!data.birth_date || !data.destiny_number || !data.life_path_number) {
-                    throw new Error("ข้อมูลไม่ครบถ้วน (birth_date, destiny_number, life_path_number)");
+                    throw new Error("❌ ข้อมูลไม่ครบถ้วน (birth_date, destiny_number, life_path_number จำเป็น)");
                 }
 
-                // ดึง LifePath จาก Supabase
-                DebugLogger.log(`🔍 Loading LifePath ${data.life_path_number}...`);
-                const lifePathData = await fetchLifePathMeaning(data.life_path_number);
+                // ดึง LifePath จาก Supabase จริง
+                showDebug(`🔍 Querying LifePath ${data.life_path_number} from Supabase...`);
+                const lifePathData = await fetchLifePathFromSupabase(data.life_path_number);
                 
+                if (lifePathData.success) {
+                    showDebug(`✅ LifePath data loaded successfully`);
+                } else {
+                    showDebug(`⚠️ Using fallback: ${lifePathData.summary}`);
+                }
+
                 // Render เนื้อหา
                 document.getElementById('result-content').innerHTML = renderResult(data, lifePathData);
                 document.getElementById('loading-message').style.display = 'none';
@@ -297,24 +361,35 @@
                     if(num >= 1 && num <= 9) counts[num]++;
                 });
                 
+                showDebug(`Pythagorean counts: ${JSON.stringify(counts)}`);
                 document.getElementById('pythagorean-container').innerHTML = renderPythagoreanSquare(counts);
-                DebugLogger.log('✅ Pythagorean Square rendered');
+
+                showDebug(`=== PAGE INITIALIZATION COMPLETE ===`);
 
             } catch (error) {
-                DebugLogger.error(`❌ Fatal error: ${error.message}`);
+                showDebug(`❌ FATAL ERROR: ${error.message}`);
+                DebugLogger.error(`Fatal error: ${error.message}`);
+                
                 document.getElementById('loading-message').innerHTML = 
-                    `<div class="tw-text-red-500 tw-text-center tw-p-4">
-                        <p class="tw-font-bold tw-text-lg">เกิดข้อผิดพลาด</p>
-                        <p class="tw-text-sm tw-mt-2">${error.message}</p>
-                        <button onclick="history.back()" class="tw-bg-blue-500 tw-text-white tw-px-4 tw-py-2 tw-rounded tw-mt-4 hover:tw-bg-blue-600">
-                            กลับไปกรอกข้อมูลใหม่
+                    `<div class="tw-text-red-500 tw-text-center tw-p-6 tw-bg-red-50 tw-rounded-lg tw-border tw-border-red-200">
+                        <p class="tw-font-bold tw-text-xl tw-flex tw-items-center tw-justify-center">
+                            <i class="fas fa-exclamation-triangle tw-mr-2"></i>
+                            เกิดข้อผิดพลาดในการโหลดข้อมูล
+                        </p>
+                        <p class="tw-text-sm tw-mt-3 tw-text-red-600">${error.message}</p>
+                        <button onclick="history.back()" class="tw-bg-blue-500 tw-text-white tw-px-6 tw-py-3 tw-rounded-lg tw-mt-4 hover:tw-bg-blue-600 tw-transition-colors">
+                            <i class="fas fa-arrow-left tw-mr-2"></i>กลับไปกรอกข้อมูลใหม่
                         </button>
                     </div>`;
             }
         }
 
         // ==================== EVENT LISTENERS ====================
-        document.addEventListener('DOMContentLoaded', initializePage);
+        document.addEventListener('DOMContentLoaded', () => {
+            showDebug('DOM Content Loaded - Initializing...');
+            document.getElementById('version-display').textContent = RESULT_PAGE_VERSION;
+            initializePage();
+        });
 
         // จัดการลิงก์ใน Numerology Table
         document.addEventListener('click', async (e) => {
@@ -322,6 +397,8 @@
             if (link) {
                 e.preventDefault();
                 const href = link.dataset.href;
+                showDebug(`Link clicked: ${href}`);
+                
                 const content = await fetchGitHubContent(href);
                 document.getElementById('explained-content').innerHTML = content;
                 document.querySelector('[onclick*="Explained"]').click();
