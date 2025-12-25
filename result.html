@@ -14,39 +14,68 @@
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
-    <!-- Supabase CDN -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- Scripts ตามลำดับ -->
-    <script src="js/supabase-config.js"></script>
+    <!-- Debug Logger (โหลดก่อน) -->
     <script src="js/debug-logger.js"></script>
 </head>
 <body class="tw-bg-gray-100 tw-p-4">
-    <div class="tw-max-w-4xl tw-mx-auto tw-mt-6">
+    <!-- Status Bar แสดงเวอร์ชัน -->
+    <div id="status-bar" class="tw-fixed tw-top-0 tw-left-0 tw-right-0 tw-bg-gray-800 tw-text-white tw-p-2 tw-text-xs tw-z-50">
+        <div class="tw-container tw-mx-auto tw-flex tw-justify-between">
+            <div>
+                <span id="status-text">🚀 กำลังเริ่มต้นระบบ...</span>
+                <span id="version" class="tw-ml-4 tw-text-gray-300">เวอร์ชัน: result.html v1.0.1</span>
+            </div>
+            <div>
+                <span id="load-time" class="tw-text-gray-300"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="tw-container tw-mx-auto tw-mt-10">
         <!-- Header -->
         <div class="tw-text-center tw-mb-6 tw-p-4 tw-bg-gradient-to-r tw-from-blue-600 tw-to-purple-600 tw-rounded-lg tw-shadow-lg">
             <h1 class="tw-text-3xl tw-font-bold tw-text-white tw-mb-2">🔮 Psychomatrix Analysis</h1>
             <p class="tw-text-blue-100">ผลการวิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
         </div>
         
+        <!-- Debug Panel -->
+        <div class="tw-bg-yellow-50 tw-border tw-border-yellow-200 tw-rounded-lg tw-p-4 tw-mb-6">
+            <h3 class="tw-font-bold tw-text-yellow-800 tw-mb-2">Debug Panel (สำหรับตรวจสอบปัญหา)</h3>
+            <div id="debug-panel" class="tw-text-sm tw-font-mono">
+                <div class="tw-grid tw-grid-cols-2 tw-gap-4">
+                    <div>
+                        <strong>Timestamp:</strong> <span id="debug-time">-</span>
+                    </div>
+                    <div>
+                        <strong>JavaScript:</strong> <span id="debug-js" class="tw-text-green-600">✅ ทำงานปกติ</span>
+                    </div>
+                    <div>
+                        <strong>SessionStorage:</strong> <span id="debug-session">กำลังตรวจสอบ...</span>
+                    </div>
+                    <div>
+                        <strong>URL Params:</strong> <span id="debug-url">กำลังตรวจสอบ...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabs -->
         <div class="tw-flex tw-border-b tw-border-gray-300">
             <button class="tablink active" onclick="switchTab('Main', this)">ผลการวิเคราะห์</button>
-            <button class="tablink" onclick="switchTab('Explained', this)">คำอธิบาย</button>
+            <button class="tablink" onclick="switchTab('RawData', this)">Raw Data</button>
             <button class="tablink" onclick="switchTab('SQL', this)">SQL Results</button>
         </div>
 
-        <!-- Main Tab - ผลการวิเคราะห์ -->
+        <!-- Main Tab -->
         <div id="Main" class="tabcontent active tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-4">
             <h2 class="tw-text-2xl tw-font-bold tw-text-center tw-mb-6">
-                <img src="images/PsychomatixAnalize.png" 
-                     alt="Logo" class="tw-h-16 tw-w-16 tw-inline tw-mr-3">
                 ผลการวิเคราะห์ Psychomatrix
             </h2>
             
             <div id="loading-message" class="tw-text-center tw-py-8">
                 <div class="tw-inline-block tw-animate-spin tw-rounded-full tw-h-12 tw-w-12 tw-border-b-2 tw-border-blue-600"></div>
-                <p class="tw-mt-4 tw-text-gray-600">กำลังโหลดและวิเคราะห์ข้อมูล...</p>
+                <p class="tw-mt-4 tw-text-gray-600" id="loading-text">กำลังเริ่มต้นระบบ...</p>
             </div>
             
             <div id="result-content" class="tw-hidden">
@@ -54,14 +83,13 @@
             </div>
         </div>
 
-        <!-- Explained Tab - คำอธิบาย -->
-        <div id="Explained" class="tabcontent tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-4">
-            <div id="explained-content">
-                <p class="tw-text-gray-500 tw-text-center">เลือกลิงก์จากตารางเพื่อดูคำอธิบายเพิ่มเติม</p>
-            </div>
+        <!-- Raw Data Tab -->
+        <div id="RawData" class="tabcontent tw-bg-gray-50 tw-p-6 tw-rounded tw-shadow tw-mt-4">
+            <h3 class="tw-text-xl tw-font-bold tw-mb-4">Raw Data & Session Storage</h3>
+            <pre id="raw-data-output" class="tw-bg-gray-900 tw-text-green-400 tw-p-4 tw-rounded tw-overflow-auto tw-max-h-96">กำลังโหลดข้อมูล...</pre>
         </div>
 
-        <!-- SQL Tab - แสดงผล SQL Query -->
+        <!-- SQL Tab -->
         <div id="SQL" class="tabcontent tw-bg-gray-900 tw-text-gray-100 tw-p-6 tw-rounded tw-shadow tw-mt-4">
             <h3 class="tw-text-xl tw-font-bold tw-mb-4">SQL Query Results</h3>
             <div id="sql-content">
@@ -72,12 +100,76 @@
 
     <!-- Scripts -->
     <script>
-        // ==================== CONFIGURATION ====================
-        const SUPABASE_URL = window.SUPABASE_URL || 'https://oibubvhuiuurkxhnefsw.supabase.co';
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+        // ==================== VERSION & CONFIG ====================
+        const VERSION = 'result.html v1.0.1';
+        const BUILD_DATE = '2025-12-25 13:40';
         
-        // สร้าง Supabase client
-        const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+        // อัปเดตเวอร์ชันใน status bar
+        document.getElementById('version').textContent = `เวอร์ชัน: ${VERSION}`;
+        document.getElementById('load-time').textContent = `โหลดเวลา: ${new Date().toLocaleTimeString('th-TH')}`;
+        document.getElementById('debug-time').textContent = new Date().toLocaleTimeString('th-TH');
+
+        // ==================== DEBUG FUNCTIONS ====================
+        function updateDebugPanel(key, value, isError = false) {
+            const element = document.getElementById(`debug-${key}`);
+            if (element) {
+                element.textContent = value;
+                element.className = isError ? 'tw-text-red-600' : 'tw-text-green-600';
+            }
+            DebugLogger.log(`DEBUG [${key}]: ${value}`);
+        }
+
+        function updateStatus(text, type = 'info') {
+            const statusElement = document.getElementById('status-text');
+            const colors = {
+                'info': 'tw-text-white',
+                'success': 'tw-text-green-300',
+                'warning': 'tw-text-yellow-300',
+                'error': 'tw-text-red-300'
+            };
+            
+            statusElement.textContent = text;
+            statusElement.className = colors[type] || 'tw-text-white';
+            DebugLogger.log(`STATUS: ${text}`);
+        }
+
+        // ==================== INITIAL CHECKS ====================
+        function performInitialChecks() {
+            updateStatus('🔍 กำลังตรวจสอบระบบ...', 'info');
+            
+            // 1. ตรวจสอบ JavaScript
+            updateDebugPanel('js', '✅ ทำงานปกติ');
+            
+            // 2. ตรวจสอบ SessionStorage
+            try {
+                const hasSession = sessionStorage.getItem('psychomatrixResult');
+                updateDebugPanel('session', hasSession ? '✅ พบข้อมูล' : '❌ ไม่พบข้อมูล', !hasSession);
+            } catch (e) {
+                updateDebugPanel('session', `❌ Error: ${e.message}`, true);
+            }
+            
+            // 3. ตรวจสอบ URL Parameters
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const hasParams = params.toString().length > 0;
+                updateDebugPanel('url', hasParams ? '✅ พบพารามิเตอร์' : '❌ ไม่มีพารามิเตอร์', !hasParams);
+            } catch (e) {
+                updateDebugPanel('url', `❌ Error: ${e.message}`, true);
+            }
+            
+            // 4. ตรวจสอบ Supabase Config
+            try {
+                if (typeof window.SUPABASE_URL === 'undefined') {
+                    updateDebugPanel('supabase', '❌ ไม่พบ config', true);
+                } else {
+                    updateDebugPanel('supabase', '✅ พบ config');
+                }
+            } catch (e) {
+                updateDebugPanel('supabase', `❌ Error: ${e.message}`, true);
+            }
+            
+            updateStatus('✅ ตรวจสอบระบบเสร็จสิ้น', 'success');
+        }
 
         // ==================== UTILITY FUNCTIONS ====================
         function switchTab(tabName, el) {
@@ -87,23 +179,18 @@
             el.classList.add('active');
         }
 
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                birth_date: params.get('birth_date') || '',
-                full_name: params.get('full_name') || '',
-                id_card: params.get('id_card') || ''
-            };
-        }
-
-        // ==================== SQL QUERY FUNCTIONS ====================
-        async function queryLifePathFromSupabase(rootNumber) {
+        // ==================== DATA FETCHING ====================
+        async function fetchLifePathFromSupabase(rootNumber) {
+            updateStatus(`📡 กำลังดึงข้อมูล LifePath ${rootNumber}...`, 'info');
+            
             try {
-                console.log(`📊 Querying Supabase for LifePath WHERE root_number = ${rootNumber}`);
+                // ถ้าไม่มี SUPABASE_URL ให้ใช้ค่าตรงๆ
+                const SUPABASE_URL = window.SUPABASE_URL || 'https://oibubvhuiuurkxhnefsw.supabase.co';
+                const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pYnVidmh1aXV1cmt4aG5lZnN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUwNTQ4NzksImV4cCI6MjA1MDYzMDg3OX0.lCwQjPY--EswBo8q4CxrSbGfLEqDvY2cM5y1CvKT1gY';
                 
                 const response = await fetch(
                     `${SUPABASE_URL}/rest/v1/numerology_search_index?` + 
-                    `element_type=eq.LifePath&root_number=eq.${rootNumber}&select=*`,
+                    `element_type=eq.LifePath&root_number=eq.${rootNumber}`,
                     {
                         headers: {
                             'apikey': SUPABASE_ANON_KEY,
@@ -114,333 +201,160 @@
                 );
                 
                 if (!response.ok) {
-                    throw new Error(`Supabase query failed: ${response.status} ${response.statusText}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const data = await response.json();
-                console.log(`✅ Supabase returned ${data.length} records`);
-                
-                return data[0]; // ควรมีแค่ 1 record
-            } catch (error) {
-                console.error(`❌ Supabase query error: ${error.message}`);
-                return null;
-            }
-        }
-
-        async function queryDestinyFromSupabase(destinyNumber) {
-            try {
-                console.log(`📊 Querying Supabase for Destiny WHERE id = ${destinyNumber}`);
-                
-                const response = await fetch(
-                    `${SUPABASE_URL}/rest/v1/numerology_search_index?` + 
-                    `element_type=eq.Destiny&id=eq.${destinyNumber}&select=*`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_ANON_KEY,
-                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error(`Supabase query failed: ${response.status} ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                console.log(`✅ Supabase returned ${data.length} records`);
-                
+                updateStatus(`✅ ดึงข้อมูล LifePath สำเร็จ`, 'success');
                 return data[0];
             } catch (error) {
-                console.error(`❌ Supabase query error: ${error.message}`);
+                updateStatus(`❌ ไม่สามารถดึงข้อมูล LifePath: ${error.message}`, 'error');
                 return null;
             }
         }
 
-        // ==================== GITHUB CONTENT FETCH ====================
-        async function fetchContentFromGitHub(path) {
+        // ==================== RENDERING ====================
+        function renderRawData() {
             try {
-                // ตรวจสอบว่า path ขึ้นต้นด้วย / หรือไม่
-                const cleanPath = path.startsWith('/') ? path : `/${path}`;
-                const url = `https://rainboworcakids-collab.github.io/rainboworcakids${cleanPath}`;
+                const sessionData = sessionStorage.getItem('psychomatrixResult');
+                const urlParams = new URLSearchParams(window.location.search);
                 
-                console.log(`🌐 Fetching GitHub content: ${url}`);
+                const rawData = {
+                    version: VERSION,
+                    timestamp: new Date().toISOString(),
+                    sessionStorage: sessionData ? JSON.parse(sessionData) : 'ไม่มีข้อมูล',
+                    urlParameters: Object.fromEntries(urlParams.entries()),
+                    localStorageKeys: Object.keys(localStorage),
+                    sessionStorageKeys: Object.keys(sessionStorage)
+                };
                 
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`GitHub fetch failed: ${response.status} ${response.statusText}`);
-                }
-                
-                const html = await response.text();
-                console.log(`✅ GitHub content fetched (${html.length} bytes)`);
-                
-                return html;
+                document.getElementById('raw-data-output').textContent = 
+                    JSON.stringify(rawData, null, 2);
             } catch (error) {
-                console.error(`❌ GitHub fetch error: ${error.message}`);
-                return `<div class="tw-text-red-500 tw-p-4 tw-border tw-border-red-200 tw-rounded">
-                    <p>ไม่สามารถโหลดเนื้อหาได้</p>
-                    <p class="tw-text-sm">${error.message}</p>
-                    <p class="tw-text-sm">Path: ${path}</p>
-                </div>`;
+                document.getElementById('raw-data-output').textContent = 
+                    `ERROR: ${error.message}\n${error.stack}`;
             }
         }
 
-        // ==================== EDGE FUNCTION CALL ====================
-        async function callPsychomatrixCalculate(birthDate) {
-            try {
-                const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/psychomatrix-calculate`;
-                
-                console.log(`📡 Calling Edge Function: ${EDGE_FUNCTION_URL}`);
-                console.log(`📅 Birth Date: ${birthDate}`);
-                
-                const response = await fetch(EDGE_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    },
-                    body: JSON.stringify({ birth_date: birthDate })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Edge Function error: ${response.status} - ${errorText}`);
-                }
-                
-                const data = await response.json();
-                console.log(`✅ Edge Function returned:`, data);
-                
-                return data;
-            } catch (error) {
-                console.error(`❌ Edge Function call failed: ${error.message}`);
-                throw error;
-            }
-        }
-
-        // ==================== RENDERING FUNCTIONS ====================
-        function renderMainResult(edgeResult, lifePathData, destinyData) {
-            if (!edgeResult) {
-                return `<div class="tw-text-red-500 tw-text-center tw-p-4">
-                    <p>ไม่พบข้อมูลผลลัพธ์</p>
-                </div>`;
-            }
+        function renderTestResult() {
+            updateStatus('🎨 กำลังแสดงผลลัพธ์ทดสอบ...', 'info');
             
-            const { birth_date, destiny_number, life_path_number, life_path_meaning } = edgeResult;
+            // ข้อมูลทดสอบ
+            const testData = {
+                birth_date: "13:05 22/05/1968",
+                birth_numbers: "130522051968",
+                destiny_number: 42,
+                destiny_number_reduced: 6,
+                life_path_number: 6,
+                life_path_meaning: "ผู้มีความรับผิดชอบสูง รักครอบครัว..."
+            };
             
-            return `
+            const html = `
                 <div class="tw-space-y-6">
-                    <!-- Header -->
                     <div class="tw-text-center tw-mb-8">
                         <h3 class="tw-text-2xl tw-font-bold tw-text-gray-800">วันเวลาเกิด</h3>
-                        <p class="tw-text-3xl tw-font-semibold tw-text-blue-600 tw-mt-2">${birth_date || 'ไม่ระบุ'}</p>
+                        <p class="tw-text-3xl tw-font-semibold tw-text-blue-600 tw-mt-2">
+                            ${testData.birth_date}
+                        </p>
+                        <p class="tw-text-sm tw-text-gray-500 tw-mt-2">(ข้อมูลทดสอบ)</p>
                     </div>
                     
-                    <!-- Numbers Summary -->
                     <div class="tw-grid md:tw-grid-cols-2 tw-gap-6">
-                        <!-- Destiny Card -->
-                        <div class="tw-bg-gradient-to-r tw-from-blue-50 tw-to-blue-100 tw-border-2 tw-border-blue-200 tw-rounded-xl tw-p-6 tw-shadow">
-                            <h4 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">เลขภาระกิจ (Destiny)</h4>
-                            <div class="tw-flex tw-items-center">
-                                <div class="tw-text-5xl tw-font-bold tw-text-blue-600 tw-mr-4">${destiny_number || '-'}</div>
+                        <div class="tw-bg-blue-50 tw-border-2 tw-border-blue-200 tw-rounded-xl tw-p-6">
+                            <h4 class="tw-text-lg tw-font-bold tw-text-blue-800">เลขภาระกิจ (Destiny)</h4>
+                            <div class="tw-flex tw-items-center tw-mt-4">
+                                <div class="tw-text-5xl tw-font-bold tw-text-blue-600 tw-mr-4">
+                                    ${testData.destiny_number}
+                                </div>
                                 <div>
-                                    <p class="tw-text-gray-600">หมายเลขโชคชะตา</p>
-                                    ${destinyData ? `<p class="tw-text-sm tw-text-gray-500">${destinyData.title || ''}</p>` : ''}
+                                    <p class="tw-text-gray-600">(ลดเหลือ ${testData.destiny_number_reduced})</p>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Life Path Card -->
-                        <div class="tw-bg-gradient-to-r tw-from-green-50 tw-to-green-100 tw-border-2 tw-border-green-200 tw-rounded-xl tw-p-6 tw-shadow">
-                            <h4 class="tw-text-lg tw-font-bold tw-text-green-800 tw-mb-2">เลขเส้นทางชีวิต (Life Path)</h4>
-                            <div class="tw-flex tw-items-center">
-                                <div class="tw-text-5xl tw-font-bold tw-text-green-600 tw-mr-4">${life_path_number || '-'}</div>
+                        <div class="tw-bg-green-50 tw-border-2 tw-border-green-200 tw-rounded-xl tw-p-6">
+                            <h4 class="tw-text-lg tw-font-bold tw-text-green-800">เลขเส้นทางชีวิต (Life Path)</h4>
+                            <div class="tw-flex tw-items-center tw-mt-4">
+                                <div class="tw-text-5xl tw-font-bold tw-text-green-600 tw-mr-4">
+                                    ${testData.life_path_number}
+                                </div>
                                 <div>
-                                    <p class="tw-text-gray-600">เส้นทางชีวิตของคุณ</p>
-                                    ${lifePathData ? `<p class="tw-text-sm tw-text-gray-500">${lifePathData.title || ''}</p>` : ''}
+                                    <p class="tw-text-sm tw-text-gray-500">เส้นทางชีวิต</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Life Path Meaning -->
-                    ${life_path_meaning ? `
                     <div class="tw-bg-yellow-50 tw-border-l-4 tw-border-yellow-400 tw-p-4 tw-rounded">
-                        <h4 class="tw-font-bold tw-text-yellow-800 tw-mb-2">ความหมายเส้นทางชีวิต:</h4>
-                        <p class="tw-text-gray-700">${life_path_meaning}</p>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Action Buttons -->
-                    <div class="tw-flex tw-justify-center tw-space-x-4 tw-mt-8">
-                        <button onclick="loadLifePathContent(${life_path_number})" 
-                                class="tw-bg-green-500 hover:tw-bg-green-600 tw-text-white tw-font-bold tw-py-3 tw-px-6 tw-rounded-lg tw-transition">
-                            📖 ดูคำอธิบายเส้นทางชีวิต
-                        </button>
-                        <button onclick="loadDestinyContent(${destiny_number})" 
-                                class="tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-3 tw-px-6 tw-rounded-lg tw-transition">
-                            🔮 ดูคำอธิบายเลขภาระกิจ
-                        </button>
+                        <h4 class="tw-font-bold tw-text-yellow-800">ความหมายเส้นทางชีวิต:</h4>
+                        <p class="tw-text-gray-700">${testData.life_path_meaning}</p>
                     </div>
                     
-                    <!-- Links to GitHub Content -->
-                    <div class="tw-mt-6 tw-p-4 tw-bg-gray-50 tw-rounded">
-                        <h4 class="tw-font-bold tw-text-gray-800 tw-mb-2">📁 GitHub Content Paths:</h4>
-                        <ul class="tw-text-sm">
-                            <li>Life Path: <code>${lifePathData ? lifePathData.html_path : 'N/A'}</code></li>
-                            <li>Destiny: <code>${destinyData ? destinyData.html_path : 'N/A'}</code></li>
-                        </ul>
+                    <div class="tw-text-center">
+                        <button onclick="loadRealData()" 
+                                class="tw-bg-purple-500 hover:tw-bg-purple-600 tw-text-white tw-font-bold tw-py-3 tw-px-6 tw-rounded-lg">
+                            🔄 โหลดข้อมูลจริงจาก Supabase
+                        </button>
                     </div>
                 </div>
             `;
+            
+            document.getElementById('result-content').innerHTML = html;
+            document.getElementById('loading-message').classList.add('tw-hidden');
+            document.getElementById('result-content').classList.remove('tw-hidden');
+            
+            updateStatus('✅ แสดงผลลัพธ์ทดสอบสำเร็จ', 'success');
         }
 
-        function renderSQLResults(lifePathQuery, destinyQuery) {
-            return `
-=== SQL QUERY 1: Life Path (root_number = 6) ===
-SELECT * FROM numerology_search_index 
-WHERE element_type = 'LifePath' AND root_number = 6
-
-Result:
-${lifePathQuery ? JSON.stringify(lifePathQuery, null, 2) : 'No data found'}
-
-=== SQL QUERY 2: Destiny (id = destiny_number) ===
-SELECT * FROM numerology_search_index 
-WHERE element_type = 'Destiny' AND id = ${destinyQuery ? destinyQuery.id : 'N/A'}
-
-Result:
-${destinyQuery ? JSON.stringify(destinyQuery, null, 2) : 'No data found'}
-
-=== GITHUB PATHS ===
-Life Path HTML Path: ${lifePathQuery ? lifePathQuery.html_path : 'N/A'}
-Destiny HTML Path: ${destinyQuery ? destinyQuery.html_path : 'N/A'}
-            `;
-        }
-
-        // ==================== LOADING FUNCTIONS ====================
-        async function loadLifePathContent(lifePathNumber) {
-            try {
-                console.log(`Loading Life Path content for number: ${lifePathNumber}`);
-                
-                // Query Supabase เพื่อหา html_path
-                const lifePathData = await queryLifePathFromSupabase(lifePathNumber);
-                
-                if (!lifePathData || !lifePathData.html_path) {
-                    alert('ไม่พบข้อมูลเส้นทางชีวิตในฐานข้อมูล');
-                    return;
-                }
-                
-                // โหลดเนื้อหาจาก GitHub
-                const content = await fetchContentFromGitHub(lifePathData.html_path);
-                
-                // แสดงในแท็บ Explained
-                document.getElementById('explained-content').innerHTML = content;
-                
-                // สลับไปแท็บ Explained
-                switchTab('Explained', document.querySelector('[onclick*="Explained"]'));
-                
-                console.log('Life Path content loaded successfully');
-            } catch (error) {
-                console.error(`Failed to load Life Path content: ${error.message}`);
-                alert('เกิดข้อผิดพลาดในการโหลดเนื้อหา');
-            }
-        }
-
-        async function loadDestinyContent(destinyNumber) {
-            try {
-                console.log(`Loading Destiny content for number: ${destinyNumber}`);
-                
-                // Query Supabase เพื่อหา html_path
-                const destinyData = await queryDestinyFromSupabase(destinyNumber);
-                
-                if (!destinyData || !destinyData.html_path) {
-                    alert('ไม่พบข้อมูลเลขภาระกิจในฐานข้อมูล');
-                    return;
-                }
-                
-                // โหลดเนื้อหาจาก GitHub
-                const content = await fetchContentFromGitHub(destinyData.html_path);
-                
-                // แสดงในแท็บ Explained
-                document.getElementById('explained-content').innerHTML = content;
-                
-                // สลับไปแท็บ Explained
-                switchTab('Explained', document.querySelector('[onclick*="Explained"]'));
-                
-                console.log('Destiny content loaded successfully');
-            } catch (error) {
-                console.error(`Failed to load Destiny content: ${error.message}`);
-                alert('เกิดข้อผิดพลาดในการโหลดเนื้อหา');
-            }
-        }
-
-        // ==================== MAIN EXECUTION ====================
+        // ==================== MAIN INITIALIZATION ====================
         async function initializePage() {
             try {
-                console.log('=== INITIALIZING RESULT PAGE ===');
+                DebugLogger.log('=== STARTING RESULT PAGE ===');
+                updateStatus('🚀 กำลังเริ่มต้นหน้ารายงานผล...', 'info');
+                document.getElementById('loading-text').textContent = 'กำลังเริ่มต้นระบบ...';
                 
-                let edgeResult = null;
+                // 1. ทำ initial checks
+                performInitialChecks();
                 
-                // 1. ลองอ่านจาก sessionStorage ก่อน (จาก Psychomatrix.js)
+                // 2. แสดง raw data
+                renderRawData();
+                
+                // 3. พยายามดึงข้อมูลจาก sessionStorage
                 const sessionData = sessionStorage.getItem('psychomatrixResult');
+                
                 if (sessionData) {
                     try {
-                        edgeResult = JSON.parse(sessionData);
-                        console.log('📂 Loaded data from sessionStorage:', edgeResult);
+                        const parsedData = JSON.parse(sessionData);
+                        updateStatus('✅ พบข้อมูลจาก Psychomatrix.js', 'success');
+                        document.getElementById('loading-text').textContent = 'กำลังประมวลผลข้อมูล...';
+                        
+                        // แสดงข้อมูลจริง
+                        await renderRealData(parsedData);
                     } catch (parseError) {
-                        console.error('Failed to parse sessionStorage data:', parseError);
+                        updateStatus('❌ ข้อมูล sessionStorage ไม่ถูกต้อง', 'error');
+                        renderTestResult();
                     }
-                }
-                
-                // 2. ถ้าไม่มีใน sessionStorage ให้อ่านจาก URL parameters
-                if (!edgeResult || !edgeResult.success) {
-                    const params = getUrlParams();
-                    console.log(`📋 URL Parameters:`, params);
+                } else {
+                    updateStatus('⚠️ ไม่พบข้อมูล sessionStorage', 'warning');
+                    document.getElementById('loading-text').textContent = 'แสดงข้อมูลทดสอบ...';
                     
-                    // ถ้ามี birth_date ใน URL ให้เรียก Edge Function
-                    if (params.birth_date) {
-                        edgeResult = await callPsychomatrixCalculate(params.birth_date);
-                    } else {
-                        // ถ้าไม่มีข้อมูลใดๆ
-                        throw new Error('ไม่พบข้อมูลสำหรับการวิเคราะห์ กรุณากรอกข้อมูลใน Psychomatrix.html');
-                    }
+                    // ใช้ข้อมูลทดสอบ
+                    setTimeout(() => {
+                        renderTestResult();
+                    }, 1000);
                 }
                 
-                if (!edgeResult.success) {
-                    throw new Error(`Edge Function calculation failed: ${edgeResult.error || 'Unknown error'}`);
-                }
-                
-                // 3. Query ข้อมูลจาก Supabase (ตามที่คุณต้องการ)
-                console.log(`🔍 Querying Supabase for LifePath root_number = ${edgeResult.life_path_number}`);
-                const lifePathQuery = await queryLifePathFromSupabase(edgeResult.life_path_number);
-                
-                console.log(`🔍 Querying Supabase for Destiny id = ${edgeResult.destiny_number}`);
-                const destinyQuery = await queryDestinyFromSupabase(edgeResult.destiny_number);
-                
-                // 4. Render ผลลัพธ์
-                const mainContent = renderMainResult(edgeResult, lifePathQuery, destinyQuery);
-                document.getElementById('result-content').innerHTML = mainContent;
-                
-                // 5. Render SQL Results
-                const sqlContent = renderSQLResults(lifePathQuery, destinyQuery);
-                document.getElementById('sql-content').innerHTML = `<pre class="tw-text-sm">${sqlContent}</pre>`;
-                
-                // 6. ซ่อน loading message และแสดงผลลัพธ์
-                document.getElementById('loading-message').classList.add('tw-hidden');
-                document.getElementById('result-content').classList.remove('tw-hidden');
-                
-                console.log('=== PAGE INITIALIZATION COMPLETE ===');
-                
-                // 7. โหลด Life Path content อัตโนมัติ (optional)
-                // await loadLifePathContent(edgeResult.life_path_number);
+                DebugLogger.log('=== PAGE INITIALIZED SUCCESSFULLY ===');
                 
             } catch (error) {
-                console.error(`Initialization failed: ${error.message}`);
+                DebugLogger.error(`FATAL ERROR: ${error.message}`);
+                updateStatus(`❌ ข้อผิดพลาดร้ายแรง: ${error.message}`, 'error');
                 
                 document.getElementById('loading-message').innerHTML = `
                     <div class="tw-text-red-500 tw-text-center">
-                        <p class="tw-text-xl tw-font-bold">เกิดข้อผิดพลาด</p>
+                        <p class="tw-text-xl tw-font-bold">เกิดข้อผิดพลาดร้ายแรง</p>
                         <p class="tw-mt-2">${error.message}</p>
+                        <p class="tw-text-sm tw-mt-4">${error.stack}</p>
                         <a href="Psychomatrix.html" class="tw-inline-block tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded">
                             ← กลับไปหน้าฟอร์ม
                         </a>
@@ -451,14 +365,37 @@ Destiny HTML Path: ${destinyQuery ? destinyQuery.html_path : 'N/A'}
 
         // ==================== EVENT LISTENERS ====================
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM Content Loaded - Starting initialization');
-            initializePage();
+            DebugLogger.log('📄 DOM Content Loaded');
+            
+            // เริ่มต้นหน้านี้
+            setTimeout(() => {
+                initializePage();
+            }, 500);
         });
 
-        // ทำให้ฟังก์ชันโหลดเนื้อหาเป็น global
-        window.loadLifePathContent = loadLifePathContent;
-        window.loadDestinyContent = loadDestinyContent;
+        // ทำให้ฟังก์ชันเป็น global
         window.switchTab = switchTab;
+        window.loadRealData = async function() {
+            updateStatus('🔍 กำลังโหลดข้อมูลจริงจาก Supabase...', 'info');
+            
+            // ดึงข้อมูล LifePath 6 (ตามที่ต้องการ)
+            const lifePathData = await fetchLifePathFromSupabase(6);
+            
+            if (lifePathData) {
+                document.getElementById('sql-content').innerHTML = `
+                    <div class="tw-bg-gray-800 tw-p-4 tw-rounded">
+                        <h4 class="tw-text-green-400">✅ พบข้อมูล LifePath 6</h4>
+                        <pre class="tw-text-sm tw-whitespace-pre-wrap">${JSON.stringify(lifePathData, null, 2)}</pre>
+                    </div>
+                `;
+                
+                // สลับไปแท็บ SQL
+                switchTab('SQL', document.querySelector('[onclick*="SQL"]'));
+                
+                updateStatus('✅ โหลดข้อมูล SQL สำเร็จ', 'success');
+            }
+        };
+
     </script>
 </body>
 </html>
