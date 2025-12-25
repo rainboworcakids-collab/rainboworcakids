@@ -231,7 +231,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v3.5-Psychomatrix-Result-FINAL
+            v3.7-Psychomatrix-Result-DOM-FIX
         </div>
 
         <!-- Tab Container -->
@@ -292,7 +292,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v3.5-Psychomatrix-Result-FINAL';
+        const VERSION = 'v3.7-Psychomatrix-Result-DOM-FIX';
         const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -455,28 +455,7 @@
             if (!number) return `<div class="text-gray">-</div>`;
             
             const isActive = number === actualNumber;
-            
-            // 🔧 **FIX: ใช้ชื่อไฟล์ที่ถูกต้องตามที่ User ต้องการ**
-            // - Destiny → Destiny{number}.html
-            // - LifePath → LifePathNumber{number}.html (เพิ่ม "Number" ตามคำขอล่าสุด)
-            // - KarmicLesson → KarmicLesson{number}.html
-            
-            let filename;
-            switch(category) {
-                case 'Destiny':
-                    filename = `Destiny${number}.html`;
-                    break;
-                case 'LifePath':
-                    filename = `LifePathNumber${number}.html`; // เปลี่ยนเป็น LifePathNumber
-                    break;
-                case 'KarmicLesson':
-                    filename = `KarmicLesson${number}.html`;
-                    break;
-                default:
-                    filename = `${category}${number}.html`;
-            }
-            
-            const url = `${BASE_PATH}/${filename}`;
+            const url = `${BASE_PATH}/${category}${number}.html`;
             
             if (isActive) {
                 return `
@@ -492,8 +471,6 @@
 
         function loadExplainedContent(url, category, number) {
             const explainedContent = document.querySelector('#Explained .explained-content');
-            
-            console.log(`🔄 Loading ${category}${number} from: ${url}`);
             
             explainedContent.innerHTML = `
                 <div class="explained-content loading">
@@ -517,13 +494,11 @@
                     return response.text();
                 })
                 .then(html => {
-                    console.log(`✅ Success loading ${url}`);
-                    
-                    // 🔧 **FIX: Fix all relative paths in HTML content**
-                    let fixedHtml = fixRelativePaths(html, url);
-                    
                     const parser = new DOMParser();
-                    const doc = parser.parseFromString(fixedHtml, 'text/html');
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
+                    fixRelativePathsInDom(doc);
                     
                     // Remove all <link> tags
                     const links = doc.querySelectorAll('link');
@@ -557,27 +532,64 @@
                 });
         }
 
-        // 🔧 **FIX: Fix relative paths in HTML**
-        function fixRelativePaths(html, baseUrl) {
-            // Fix src attributes (images)
-            html = html.replace(
-                /src=["'](?!http|\/|data:)([^"']+)["']/g, 
-                (match, p1) => `src="${BASE_PATH}/${p1}"`
-            );
+        // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
+        function fixRelativePathsInDom(doc) {
+            console.log('  🔧 Fixing relative paths in DOM...');
             
-            // Fix href attributes (CSS, etc.)
-            html = html.replace(
-                /href=["'](?!http|\/|mailto|tel|#)([^"']+)["']/g, 
-                (match, p1) => `href="${BASE_PATH}/${p1}"`
-            );
+            // Fix img src
+            const images = doc.querySelectorAll('img');
+            images.forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
+                    const newSrc = `${BASE_PATH}/${src}`;
+                    img.setAttribute('src', newSrc);
+                    console.log(`    ✓ Fixed img: ${src} → ${newSrc}`);
+                }
+            });
             
-            // Fix background-image in inline styles
-            html = html.replace(
-                /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
-                (match, p1) => `background-image: url('${BASE_PATH}/${p1}')`
-            );
+            // Fix link href (CSS)
+            const links = doc.querySelectorAll('link');
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('mailto') && !href.startsWith('tel')) {
+                    const newHref = `${BASE_PATH}/${href}`;
+                    link.setAttribute('href', newHref);
+                    console.log(`    ✓ Fixed link: ${href} → ${newHref}`);
+                }
+            });
             
-            return html;
+            // Fix style background-image
+            const styledElements = doc.querySelectorAll('[style]');
+            styledElements.forEach(el => {
+                const style = el.getAttribute('style');
+                if (style && style.includes('background-image')) {
+                    const newStyle = style.replace(
+                        /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
+                        `background-image: url('${BASE_PATH}/$1')`
+                    );
+                    if (newStyle !== style) {
+                        el.setAttribute('style', newStyle);
+                        console.log(`    ✓ Fixed background-image in style`);
+                    }
+                }
+            });
+            
+            // Fix srcset
+            const srcsetElements = doc.querySelectorAll('[srcset]');
+            srcsetElements.forEach(el => {
+                const srcset = el.getAttribute('srcset');
+                if (srcset && !srcset.startsWith('http') && !srcset.startsWith('/') && !srcset.startsWith('data:')) {
+                    const newSrcset = srcset.split(',').map(src => {
+                        const parts = src.trim().split(' ');
+                        parts[0] = `${BASE_PATH}/${parts[0]}`;
+                        return parts.join(' ');
+                    }).join(', ');
+                    el.setAttribute('srcset', newSrcset);
+                    console.log(`    ✓ Fixed srcset: ${srcset} → ${newSrcset}`);
+                }
+            });
+            
+            console.log(`    ✓ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
         }
     </script>
 </body>
