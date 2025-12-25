@@ -83,63 +83,56 @@
             to { opacity: 1; }
         }
         
-        /* Numerology Table Styles */
-        .numerology-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 1.5rem 0;
-            background: white;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* Data Grid Styles */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
         
-        .numerology-table th {
-            background: #667eea;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .numerology-table td {
-            padding: 0.75rem;
-            text-align: center;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .numerology-table tr:hover {
+        .data-item {
             background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #667eea;
+            text-align: center;
         }
         
-        .numerology-link {
-            display: inline-block;
-            padding: 0.5rem 1rem;
+        .data-item .label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+        
+        .data-item .number-button {
             background: #667eea;
             color: white;
-            text-decoration: none;
-            border-radius: 0.375rem;
-            font-weight: bold;
-            transition: all 0.2s;
             border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 1.5rem;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
         
-        .numerology-link:hover {
+        .data-item .number-button:hover {
             background: #5a67d8;
             transform: translateY(-2px);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
-        .numerology-link.active {
+        .data-item .number-button.active {
             background: #48bb78;
         }
         
-        .numerology-link.disabled {
-            background: #d1d5db;
+        .data-item .description {
+            font-size: 0.75rem;
             color: #9ca3af;
-            cursor: not-allowed;
-            pointer-events: none;
+            margin-top: 0.5rem;
         }
         
         /* Explained Tab Content */
@@ -151,6 +144,8 @@
             color: #1f2937;
             font-size: 1.5rem;
             margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
         }
         
         .explained-content p {
@@ -185,18 +180,30 @@
             background: white;
         }
         
-        .data-grid {
+        .pythagorean-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-width: 300px;
+            margin: 1rem auto;
         }
         
-        .data-item {
-            background: #f9fafb;
-            padding: 1rem;
+        .pythagorean-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
             border-radius: 0.5rem;
-            border-left: 4px solid #667eea;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .pythagorean-cell.active {
+            background: #667eea;
+            color: white;
+            border-color: #5a67d8;
         }
     </style>
 </head>
@@ -215,7 +222,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v3.1-Psychomatrix-Result-TABS
+            v3.2-Psychomatrix-Result-FINAL
         </div>
 
         <!-- Tab Container -->
@@ -259,14 +266,14 @@
                 <div id="Explained" class="tab-pane">
                     <div class="explained-content loading">
                         <i class="fas fa-hand-pointer text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">คลิกที่ลิงค์ในแท็บ <strong>Main</strong> เพื่อดูรายละเอียดที่นี่</p>
+                        <p class="text-gray-600">คลิกที่ตัวเลขในแท็บ <strong>Main</strong> เพื่อดูรายละเอียดที่นี่</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Back Button -->
-        <div id="backButtonSection" class="hidden text-center mt-8">
+        <div class="text-center mt-8">
             <a href="Psychomatrix.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
                 <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์ใหม่
             </a>
@@ -276,7 +283,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v3.1-Psychomatrix-Result-TABS';
+        const VERSION = 'v3.2-Psychomatrix-Result-FINAL';
         const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -286,18 +293,13 @@
 
         // Tab Switching Function
         function switchTab(tabName, buttonElement) {
-            // Hide all tab panes
             const panes = document.querySelectorAll('.tab-pane');
             panes.forEach(pane => pane.classList.remove('active'));
             
-            // Remove active class from all buttons
             const buttons = document.querySelectorAll('.tab-button');
             buttons.forEach(btn => btn.classList.remove('active'));
             
-            // Show selected tab pane
             document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to clicked button
             buttonElement.classList.add('active');
         }
 
@@ -305,9 +307,7 @@
             const loadingEl = document.getElementById('loadingStatus');
             const noDataEl = document.getElementById('noDataMessage');
             const resultsContainer = document.getElementById('resultsContainer');
-            const backBtnEl = document.getElementById('backButtonSection');
 
-            // โหลดจาก sessionStorage
             const resultData = sessionStorage.getItem('psychomatrixResult');
             
             if (!resultData) {
@@ -327,21 +327,16 @@
                 let html = '';
                 
                 if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    // แสดงทุก result ใน array
                     data.results.forEach(result => {
                         html += createResultSectionFromResult(result);
                     });
                 } else {
-                    // Fallback: รองรับ object เดี่ยว
                     html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
                 }
 
                 resultsContainer.innerHTML = html;
-
-                // แสดงส่วนต่างๆ
                 loadingEl.classList.add('hidden');
                 resultsContainer.classList.remove('hidden');
-                backBtnEl.classList.remove('hidden');
 
             } catch (error) {
                 console.error('❌ Error displaying result:', error);
@@ -370,34 +365,37 @@
         function createResultSection(id, title, data, type) {
             return `
                 <div class="result-section">
-                    <!-- Section Header -->
                     <div class="section-header">
                         <i class="fas fa-chart-bar mr-2"></i>${title}
                     </div>
-                    
-                    <!-- Section Content -->
                     <div class="section-content">
-                        <!-- Data Grid -->
                         <div class="data-grid">
+                            <!-- Destiny Number with Link -->
                             <div class="data-item">
-                                <div class="text-sm text-gray-600">Destiny Number</div>
-                                <div class="text-2xl font-bold text-purple-700">${data.destiny_number || '-'}</div>
-                                <div class="text-xs text-gray-500 mt-1">${data.destiny_meaning || ''}</div>
+                                <div class="label">Destiny Number</div>
+                                ${createNumberButton(data.destiny_number, 'Destiny', data.destiny_number)}
+                                <div class="description">${data.destiny_meaning || ''}</div>
                             </div>
+                            
+                            <!-- Life Path Number with Link -->
                             <div class="data-item">
-                                <div class="text-sm text-gray-600">Life Path Number</div>
-                                <div class="text-2xl font-bold text-blue-700">${data.life_path_number || '-'}</div>
-                                <div class="text-xs text-gray-500 mt-1">เส้นทางชีวิต</div>
+                                <div class="label">Life Path Number</div>
+                                ${createNumberButton(data.life_path_number, 'LifePath', data.life_path_number)}
+                                <div class="description">เส้นทางชีวิต</div>
                             </div>
+                            
+                            <!-- Karmic Number -->
                             <div class="data-item">
-                                <div class="text-sm text-gray-600">Karmic Number</div>
+                                <div class="label">Karmic Number</div>
                                 <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
-                                <div class="text-xs text-gray-500 mt-1">ภาระกรรม</div>
+                                <div class="description">ภาระกรรม</div>
                             </div>
+                            
+                            <!-- Life Lesson with Link -->
                             <div class="data-item">
-                                <div class="text-sm text-gray-600">Life Lesson</div>
-                                <div class="text-2xl font-bold text-green-700">${data.thirdAndFourth?.lifeLesson || '-'}</div>
-                                <div class="text-xs text-gray-500 mt-1">บทเรียนชีวิต</div>
+                                <div class="label">Life Lesson</div>
+                                ${createNumberButton(data.thirdAndFourth?.lifeLesson, 'KarmicLesson', data.thirdAndFourth?.lifeLesson)}
+                                <div class="description">บทเรียนชีวิต</div>
                             </div>
                         </div>
 
@@ -417,14 +415,6 @@
                                 </div>
                             </div>
                         ` : ''}
-
-                        <!-- Numerology Table -->
-                        <div class="mt-6">
-                            <h4 class="font-bold text-gray-800 mb-3">
-                                <i class="fas fa-table mr-2"></i>Numerology Table
-                            </h4>
-                            ${generateNumerologyTable(data)}
-                        </div>
 
                         <!-- Pythagorean Square -->
                         <div class="mt-6">
@@ -453,63 +443,23 @@
             `;
         }
 
-        function generateNumerologyTable(data) {
-            const lifePath = data.life_path_number;
-            const destiny = data.destiny_number;
-            const lifeLesson = data.thirdAndFourth?.lifeLesson;
+        function createNumberButton(number, category, actualNumber) {
+            if (!number) return `<div class="text-2xl font-bold text-gray-400">-</div>`;
             
-            // 🔧 **สร้างตาราง Numerology**
-            let table = '<table class="numerology-table">';
-            table += '<thead><tr><th>Life Path</th><th>Destiny</th><th>Life Lesson</th></tr></thead>';
-            table += '<tbody><tr>';
+            const isActive = number === actualNumber;
+            const link = `${BASE_PATH}/${category}${number}.html`;
             
-            // Life Path Column (1-9)
-            table += '<td>';
-            for (let i = 1; i <= 9; i++) {
-                const isActive = i === lifePath;
-                const link = `${BASE_PATH}/LifePathNumber${i}.html`;
-                table += createNumerologyLink(i, link, isActive, 'Life Path');
-            }
-            table += '</td>';
-            
-            // Destiny Column (11-99)
-            table += '<td>';
-            if (destiny) {
-                const link = `${BASE_PATH}/Destiny${destiny}.html`;
-                table += createNumerologyLink(destiny, link, true, 'Destiny');
+            // Only make the actual calculated number clickable
+            if (isActive) {
+                return `
+                    <button class="number-button active" 
+                            onclick="loadExplainedContent('${link}', '${category}', ${number})">
+                        ${number}
+                    </button>
+                `;
             } else {
-                table += '<span class="text-gray-400">-</span>';
+                return `<div class="text-2xl font-bold text-gray-400">${number}</div>`;
             }
-            table += '</td>';
-            
-            // Life Lesson Column (1-9)
-            table += '<td>';
-            if (lifeLesson) {
-                const link = `${BASE_PATH}/KarmicLesson${lifeLesson}.html`;
-                table += createNumerologyLink(lifeLesson, link, true, 'Life Lesson');
-            } else {
-                table += '<span class="text-gray-400">-</span>';
-            }
-            table += '</td>';
-            
-            table += '</tr></tbody></table>';
-            
-            return table;
-        }
-
-        function createNumerologyLink(number, url, isActive, category) {
-            if (!number) return '';
-            
-            const activeClass = isActive ? 'active' : '';
-            const title = isActive ? `ดูรายละเอียด ${category} ${number}` : `${category} ${number}`;
-            
-            return `
-                <button class="numerology-link ${activeClass} ${!isActive ? 'disabled' : ''}" 
-                        onclick="loadExplainedContent('${url}', '${category}', ${number})" 
-                        title="${title}">
-                    ${number}
-                </button>
-            `;
         }
 
         function loadExplainedContent(url, category, number) {
@@ -517,7 +467,7 @@
             
             // Show loading
             explainedContent.innerHTML = `
-                <div class="loading">
+                <div class="explained-content loading">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
                     <p>กำลังโหลด ${category} ${number}...</p>
                 </div>
@@ -536,17 +486,39 @@
                     return response.text();
                 })
                 .then(html => {
-                    // Extract body content
+                    // Parse HTML
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    const bodyContent = doc.querySelector('body')?.innerHTML || 
-                                      doc.querySelector('main')?.innerHTML || 
-                                      html;
+                    
+                    // 🔧 **FIX CSS Path: Convert relative to absolute**
+                    const links = doc.querySelectorAll('link[rel="stylesheet"]');
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && !href.startsWith('http') && !href.startsWith('/')) {
+                            // Relative path, make it absolute
+                            link.setAttribute('href', `${BASE_PATH}/${href}`);
+                        }
+                    });
+                    
+                    // Get body content or fallback
+                    let content = doc.querySelector('body')?.innerHTML;
+                    if (!content || content.trim() === '') {
+                        content = doc.querySelector('main')?.innerHTML;
+                    }
+                    if (!content || content.trim() === '') {
+                        content = doc.documentElement.innerHTML;
+                    }
+                    
+                    // Remove any problematic link tags from content
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = content;
+                    const contentLinks = tempDiv.querySelectorAll('link');
+                    contentLinks.forEach(l => l.remove());
                     
                     explainedContent.innerHTML = `
                         <div class="explained-content">
                             <h2>${category} ${number}</h2>
-                            ${bodyContent}
+                            ${tempDiv.innerHTML}
                         </div>
                     `;
                 })
