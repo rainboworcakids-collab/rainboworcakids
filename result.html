@@ -11,7 +11,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- 🔧 FIX: Pre-load PsychomatrixContents style.css -->
+    <!-- Pre-load CSS -->
     <link rel="stylesheet" href="/rainboworcakids/PsychomatrixContents/style.css">
     
     <!-- Favicon -->
@@ -231,7 +231,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v3.3-Psychomatrix-Result-DEBUG
+            v3.5-Psychomatrix-Result-FINAL
         </div>
 
         <!-- Tab Container -->
@@ -292,7 +292,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v3.3-Psychomatrix-Result-DEBUG';
+        const VERSION = 'v3.5-Psychomatrix-Result-FINAL';
         const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -339,7 +339,7 @@
                 if (data.results && Array.isArray(data.results) && data.results.length > 0) {
                     console.log(`📊 Found ${data.results.length} results`);
                     data.results.forEach((result, index) => {
-                        console.log(`  Result ${index}:`, result.type, result.title);
+                        console.log(`  Result ${index}: ${result.type} | Destiny: ${result.data?.destiny_number} | LifePath: ${result.data?.life_path_number}`);
                         html += createResultSectionFromResult(result);
                     });
                 } else {
@@ -372,8 +372,6 @@
             const data = result.data || {};
             const databaseData = result.database_data || null;
             
-            console.log(`📝 Creating section for: ${type}`);
-            
             return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
         }
 
@@ -381,8 +379,6 @@
             const destinyNum = data.destiny_number;
             const lifePathNum = data.life_path_number;
             const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
-            
-            console.log(`  - Destiny: ${destinyNum}, LifePath: ${lifePathNum}, LifeLesson: ${lifeLessonNum}`);
             
             return `
                 <div class="result-section">
@@ -393,12 +389,12 @@
                         <div class="data-grid">
                             <div class="data-item">
                                 <div class="label">Destiny Number</div>
-                                ${createNumberButton(destinyNum, 'Destiny', destinyNum, 'Destiny_num')}
+                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
                                 <div class="description">${data.destiny_meaning || ''}</div>
                             </div>
                             <div class="data-item">
                                 <div class="label">Life Path Number</div>
-                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum, 'LifePath_num')}
+                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
                                 <div class="description">เส้นทางชีวิต</div>
                             </div>
                             <div class="data-item">
@@ -408,7 +404,7 @@
                             </div>
                             <div class="data-item">
                                 <div class="label">Life Lesson</div>
-                                ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum, 'LifeLesson_num')}
+                                ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum)}
                                 <div class="description">บทเรียนชีวิต</div>
                             </div>
                         </div>
@@ -455,14 +451,34 @@
             `;
         }
 
-        function createNumberButton(number, category, actualNumber, debugId) {
+        function createNumberButton(number, category, actualNumber) {
             if (!number) return `<div class="text-gray">-</div>`;
             
             const isActive = number === actualNumber;
-            const url = `${BASE_PATH}/${category}${number}.html`;
+            
+            // 🔧 **FIX: ใช้ชื่อไฟล์ที่ถูกต้องตามที่ User ต้องการ**
+            // - Destiny → Destiny{number}.html
+            // - LifePath → LifePathNumber{number}.html (เพิ่ม "Number" ตามคำขอล่าสุด)
+            // - KarmicLesson → KarmicLesson{number}.html
+            
+            let filename;
+            switch(category) {
+                case 'Destiny':
+                    filename = `Destiny${number}.html`;
+                    break;
+                case 'LifePath':
+                    filename = `LifePathNumber${number}.html`; // เปลี่ยนเป็น LifePathNumber
+                    break;
+                case 'KarmicLesson':
+                    filename = `KarmicLesson${number}.html`;
+                    break;
+                default:
+                    filename = `${category}${number}.html`;
+            }
+            
+            const url = `${BASE_PATH}/${filename}`;
             
             if (isActive) {
-                console.log(`  🔗 ${debugId}: ${url}`);
                 return `
                     <button class="number-button active" 
                             onclick="loadExplainedContent('${url}', '${category}', ${number})">
@@ -483,7 +499,6 @@
                 <div class="explained-content loading">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
                     <p>กำลังโหลด ${category} ${number}...</p>
-                    <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
                 </div>
             `;
             
@@ -502,14 +517,16 @@
                     return response.text();
                 })
                 .then(html => {
-                    console.log(`✅ Success loading ${url}`, html.substring(0, 100) + '...');
+                    console.log(`✅ Success loading ${url}`);
+                    
+                    // 🔧 **FIX: Fix all relative paths in HTML content**
+                    let fixedHtml = fixRelativePaths(html, url);
                     
                     const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
+                    const doc = parser.parseFromString(fixedHtml, 'text/html');
                     
-                    // 🔧 **CRITICAL FIX**: Remove all <link> tags to prevent CSS issues
+                    // Remove all <link> tags
                     const links = doc.querySelectorAll('link');
-                    console.log(`  Removed ${links.length} <link> tags`);
                     links.forEach(link => link.remove());
                     
                     let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
@@ -522,7 +539,6 @@
                         <div class="explained-content">
                             <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                                 <h2 class="text-xl font-bold text-blue-800">${category} ${number}</h2>
-                                <p class="text-sm text-blue-600">ที่มา: ${url}</p>
                             </div>
                             ${content}
                         </div>
@@ -536,10 +552,32 @@
                             <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
                             <p class="text-sm">${error.message}</p>
                             <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
-                            <p class="text-xs text-gray-400 mt-2">ตรวจสอบว่าไฟล์มีอยู่ใน GitHub Pages ที่เส้นทางนี้จริง</p>
                         </div>
                     `;
                 });
+        }
+
+        // 🔧 **FIX: Fix relative paths in HTML**
+        function fixRelativePaths(html, baseUrl) {
+            // Fix src attributes (images)
+            html = html.replace(
+                /src=["'](?!http|\/|data:)([^"']+)["']/g, 
+                (match, p1) => `src="${BASE_PATH}/${p1}"`
+            );
+            
+            // Fix href attributes (CSS, etc.)
+            html = html.replace(
+                /href=["'](?!http|\/|mailto|tel|#)([^"']+)["']/g, 
+                (match, p1) => `href="${BASE_PATH}/${p1}"`
+            );
+            
+            // Fix background-image in inline styles
+            html = html.replace(
+                /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
+                (match, p1) => `background-image: url('${BASE_PATH}/${p1}')`
+            );
+            
+            return html;
         }
     </script>
 </body>
