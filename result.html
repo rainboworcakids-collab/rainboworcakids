@@ -8,13 +8,16 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- ** FIX: Supabase JS Library ** -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
-    <!-- Scripts ตามลำดับ (ใช้ที่มีอยู่แล้ว) -->
+    <!-- Scripts ตามลำดับ -->
     <script src="js/supabase-config.js"></script>
     <script src="js/debug-logger.js"></script>
     <script src="js/auth_status_manager.js"></script>
@@ -161,7 +164,6 @@
             return grid;
         }
 
-        // ==================== MAIN EXECUTION ====================
         async function loadAndDisplayResult() {
             try {
                 DebugLogger.log('=== Starting Result Page Load ===');
@@ -180,9 +182,7 @@
                     karmic_number: 3
                 };
 
-                DebugLogger.log(`Data loaded: ${JSON.stringify(resultData)}`);
-
-                // ดึง LifePath content จาก Supabase (เพิ่มเติม)
+                // ดึง LifePath content จาก Supabase
                 const lifePathData = await fetchFromSupabase('LifePath', resultData.life_path_number);
                 if (lifePathData && lifePathData.summary) {
                     resultData.life_path_meaning = lifePathData.summary;
@@ -196,7 +196,6 @@
                             วันเวลาเกิด: ${resultData.birth_date}
                         </h2>
                         
-                        <!-- Summary Cards -->
                         <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-6">
                             <div class="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-4 tw-rounded">
                                 <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800">เลขภาระกิจ</h3>
@@ -212,16 +211,13 @@
                             </div>
                         </div>
 
-                        <!-- Life Path Meaning -->
                         <div class="tw-bg-gray-50 tw-p-4 tw-rounded tw-border tw-border-gray-200 tw-mb-6">
                             <h3 class="tw-font-semibold tw-mb-2">ความหมายเส้นทางชีวิต:</h3>
                             <p class="tw-text-gray-700">${resultData.life_path_meaning}</p>
                         </div>
 
-                        <!-- Numerology Table -->
                         ${renderNumerologyTable(resultData)}
 
-                        <!-- Pythagorean Square -->
                         <div class="tw-mt-8">
                             <h3 class="tw-text-xl tw-font-semibold tw-mb-4">Pythagorean Square</h3>
                             <div id="pythagorean-container" class="tw-text-center tw-py-4">
@@ -235,61 +231,38 @@
                 document.getElementById('loading-message').classList.add('tw-hidden');
                 document.getElementById('result-content').classList.remove('tw-hidden');
 
-                // โหลด Pythagorean Square
                 loadPythagoreanSquare(resultData.birth_numbers);
                 
-                DebugLogger.log('=== Result Page Load Complete ===');
-
             } catch (error) {
-                DebugLogger.error(`Fatal error: ${error.message}`);
                 document.getElementById('loading-message').innerHTML = 
                     `<div class="tw-text-red-500 tw-text-center">
-                        <p>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
-                        <p class="tw-text-xs tw-mt-2">${error.message}</p>
+                        <p>เกิดข้อผิดพลาด: ${error.message}</p>
                     </div>`;
             }
         }
 
         async function loadPythagoreanSquare(birthNumbers) {
-            try {
-                // คำนวณ counts จาก birthNumbers (สมมติเป็นตัวอย่าง)
-                const counts = {};
-                for (let i = 1; i <= 9; i++) counts[i] = 0;
-                
-                birthNumbers.split('').forEach(d => {
-                    const num = parseInt(d);
-                    if (num > 0) counts[num]++;
-                });
+            const counts = {};
+            for (let i = 1; i <= 9; i++) counts[i] = 0;
+            birthNumbers.split('').forEach(d => {
+                const num = parseInt(d);
+                if (num > 0) counts[num]++;
+            });
 
-                document.getElementById('pythagorean-container').innerHTML = renderPythagoreanSquare(counts);
-                DebugLogger.log('Pythagorean Square rendered');
-            } catch (error) {
-                DebugLogger.error(`Pythagorean render failed: ${error.message}`);
-            }
+            document.getElementById('pythagorean-container').innerHTML = renderPythagoreanSquare(counts);
         }
 
         // ==================== EVENT LISTENERS ====================
-        document.addEventListener('DOMContentLoaded', async () => {
-            DebugLogger.log('DOM Content Loaded');
-            await loadAndDisplayResult();
-        });
+        document.addEventListener('DOMContentLoaded', loadAndDisplayResult);
 
-        // จัดการลิงก์ใน Numerology Table
         document.addEventListener('click', async (e) => {
             const link = e.target.closest('.numerology-link');
             if (link) {
                 e.preventDefault();
                 const href = link.dataset.href;
-                const targetTab = link.dataset.tab;
-                
-                DebugLogger.log(`Link clicked: ${href}`);
-                
                 const content = await fetchGitHubContent(href);
                 document.getElementById('explained-content').innerHTML = content;
-                
-                // สลับไปแท็บ Explained
-                const explainedTab = document.querySelector('[onclick*="Explained"]');
-                if (explainedTab) explainedTab.click();
+                document.querySelector('[onclick*="Explained"]').click();
             }
         });
     </script>
