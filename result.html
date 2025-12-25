@@ -11,6 +11,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Chart.js (สำหรับ Pinnacle) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
@@ -27,6 +30,89 @@
             font-size: 0.75rem;
             font-family: monospace;
             z-index: 1000;
+        }
+        .result-section {
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.125rem;
+        }
+        .section-content {
+            padding: 1.5rem;
+            background: white;
+        }
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .data-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
+        .pythagorean-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            max-width: 300px;
+            margin: 1rem auto;
+        }
+        .pythagorean-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .pythagorean-cell.active {
+            background: #667eea;
+            color: white;
+            border-color: #5a67d8;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #38a169;
         }
     </style>
 </head>
@@ -45,7 +131,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v1.0-Psychomatrix-Result-TEST
+            v2.0-Psychomatrix-Result-4Sections
         </div>
 
         <!-- Loading Status -->
@@ -63,82 +149,13 @@
             </a>
         </div>
 
-        <!-- Stats Cards -->
-        <div id="statsSection" class="hidden grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-4 rounded-lg shadow border border-purple-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100 text-purple-600 mr-4">
-                        <i class="fas fa-star text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Destiny Number</p>
-                        <p id="destinyNumber" class="text-2xl font-bold text-purple-700">-</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border border-blue-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
-                        <i class="fas fa-route text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Life Path Number</p>
-                        <p id="lifePathNumber" class="text-2xl font-bold text-blue-700">-</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border border-green-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
-                        <i class="fas fa-calendar-alt text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Birth Date</p>
-                        <p id="birthDate" class="text-lg font-semibold text-green-700">-</p>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white p-4 rounded-lg shadow border border-gray-100">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-gray-100 text-gray-600 mr-4">
-                        <i class="fas fa-clock text-xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm">คำนวณเมื่อ</p>
-                        <p id="timestamp" class="text-sm font-medium text-gray-700">-</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Results Table -->
-        <div id="resultsSection" class="hidden bg-white rounded-lg shadow overflow-hidden mb-8">
-            <div class="px-6 py-4 bg-gradient-to-r from-purple-500 to-blue-500">
-                <h2 class="text-xl font-bold text-white">
-                    <i class="fas fa-database mr-2"></i>ข้อมูลฐานข้อมูล Life Path
-                </h2>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                ชื่อฟิลด์
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                ค่าข้อมูล
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsTableBody" class="bg-white divide-y divide-gray-200">
-                        <!-- Data will be inserted here -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- Results Container -->
+        <div id="resultsContainer" class="hidden space-y-8">
+            <!-- Results will be inserted here -->
         </div>
 
         <!-- Back Button -->
-        <div class="text-center" id="backButtonSection" class="hidden">
+        <div id="backButtonSection" class="hidden text-center mt-8">
             <a href="Psychomatrix.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
                 <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์ใหม่
             </a>
@@ -148,7 +165,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v1.0-Psychomatrix-Result-TEST';
+        const VERSION = 'v2.0-Psychomatrix-Result-4Sections';
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
@@ -158,8 +175,7 @@
         function loadAndDisplayResult() {
             const loadingEl = document.getElementById('loadingStatus');
             const noDataEl = document.getElementById('noDataMessage');
-            const statsEl = document.getElementById('statsSection');
-            const resultsEl = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
             const backBtnEl = document.getElementById('backButtonSection');
 
             // โหลดจาก sessionStorage
@@ -179,51 +195,29 @@
                     throw new Error(data.error || 'API returned error');
                 }
 
-                // แสดง Stats Cards
-                document.getElementById('destinyNumber').textContent = data.destiny_number || '-';
-                document.getElementById('lifePathNumber').textContent = data.life_path_number || '-';
-                document.getElementById('birthDate').textContent = data.birth_date || '-';
+                // สร้าง HTML สำหรับแต่ละประเภทข้อมูล
+                let html = '';
                 
-                const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString('th-TH') : '-';
-                document.getElementById('timestamp').textContent = timestamp;
-
-                // แสดงข้อมูล Life Path จากฐานข้อมูล
-                const tableBody = document.getElementById('resultsTableBody');
-                tableBody.innerHTML = '';
-
-                if (data.life_path_data && typeof data.life_path_data === 'object') {
-                    // แสดงทุกฟิลด์ที่ดึงมาจาก numerology_search_index
-                    Object.entries(data.life_path_data).forEach(([key, value]) => {
-                        const row = document.createElement('tr');
-                        row.className = 'hover:bg-gray-50';
-                        
-                        // แปลง key ให้อ่านง่าย
-                        const displayKey = key.replace(/_/g, ' ').toUpperCase();
-                        
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                ${displayKey}
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-700">
-                                ${value !== null && value !== '' ? value : '-'}
-                            </td>
-                        `;
-                        tableBody.appendChild(row);
-                    });
-                } else {
-                    tableBody.innerHTML = `
-                        <tr>
-                            <td colspan="2" class="px-6 py-8 text-center text-gray-500">
-                                <i class="fas fa-info-circle mr-2"></i>ไม่พบข้อมูล Life Path ในฐานข้อมูล
-                            </td>
-                        </tr>
-                    `;
+                // 1. Birth Date Results
+                if (data.birth_date && data.destiny_number) {
+                    html += createResultSection('birth-date', '📅 ข้อมูลวันเกิด', data, 'birth');
                 }
+                
+                // 2. ID Card Results
+                if (data.id_card && data.destiny_number) {
+                    html += createResultSection('id-card', '🪪 ข้อมูลบัตรประชาชน', data, 'idcard');
+                }
+                
+                // 3. Full Name Results
+                if (data.full_name && data.destiny_number) {
+                    html += createResultSection('full-name', '✍️ ข้อมูลชื่อ-สกุล', data, 'name');
+                }
+
+                resultsContainer.innerHTML = html;
 
                 // แสดงส่วนต่างๆ
                 loadingEl.classList.add('hidden');
-                statsEl.classList.remove('hidden');
-                resultsEl.classList.remove('hidden');
+                resultsContainer.classList.remove('hidden');
                 backBtnEl.classList.remove('hidden');
 
             } catch (error) {
@@ -239,6 +233,105 @@
                     </a>
                 `;
             }
+        }
+
+        function createResultSection(id, title, data, type) {
+            const sectionId = `section-${id}`;
+            const pythagoreanId = `pythagorean-${id}`;
+            const pinnacleId = `pinnacle-${id}`;
+            
+            return `
+                <div class="result-section" id="${sectionId}">
+                    <!-- Section 1: Header -->
+                    <div class="section-header">
+                        <i class="fas fa-chart-bar mr-2"></i>${title}
+                    </div>
+                    
+                    <!-- Section 2: Data Display -->
+                    <div class="section-content">
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="text-sm text-gray-600">Destiny Number</div>
+                                <div class="text-2xl font-bold text-purple-700">${data.destiny_number || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">${data.destiny_meaning || ''}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="text-sm text-gray-600">Life Path Number</div>
+                                <div class="text-2xl font-bold text-blue-700">${data.life_path_number || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">เส้นทางชีวิต</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="text-sm text-gray-600">Karmic Number</div>
+                                <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">ภาระกรรม</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="text-sm text-gray-600">Life Lesson</div>
+                                <div class="text-2xl font-bold text-green-700">${data.thirdAndFourth?.lifeLesson || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">บทเรียนชีวิต</div>
+                            </div>
+                        </div>
+
+                        <!-- ข้อมูลจากฐานข้อมูล -->
+                        ${data.life_path_data ? `
+                            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                                <h4 class="font-bold text-blue-800 mb-2">
+                                    <i class="fas fa-database mr-2"></i>ข้อมูลจากฐานข้อมูล
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                    ${Object.entries(data.life_path_data).map(([key, value]) => `
+                                        <div>
+                                            <span class="font-medium text-gray-700">${key.replace(/_/g, ' ')}:</span>
+                                            <span class="text-gray-600">${value || '-'}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Section 3: Pythagorean Square (Placeholder) -->
+                        <div class="mt-6">
+                            <h4 class="font-bold text-gray-800 mb-3">
+                                <i class="fas fa-th-large mr-2"></i>Pythagorean Square
+                            </h4>
+                            <div class="pythagorean-grid" id="${pythagoreanId}">
+                                <div class="pythagorean-cell">1</div>
+                                <div class="pythagorean-cell">2</div>
+                                <div class="pythagorean-cell">3</div>
+                                <div class="pythagorean-cell">4</div>
+                                <div class="pythagorean-cell active">5</div>
+                                <div class="pythagorean-cell">6</div>
+                                <div class="pythagorean-cell">7</div>
+                                <div class="pythagorean-cell">8</div>
+                                <div class="pythagorean-cell">9</div>
+                            </div>
+                            <div class="mt-3 p-3 bg-yellow-50 rounded-lg text-sm text-gray-700">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>สรุปผลเลขแวดล้อมที่มีอิทธิผลสูง:</strong>
+                                <span class="ml-2">กำลังพัฒนา...</span>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="showPythagoreanDetail('${type}')">
+                                <i class="fas fa-square"></i>Pythagorean Square
+                            </button>
+                            <button class="btn btn-secondary" onclick="showPinnacleDetail('${type}')">
+                                <i class="fas fa-mountain"></i>Pinnacle Cycle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showPythagoreanDetail(type) {
+            alert(`🔍 รายละเอียด Pythagorean Square สำหรับ ${type}\n\nกำลังพัฒนา...`);
+        }
+
+        function showPinnacleDetail(type) {
+            alert(`🏔️ รายละเอียด Pinnacle Cycle สำหรับ ${type}\n\nกำลังพัฒนา...`);
         }
     </script>
 </body>
