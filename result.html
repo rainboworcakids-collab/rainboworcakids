@@ -72,27 +72,30 @@
             
             return {
                 success: true,
-                birth_date: params.get('bd') || "13:05 22/05/1968", // format: 13:05 22/05/1968
-                birth_day: params.get('day') || "22",
-                birth_month: params.get('month') || "05",
-                birth_year: params.get('year') || "1968",
-                destiny_number: parseInt(params.get('destiny')) || 42,
-                life_path_number: parseInt(params.get('lifepath')) || 6,
-                life_path_meaning: params.get('meaning') || "กำลังโหลดความหมาย...",
+                birth_date: params.get('bd') || "", // 13:05 22/05/1968
+                birth_day: params.get('day') || "",
+                birth_month: params.get('month') || "",
+                birth_year: params.get('year') || "",
+                destiny_number: parseInt(params.get('destiny') || "0"),
+                life_path_number: parseInt(params.get('lifepath') || "0"),
                 id_card: params.get('idc') || "",
                 full_name: params.get('name') || "",
                 option: params.get('opt') || "BD"
             };
         }
 
-        // ดึงข้อมูลเพิ่มเติมจาก Supabase
-        async function fetchLifePathMeaning(number) {
+        // ดึง LifePath จาก Supabase
+        async function fetchLifePathMeaning(rootNumber) {
+            if (!rootNumber || rootNumber < 1 || rootNumber > 9) {
+                return { summary: "เลขเส้นทางชีวิตไม่ถูกต้อง" };
+            }
+
             try {
-                DebugLogger.log(`Fetching LifePath ${number} from Supabase`);
+                DebugLogger.log(`🔍 Querying LifePath ${rootNumber} from Supabase`);
                 
                 const response = await fetch(
                     `${window.SUPABASE_URL}/rest/v1/numerology_search_index?` + 
-                    `element_type=eq.LifePath&root_number=eq.${number}`, 
+                    `element_type=eq.LifePath&root_number=eq.${rootNumber}`, 
                     {
                         headers: {
                             'apikey': window.SUPABASE_ANON_KEY,
@@ -102,14 +105,25 @@
                 );
                 
                 const data = await response.json();
-                if (data && data[0] && data[0].summary) {
-                    DebugLogger.log(`Found meaning: ${data[0].summary.substring(0, 50)}...`);
-                    return data[0].summary;
+                
+                if (data && data[0]) {
+                    DebugLogger.log(`✅ Found LifePath data: ${data[0].title}`);
+                    return {
+                        summary: data[0].summary || "ยังไม่มีความหมาย",
+                        html_path: data[0].html_path || `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
+                    };
                 }
-                return "ยังไม่มีความหมายในระบบ";
+                
+                return {
+                    summary: "ยังไม่มีข้อมูลในระบบ",
+                    html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
+                };
             } catch (error) {
-                DebugLogger.error(`Fetch failed: ${error.message}`);
-                return "เกิดข้อผิดพลาดในการโหลดความหมาย";
+                DebugLogger.error(`❌ Supabase fetch failed: ${error.message}`);
+                return {
+                    summary: "เกิดข้อผิดพลาดในการโหลดความหมาย",
+                    html_path: `/PsychomatrixContents/LifePathNumber${rootNumber}.html`
+                };
             }
         }
 
@@ -117,46 +131,52 @@
         async function fetchGitHubContent(path) {
             try {
                 const url = `https://rainboworcakids-collab.github.io/rainboworcakids${path}`;
-                DebugLogger.log(`Loading: ${url}`);
+                DebugLogger.log(`📥 Loading from GitHub: ${url}`);
                 
                 const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
                 return await response.text();
             } catch (error) {
-                DebugLogger.error(`GitHub fetch failed: ${error.message}`);
+                DebugLogger.error(`❌ GitHub fetch failed: ${error.message}`);
                 return `<p class="tw-text-red-500">ไม่สามารถโหลดเนื้อหาได้: ${error.message}</p>`;
             }
         }
 
         // ==================== RENDERING ====================
         function renderNumerologyTable(data) {
+            if (!data.destiny_number || !data.life_path_number) {
+                return '<div class="tw-text-red-500 tw-text-center tw-p-4">ข้อมูลไม่ครบถ้วน ไม่สามารถแสดงตารางได้</div>';
+            }
+
             const destinyLink = `/PsychomatrixContents/Destiny${data.destiny_number}.html`;
             const lifePathLink = `/PsychomatrixContents/LifePathNumber${data.life_path_number}.html`;
 
             return `
                 <div class="tw-overflow-x-auto tw-my-6">
-                    <table class="tw-w-full tw-border-collapse tw-border tw-border-gray-300">
+                    <table class="tw-w-full tw-border-collapse tw-border tw-border-gray-300 tw-shadow-sm">
                         <thead>
-                            <tr class="tw-bg-gray-100">
-                                <th class="tw-border tw-border-gray-300 tw-p-3">วันเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3">เดือนเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3">ปีเกิด</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3">โชคชะตา</th>
-                                <th class="tw-border tw-border-gray-300 tw-p-3">เส้นทางชีวิต</th>
+                            <tr class="tw-bg-gradient-to-r tw-from-blue-50 tw-to-green-50">
+                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">วันเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">เดือนเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">ปีเกิด</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">โชคชะตา</th>
+                                <th class="tw-border tw-border-gray-300 tw-p-3 tw-font-semibold">เส้นทางชีวิต</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <tr class="hover:tw-bg-gray-50 tw-transition-colors">
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_day || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_month || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3">${data.birth_year || '-'}</td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-blue-50 hover:tw-bg-blue-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link hover:tw-text-blue-800" 
+                                    <a href="#" class="tw-font-bold tw-text-blue-600 numerology-link hover:tw-text-blue-800 tw-underline" 
                                        data-href="${destinyLink}" data-tab="Explained">
                                         ${data.destiny_number}
                                     </a>
                                 </td>
                                 <td class="tw-border tw-border-gray-300 tw-p-3 tw-bg-green-50 hover:tw-bg-green-100 tw-cursor-pointer">
-                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link hover:tw-text-green-800" 
+                                    <a href="#" class="tw-font-bold tw-text-green-600 numerology-link hover:tw-text-green-800 tw-underline" 
                                        data-href="${lifePathLink}" data-tab="Explained">
                                         ${data.life_path_number}
                                     </a>
@@ -169,51 +189,77 @@
         }
 
         function renderPythagoreanSquare(counts) {
+            if (!counts || Object.keys(counts).length === 0) {
+                return '<div class="tw-text-gray-500 tw-text-center">ไม่มีข้อมูลพลังงานตัวเลข</div>';
+            }
+
             return `
-                <div class="tw-grid tw-grid-cols-4 tw-gap-2 tw-max-w-sm tw-mx-auto tw-my-6">
+                <div class="tw-grid tw-grid-cols-4 tw-gap-3 tw-max-w-xs tw-mx-auto tw-my-6">
                     ${[1,2,3,4,5,6,7,8,9].map(num => 
-                        `<div class="tw-border-2 tw-border-gray-400 tw-p-4 tw-text-center tw-font-bold">${counts[num] || 0}</div>`
+                        `<div class="tw-border-2 tw-border-gray-400 tw-p-5 tw-text-center tw-font-bold tw-bg-white hover:tw-bg-gray-50 tw-transition-all">
+                            <div class="tw-text-2xl">${counts[num] || 0}</div>
+                            <div class="tw-text-xs tw-text-gray-500">${num}</div>
+                        </div>`
                     ).join('')}
-                    <div class="tw-col-span-4 tw-text-center tw-text-xs tw-text-gray-500 tw-mt-2">
+                    <div class="tw-col-span-4 tw-text-center tw-text-xs tw-text-gray-500 tw-mt-2 tw-font-semibold">
                         พลังงานตัวเลข 1-9 (เซลล์ที่ 1-9)
                     </div>
                 </div>
             `;
         }
 
-        function renderResult(data) {
+        function renderResult(data, lifePathData) {
             return `
                 <div class="tw-mb-6">
-                    <h2 class="tw-text-2xl tw-font-bold tw-mb-4 tw-text-center">
-                        วันเวลาเกิด: ${data.birth_date}
+                    <h2 class="tw-text-2xl tw-font-bold tw-mb-4 tw-text-center tw-text-gray-800">
+                        📅 วันเวลาเกิด: ${data.birth_date || 'ไม่ระบุ'}
                     </h2>
                     
-                    <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-6">
-                        <div class="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-4 tw-rounded">
-                            <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800">เลขภาระกิจ</h3>
-                            <p class="tw-text-3xl tw-font-bold tw-text-blue-600">
-                                ${data.destiny_number} → ${data.destiny_number % 9 || 9}
+                    <!-- Summary Cards -->
+                    <div class="tw-grid md:tw-grid-cols-2 tw-gap-6 tw-mb-8">
+                        <div class="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-6 tw-rounded-lg tw-shadow-sm hover:tw-shadow-md tw-transition-shadow">
+                            <h3 class="tw-text-lg tw-font-semibold tw-text-blue-800 tw-mb-2">เลขภาระกิจ (Destiny)</h3>
+                            <p class="tw-text-4xl tw-font-bold tw-text-blue-600 tw-mb-1">
+                                ${data.destiny_number || '?'}
+                            </p>
+                            <p class="tw-text-sm tw-text-blue-500">
+                                ${data.destiny_number ? `${data.destiny_number} → ${data.destiny_number % 9 || 9}` : 'N/A'}
                             </p>
                         </div>
-                        <div class="tw-bg-green-50 tw-border-l-4 tw-border-green-500 tw-p-4 tw-rounded">
-                            <h3 class="tw-text-lg tw-font-semibold tw-text-green-800">เลขเส้นทางชีวิต</h3>
-                            <p class="tw-text-3xl tw-font-bold tw-text-green-600">
-                                ${data.life_path_number}
+                        <div class="tw-bg-green-50 tw-border-l-4 tw-border-green-500 tw-p-6 tw-rounded-lg tw-shadow-sm hover:tw-shadow-md tw-transition-shadow">
+                            <h3 class="tw-text-lg tw-font-semibold tw-text-green-800 tw-mb-2">เลขเส้นทางชีวิต (Life Path)</h3>
+                            <p class="tw-text-4xl tw-font-bold tw-text-green-600 tw-mb-1">
+                                ${data.life_path_number || '?'}
+                            </p>
+                            <p class="tw-text-sm tw-text-green-500">
+                                Life Path Number
                             </p>
                         </div>
                     </div>
 
-                    <div class="tw-bg-gray-50 tw-p-4 tw-rounded tw-border tw-border-gray-200 tw-mb-6">
-                        <h3 class="tw-font-semibold tw-mb-2">ความหมายเส้นทางชีวิต:</h3>
-                        <p class="tw-text-gray-700">${data.life_path_meaning}</p>
+                    <!-- Life Path Meaning -->
+                    <div class="tw-bg-gradient-to-r tw-from-purple-50 tw-to-pink-50 tw-p-6 tw-rounded-lg tw-border-l-4 tw-border-purple-500 tw-mb-8">
+                        <h3 class="tw-font-semibold tw-mb-3 tw-text-gray-800">
+                            <i class="fas fa-book-open tw-mr-2"></i>ความหมายเส้นทางชีวิต:
+                        </h3>
+                        <p class="tw-text-gray-700 tw-leading-relaxed">
+                            ${lifePathData.summary || lifePathData}
+                        </p>
                     </div>
 
+                    <!-- Numerology Table -->
                     ${renderNumerologyTable(data)}
 
-                    <div class="tw-mt-8">
-                        <h3 class="tw-text-xl tw-font-semibold tw-mb-4">Pythagorean Square</h3>
-                        <div id="pythagorean-container" class="tw-text-center tw-py-4">
-                            กำลังคำนวณพลังงานตัวเลข...
+                    <!-- Pythagorean Square -->
+                    <div class="tw-mt-10">
+                        <h3 class="tw-text-2xl tw-font-semibold tw-mb-6 tw-text-center tw-text-gray-800">
+                            <i class="fas fa-th tw-mr-2"></i>Pythagorean Square
+                        </h3>
+                        <div id="pythagorean-container" class="tw-text-center tw-py-6">
+                            <div class="tw-animate-pulse tw-text-gray-500">
+                                <i class="fas fa-spinner tw-spin tw-mr-2"></i>
+                                กำลังคำนวณพลังงานตัวเลข...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -227,33 +273,42 @@
                 
                 // ดึงข้อมูลจาก URL
                 const data = getDataFromURL();
-                DebugLogger.log(`URL Data: ${JSON.stringify(data)}`);
+                DebugLogger.log(`📥 URL Data: ${JSON.stringify(data)}`);
 
-                // ดึงความหมาย Life Path จาก Supabase
-                const meaning = await fetchLifePathMeaning(data.life_path_number);
-                data.life_path_meaning = meaning;
+                // ตรวจสอบข้อมูลพื้นฐาน
+                if (!data.birth_date || !data.destiny_number || !data.life_path_number) {
+                    throw new Error("ข้อมูลไม่ครบถ้วน (birth_date, destiny_number, life_path_number)");
+                }
 
+                // ดึง LifePath จาก Supabase
+                DebugLogger.log(`🔍 Loading LifePath ${data.life_path_number}...`);
+                const lifePathData = await fetchLifePathMeaning(data.life_path_number);
+                
                 // Render เนื้อหา
-                document.getElementById('result-content').innerHTML = renderResult(data);
+                document.getElementById('result-content').innerHTML = renderResult(data, lifePathData);
                 document.getElementById('loading-message').style.display = 'none';
                 document.getElementById('result-content').style.display = 'block';
 
                 // คำนวณ Pythagorean Square
                 const birthNumbers = data.birth_date.replace(/[:\/ ]/g, '');
-                const counts = {};
-                for(let i=1; i<=9; i++) counts[i] = 0;
+                const counts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0};
                 birthNumbers.split('').forEach(d => {
                     const num = parseInt(d);
-                    if(num > 0) counts[num]++;
+                    if(num >= 1 && num <= 9) counts[num]++;
                 });
+                
                 document.getElementById('pythagorean-container').innerHTML = renderPythagoreanSquare(counts);
+                DebugLogger.log('✅ Pythagorean Square rendered');
 
-                DebugLogger.log('=== Page Load Complete ===');
             } catch (error) {
-                DebugLogger.error(`Fatal error: ${error.message}`);
+                DebugLogger.error(`❌ Fatal error: ${error.message}`);
                 document.getElementById('loading-message').innerHTML = 
-                    `<div class="tw-text-red-500 tw-text-center">
-                        <p>เกิดข้อผิดพลาด: ${error.message}</p>
+                    `<div class="tw-text-red-500 tw-text-center tw-p-4">
+                        <p class="tw-font-bold tw-text-lg">เกิดข้อผิดพลาด</p>
+                        <p class="tw-text-sm tw-mt-2">${error.message}</p>
+                        <button onclick="history.back()" class="tw-bg-blue-500 tw-text-white tw-px-4 tw-py-2 tw-rounded tw-mt-4 hover:tw-bg-blue-600">
+                            กลับไปกรอกข้อมูลใหม่
+                        </button>
                     </div>`;
             }
         }
