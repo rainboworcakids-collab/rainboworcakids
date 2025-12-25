@@ -11,6 +11,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- 🔧 FIX: Pre-load PsychomatrixContents style.css -->
+    <link rel="stylesheet" href="/rainboworcakids/PsychomatrixContents/style.css">
+    
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
@@ -129,6 +132,12 @@
             background: #48bb78;
         }
         
+        .data-item .text-gray {
+            color: #9ca3af;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
         .data-item .description {
             font-size: 0.75rem;
             color: #9ca3af;
@@ -222,7 +231,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v3.2-Psychomatrix-Result-FINAL
+            v3.3-Psychomatrix-Result-DEBUG
         </div>
 
         <!-- Tab Container -->
@@ -283,11 +292,12 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v3.2-Psychomatrix-Result-FINAL';
+        const VERSION = 'v3.3-Psychomatrix-Result-DEBUG';
         const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
+            console.log('📍 BASE_PATH:', BASE_PATH);
             loadAndDisplayResult();
         });
 
@@ -327,10 +337,13 @@
                 let html = '';
                 
                 if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    data.results.forEach(result => {
+                    console.log(`📊 Found ${data.results.length} results`);
+                    data.results.forEach((result, index) => {
+                        console.log(`  Result ${index}:`, result.type, result.title);
                         html += createResultSectionFromResult(result);
                     });
                 } else {
+                    console.log('📊 Single result mode');
                     html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
                 }
 
@@ -359,10 +372,18 @@
             const data = result.data || {};
             const databaseData = result.database_data || null;
             
+            console.log(`📝 Creating section for: ${type}`);
+            
             return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
         }
 
         function createResultSection(id, title, data, type) {
+            const destinyNum = data.destiny_number;
+            const lifePathNum = data.life_path_number;
+            const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+            
+            console.log(`  - Destiny: ${destinyNum}, LifePath: ${lifePathNum}, LifeLesson: ${lifeLessonNum}`);
+            
             return `
                 <div class="result-section">
                     <div class="section-header">
@@ -370,36 +391,28 @@
                     </div>
                     <div class="section-content">
                         <div class="data-grid">
-                            <!-- Destiny Number with Link -->
                             <div class="data-item">
                                 <div class="label">Destiny Number</div>
-                                ${createNumberButton(data.destiny_number, 'Destiny', data.destiny_number)}
+                                ${createNumberButton(destinyNum, 'Destiny', destinyNum, 'Destiny_num')}
                                 <div class="description">${data.destiny_meaning || ''}</div>
                             </div>
-                            
-                            <!-- Life Path Number with Link -->
                             <div class="data-item">
                                 <div class="label">Life Path Number</div>
-                                ${createNumberButton(data.life_path_number, 'LifePath', data.life_path_number)}
+                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum, 'LifePath_num')}
                                 <div class="description">เส้นทางชีวิต</div>
                             </div>
-                            
-                            <!-- Karmic Number -->
                             <div class="data-item">
                                 <div class="label">Karmic Number</div>
                                 <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
                                 <div class="description">ภาระกรรม</div>
                             </div>
-                            
-                            <!-- Life Lesson with Link -->
                             <div class="data-item">
                                 <div class="label">Life Lesson</div>
-                                ${createNumberButton(data.thirdAndFourth?.lifeLesson, 'KarmicLesson', data.thirdAndFourth?.lifeLesson)}
+                                ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum, 'LifeLesson_num')}
                                 <div class="description">บทเรียนชีวิต</div>
                             </div>
                         </div>
 
-                        <!-- Database Data -->
                         ${data.life_path_data ? `
                             <div class="mt-4 p-4 bg-blue-50 rounded-lg">
                                 <h4 class="font-bold text-blue-800 mb-2">
@@ -416,7 +429,6 @@
                             </div>
                         ` : ''}
 
-                        <!-- Pythagorean Square -->
                         <div class="mt-6">
                             <h4 class="font-bold text-gray-800 mb-3">
                                 <i class="fas fa-th-large mr-2"></i>Pythagorean Square
@@ -443,91 +455,88 @@
             `;
         }
 
-        function createNumberButton(number, category, actualNumber) {
-            if (!number) return `<div class="text-2xl font-bold text-gray-400">-</div>`;
+        function createNumberButton(number, category, actualNumber, debugId) {
+            if (!number) return `<div class="text-gray">-</div>`;
             
             const isActive = number === actualNumber;
-            const link = `${BASE_PATH}/${category}${number}.html`;
+            const url = `${BASE_PATH}/${category}${number}.html`;
             
-            // Only make the actual calculated number clickable
             if (isActive) {
+                console.log(`  🔗 ${debugId}: ${url}`);
                 return `
                     <button class="number-button active" 
-                            onclick="loadExplainedContent('${link}', '${category}', ${number})">
+                            onclick="loadExplainedContent('${url}', '${category}', ${number})">
                         ${number}
                     </button>
                 `;
             } else {
-                return `<div class="text-2xl font-bold text-gray-400">${number}</div>`;
+                return `<div class="text-gray">${number}</div>`;
             }
         }
 
         function loadExplainedContent(url, category, number) {
             const explainedContent = document.querySelector('#Explained .explained-content');
             
-            // Show loading
+            console.log(`🔄 Loading ${category}${number} from: ${url}`);
+            
             explainedContent.innerHTML = `
                 <div class="explained-content loading">
                     <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
                     <p>กำลังโหลด ${category} ${number}...</p>
+                    <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
                 </div>
             `;
             
-            // Switch to Explained tab
             const explainedButton = document.querySelector('.tab-button:nth-child(2)');
             switchTab('Explained', explainedButton);
             
-            // Load content via AJAX
-            fetch(url)
+            fetch(url, { 
+                method: 'GET',
+                cache: 'no-cache',
+                headers: { 'Accept': 'text/html' }
+            })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error(`ไม่พบหน้า: ${url}`);
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
                     return response.text();
                 })
                 .then(html => {
-                    // Parse HTML
+                    console.log(`✅ Success loading ${url}`, html.substring(0, 100) + '...');
+                    
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     
-                    // 🔧 **FIX CSS Path: Convert relative to absolute**
-                    const links = doc.querySelectorAll('link[rel="stylesheet"]');
-                    links.forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (href && !href.startsWith('http') && !href.startsWith('/')) {
-                            // Relative path, make it absolute
-                            link.setAttribute('href', `${BASE_PATH}/${href}`);
-                        }
-                    });
+                    // 🔧 **CRITICAL FIX**: Remove all <link> tags to prevent CSS issues
+                    const links = doc.querySelectorAll('link');
+                    console.log(`  Removed ${links.length} <link> tags`);
+                    links.forEach(link => link.remove());
                     
-                    // Get body content or fallback
-                    let content = doc.querySelector('body')?.innerHTML;
-                    if (!content || content.trim() === '') {
-                        content = doc.querySelector('main')?.innerHTML;
-                    }
-                    if (!content || content.trim() === '') {
-                        content = doc.documentElement.innerHTML;
-                    }
+                    let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
                     
-                    // Remove any problematic link tags from content
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = content;
-                    const contentLinks = tempDiv.querySelectorAll('link');
-                    contentLinks.forEach(l => l.remove());
+                    if (!content || content.trim() === '') {
+                        throw new Error('เนื้อหาว่างเปล่า');
+                    }
                     
                     explainedContent.innerHTML = `
                         <div class="explained-content">
-                            <h2>${category} ${number}</h2>
-                            ${tempDiv.innerHTML}
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <h2 class="text-xl font-bold text-blue-800">${category} ${number}</h2>
+                                <p class="text-sm text-blue-600">ที่มา: ${url}</p>
+                            </div>
+                            ${content}
                         </div>
                     `;
                 })
                 .catch(error => {
+                    console.error(`❌ Error loading ${url}:`, error);
                     explainedContent.innerHTML = `
                         <div class="text-center py-8 text-red-500">
                             <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-                            <p>${error.message}</p>
-                            <p class="text-sm text-gray-500 mt-2">อาจยังไม่มีเนื้อหาสำหรับ ${category} ${number}</p>
+                            <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
+                            <p class="text-sm">${error.message}</p>
+                            <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
+                            <p class="text-xs text-gray-400 mt-2">ตรวจสอบว่าไฟล์มีอยู่ใน GitHub Pages ที่เส้นทางนี้จริง</p>
                         </div>
                     `;
                 });
