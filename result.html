@@ -231,7 +231,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v3.7-Psychomatrix-Result-DOM-FIX
+            v4.0-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -292,7 +292,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v3.7-Psychomatrix-Result-DOM-FIX';
+        const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
         const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -455,7 +455,24 @@
             if (!number) return `<div class="text-gray">-</div>`;
             
             const isActive = number === actualNumber;
-            const url = `${BASE_PATH}/${category}${number}.html`;
+            
+            // ✨ **EXPLICIT FILENAME MAPPING - ชัดเจน ไม่ผิดพลาด**
+            let filename;
+            switch(category) {
+                case 'Destiny':
+                    filename = `Destiny${number}.html`;
+                    break;
+                case 'LifePath':
+                    filename = `LifePathNumber${number}.html`; // ✨ ถูกต้อง
+                    break;
+                case 'KarmicLesson':
+                    filename = `KarmicLesson${number}.html`;
+                    break;
+                default:
+                    filename = `${category}${number}.html`;
+            }
+            
+            const url = `${BASE_PATH}/${filename}`;
             
             if (isActive) {
                 return `
@@ -471,6 +488,8 @@
 
         function loadExplainedContent(url, category, number) {
             const explainedContent = document.querySelector('#Explained .explained-content');
+            
+            console.log(`🔄 Loading ${category}${number} from: ${url}`);
             
             explainedContent.innerHTML = `
                 <div class="explained-content loading">
@@ -494,6 +513,8 @@
                     return response.text();
                 })
                 .then(html => {
+                    console.log(`✅ Success loading ${url}`);
+                    
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     
@@ -589,7 +610,7 @@
                 }
             });
             
-            console.log(`    ✓ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
+            console.log(`    ✅ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
         }
     </script>
 </body>
