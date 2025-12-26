@@ -215,59 +215,61 @@
             border-color: #5a67d8;
         }
         
-        /* CSS เพิ่มเติม: แก้ไขปัญหา CSS ในไฟล์ที่ดึงมาไม่ทำงาน และคุมขนาดรูป */
-        /* แก้ไขปัญหา Layout ทับกันและรูปภาพ */
-        .explained-content .external-content-body {
-            all: revert;
-            display: block !important;
-            width: 100% !important;
-            position: relative !important;
-            padding: 20px !important;
-            overflow: hidden; /* ป้องกันเนื้อหาไหลออกนอกกรอบ */
-        }
+ 
+ /* ==================== แก้ไข Layout รูปและข้อความ ==================== */
 
-        /* บังคับรูปให้อยู่ซ้ายและมีระยะห่าง */
-        .explained-content img {
-            width: 120px !important;
-            max-width: 120px !important;
-            height: auto !important;
-            float: left !important;
-            margin: 0 25px 15px 0 !important; /* เว้นระยะด้านขวาและล่าง */
-            display: inline-block !important;
-            border-radius: 10px;
-            clear: both;
-        }
+/* กรอบหลักต้องรองรับ float อย่างสมบูรณ์ */
+.explained-content .external-content-body {
+    display: flow-root !important; /* สมัยใหม่ แทน clearfix */
+    padding: 20px !important;
+    overflow: visible !important; /* ให้ข้อความไหลรอบรูปได้ */
+}
 
-        /* แก้ปัญหาตัวอักษร h1 ทับรูป - นี่คือจุดสำคัญที่สุด */
-        .explained-content h1 {
-            margin-left: 0 !important; /* ล้างค่า 145px จาก style.css */
-            padding-left: 0 !important;
-            display: block !important;
-            width: auto !important;
-            color: #1a365d !important;
-            font-size: 1.5rem !important;
-            line-height: 1.2 !important;
-            margin-top: 0 !important;
-            clear: none !important; /* ให้ h1 ไหลข้างรูปได้ */
-        }
+/* รูปภาพ: Float ซ้าย ชัดเจน */
+.explained-content img {
+    float: left !important;
+    width: 120px !important;
+    max-width: 120px !important;
+    height: auto !important;
+    margin: 0 25px 15px 0 !important;
+    border-radius: 10px;
+    clear: none !important;
+}
 
-        /* แก้ปัญหาเนื้อหาอื่นๆ ทับรูป */
-        .explained-content p, 
-        .explained-content h2, 
-        .explained-content h3, 
-        .explained-content ul {
-            display: block !important;
-            clear: none !important; /* ยอมให้ข้อความล้อมรูป */
-        }
+/* ล้างค่า margin-left ที่มาจาก style.css เดิม */
+.explained-content h1 {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    color: #1a365d !important;
+    font-size: 1.5rem !important;
+    clear: none !important; /* ไม่ตัดข้อความใหม่ */
+    text-align: left !important; /* ชิดซ้าย */
+}
 
-        /* Clearfix เพื่อไม่ให้เนื้อหาถัดไปกระโดดขึ้นมาทับรูป */
-        .external-content-body::after {
-            content: "";
-            clear: both;
-            display: table;
-        }
+/* ให้ข้อความทุกชนิดล้อมรูปได้ */
+.explained-content h2, 
+.explained-content h3, 
+.explained-content p, 
+.explained-content ul,
+.explained-content ol,
+.explained-content li {
+    clear: none !important;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+    overflow: hidden !important; /* ป้องกันข้อความล้ำออกไปนอกกรอบ */
+}
 
+/* Clearfix สำรอง (fallback) สำหรับเบราว์เซอร์เก่า */
+.external-content-body::after {
+    content: "";
+    display: table !important;
+    clear: both !important;
+}
 
+/* ================================================================= */
+
+ 
+ 
  
     </style>
 </head>
@@ -286,7 +288,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.2-Psychomatrix-Result-WORKING
+            v4.3-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -549,6 +551,7 @@
             }
         }
 
+/*
         function loadExplainedContent(url, category, number) {
             const explainedContent = document.querySelector('#Explained .explained-content');
             
@@ -631,6 +634,99 @@
                     `;
                 });
         }
+*/
+
+
+function loadExplainedContent(url, category, number) {
+    const explainedContent = document.querySelector('#Explained .explained-content');
+    
+    // ✅ ตรวจสอบ URL ให้ชัดเจน
+    console.log(`🔄 Loading ${category}${number} from: ${url}`);
+    console.log(`📍 BASE_PATH used: ${BASE_PATH}`);
+    
+    explainedContent.innerHTML = `
+        <div class="explained-content loading">
+            <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
+            <p>กำลังโหลด ${category} ${number}...</p>
+        </div>
+    `;
+    
+    const explainedButton = document.querySelector('.tab-button:nth-child(2)');
+    switchTab('Explained', explainedButton);
+    
+    fetch(url, { 
+        method: 'GET',
+        cache: 'no-cache',
+        headers: { 'Accept': 'text/html' }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            console.log(`✅ Success loading ${url} (${html.length} bytes)`);
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // 🔧 **FIX: ลบ unwanted CSS และ Script จากเนื้อหาภายนอก**
+            const elementsToRemove = doc.querySelectorAll('link[rel="stylesheet"], style, script');
+            elementsToRemove.forEach(el => el.remove());
+            
+            // แก้ไขพาธให้ถูกต้อง
+            fixRelativePathsInDom(doc);
+            
+            // ดึงเฉพาะ body มาแสดง
+            const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
+            
+            if (!pureContent.trim()) {
+                throw new Error('เนื้อหาว่างเปล่า');
+            }
+            
+            // ตรวจสอบว่ามีรูปภาพหรือไม่
+            const images = doc.querySelectorAll('img');
+            console.log(`🖼️ Found ${images.length} images in external content`);
+            
+            explainedContent.innerHTML = `
+                <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
+                            <h2 class="text-2xl font-black text-blue-900">${number}</h2>
+                        </div>
+                    </div>
+                    <div class="external-content-body">
+                        ${pureContent}
+                    </div>
+                </div>
+            `;
+            
+            // ✅ ตรวจสอบหลัง render
+            setTimeout(() => {
+                const renderedImages = explainedContent.querySelectorAll('img');
+                console.log(`📸 Rendered ${renderedImages.length} images`, renderedImages);
+                renderedImages.forEach(img => {
+                    console.log(`   Image src: ${img.src}, width: ${img.width}`);
+                });
+            }, 100);
+            
+        })
+        .catch(error => {
+            console.error(`❌ Error loading ${url}:`, error);
+            explainedContent.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
+                    <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
+                    <p class="text-sm">${error.message}</p>
+                    <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
+                </div>
+            `;
+        });
+}
+
+
 
         // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
         function fixRelativePathsInDom(doc) {
