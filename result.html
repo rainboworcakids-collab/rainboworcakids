@@ -216,16 +216,17 @@
         }
         
  
- /* ==================== แก้ไข Layout รูปและข้อความ ==================== */
+<style>
+/* ==================== แก้ไข Layout รูปและข้อความ - ฉบับสมบูรณ์ ==================== */
 
-/* กรอบหลักต้องรองรับ float อย่างสมบูรณ์ */
+/* 🔥 กรอบหลัก: ทำให้รองรับ float อย่างสมบูรณ์แบบ */
 .explained-content .external-content-body {
-    display: flow-root !important; /* สมัยใหม่ แทน clearfix */
+    display: flow-root !important; /* ทันสมัยและเสถียรที่สุด */
     padding: 20px !important;
     overflow: visible !important; /* ให้ข้อความไหลรอบรูปได้ */
 }
 
-/* รูปภาพ: Float ซ้าย ชัดเจน */
+/* 🔥 รูปภาพ: Float ซ้าย + ป้องกันการถูก CSS อื่นทับ */
 .explained-content img {
     float: left !important;
     width: 120px !important;
@@ -234,19 +235,14 @@
     margin: 0 25px 15px 0 !important;
     border-radius: 10px;
     clear: none !important;
+    
+    /* ✅ ป้องกัน CSS อื่นมาเปลี่ยน display */
+    display: inline-block !important;
+    position: static !important; /* ไม่ใช้ absolute/relative */
 }
 
-/* ล้างค่า margin-left ที่มาจาก style.css เดิม */
-.explained-content h1 {
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    color: #1a365d !important;
-    font-size: 1.5rem !important;
-    clear: none !important; /* ไม่ตัดข้อความใหม่ */
-    text-align: left !important; /* ชิดซ้าย */
-}
-
-/* ให้ข้อความทุกชนิดล้อมรูปได้ */
+/* 🔥 หัวข้อและข้อความ: ให้ล้อมรูปได้ */
+.explained-content h1,
 .explained-content h2, 
 .explained-content h3, 
 .explained-content p, 
@@ -256,19 +252,39 @@
     clear: none !important;
     margin-left: 0 !important;
     padding-left: 0 !important;
-    overflow: hidden !important; /* ป้องกันข้อความล้ำออกไปนอกกรอบ */
+    overflow: hidden !important; /* ป้องกันข้อความล้ำออกนอกกรอบ */
+    display: block !important;
 }
 
-/* Clearfix สำรอง (fallback) สำหรับเบราว์เซอร์เก่า */
+/* 🔥 กำหนด h1 ให้เสถียร */
+.explained-content h1 {
+    color: #1a365d !important;
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+}
+
+/* 🔥 动画效果: บังคับให้ทำงานทุกที่ */
+.explained-content img {
+    transition: all 0.3s ease-in-out !important;
+}
+
+.explained-content img:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+    z-index: 10 !important;
+}
+
+/* 🔥 Clearfix ที่แข็งแกร่ง */
 .external-content-body::after {
-    content: "";
+    content: "" !important;
     display: table !important;
     clear: both !important;
 }
 
 /* ================================================================= */
+</style>
 
- 
  
  
     </style>
@@ -288,7 +304,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.3-Psychomatrix-Result-WORKING
+            v4.4-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -349,7 +365,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
+        const VERSION = 'v4.4-Psychomatrix-Result-WORKING';
         
        // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
         const currentPath = window.location.pathname;
@@ -637,12 +653,12 @@
 */
 
 
+
+
 function loadExplainedContent(url, category, number) {
     const explainedContent = document.querySelector('#Explained .explained-content');
     
-    // ✅ ตรวจสอบ URL ให้ชัดเจน
     console.log(`🔄 Loading ${category}${number} from: ${url}`);
-    console.log(`📍 BASE_PATH used: ${BASE_PATH}`);
     
     explainedContent.innerHTML = `
         <div class="explained-content loading">
@@ -671,23 +687,14 @@ function loadExplainedContent(url, category, number) {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // 🔧 **FIX: ลบ unwanted CSS และ Script จากเนื้อหาภายนอก**
+            // 🔧 ลบ CSS ที่อาจขัดขวาง
             const elementsToRemove = doc.querySelectorAll('link[rel="stylesheet"], style, script');
             elementsToRemove.forEach(el => el.remove());
             
-            // แก้ไขพาธให้ถูกต้อง
+            // แก้ไขพาธ
             fixRelativePathsInDom(doc);
             
-            // ดึงเฉพาะ body มาแสดง
             const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
-            
-            if (!pureContent.trim()) {
-                throw new Error('เนื้อหาว่างเปล่า');
-            }
-            
-            // ตรวจสอบว่ามีรูปภาพหรือไม่
-            const images = doc.querySelectorAll('img');
-            console.log(`🖼️ Found ${images.length} images in external content`);
             
             explainedContent.innerHTML = `
                 <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -703,14 +710,32 @@ function loadExplainedContent(url, category, number) {
                 </div>
             `;
             
-            // ✅ ตรวจสอบหลัง render
+            // ✅ **สำคัญ: แก้ไข CSS ของรูปหลัง render ทันที**
             setTimeout(() => {
-                const renderedImages = explainedContent.querySelectorAll('img');
-                console.log(`📸 Rendered ${renderedImages.length} images`, renderedImages);
-                renderedImages.forEach(img => {
-                    console.log(`   Image src: ${img.src}, width: ${img.width}`);
+                const images = explainedContent.querySelectorAll('img');
+                console.log(`📸 Found ${images.length} images`);
+                
+                images.forEach(img => {
+                    // บังคับ float อีกครั้ง
+                    img.style.setProperty('float', 'left', 'important');
+                    img.style.setProperty('width', '120px', 'important');
+                    img.style.setProperty('margin-right', '25px', 'important');
+                    img.style.setProperty('margin-bottom', '15px', 'important');
+                    img.style.setProperty('transition', 'all 0.3s ease-in-out', 'important');
+                    
+                    // ลบการ์ด CSS อื่นที่อาจมาทับ
+                    img.style.removeProperty('display');
+                    
+                    console.log(`   ✓ Fixed image: ${img.src}`);
                 });
-            }, 100);
+                
+                // ทำให้ข้อความแรกล้อมรูป
+                const firstText = explainedContent.querySelector('h1, h2, p');
+                if (firstText) {
+                    firstText.style.setProperty('overflow', 'hidden', 'important');
+                }
+                
+            }, 50);
             
         })
         .catch(error => {
@@ -725,6 +750,8 @@ function loadExplainedContent(url, category, number) {
             `;
         });
 }
+
+
 
 
 
