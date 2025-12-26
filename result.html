@@ -3,614 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis Result</title>
-    
-    <!-- Tailwind CSS -->
+    <title>Psychomatrix Analysis Result - Universal Path Version</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Pre-load CSS -->
-    <link rel="stylesheet" href="/rainboworcakids/PsychomatrixContents/style.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
-    
     <style>
         body { font-family: 'Sarabun', sans-serif; }
-        .version-badge {
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            font-family: monospace;
-            z-index: 1000;
-        }
-        
-        /* Tab Styles */
-        .tab-container {
-            background: white;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .tab-buttons {
-            display: flex;
-            background: #f3f4f6;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 1rem;
-            background: transparent;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #6b7280;
-        }
-        
-        .tab-button.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-        
-        .tab-button:hover {
-            background: #e5e7eb;
-        }
-        
-        .tab-content {
-            padding: 1.5rem;
-            min-height: 500px;
-        }
-        
-        .tab-pane {
-            display: none;
-        }
-        
-        .tab-pane.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* Data Grid Styles */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .data-item {
-            background: #f9fafb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #667eea;
-            text-align: center;
-        }
-        
-        .data-item .label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-        
-        .data-item .number-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .data-item .number-button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .data-item .number-button.active {
-            background: #48bb78;
-        }
-        
-        .data-item .text-gray {
-            color: #9ca3af;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .data-item .description {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 0.5rem;
-        }
-        
-        /* Explained Tab Content */
-        .explained-content {
-            line-height: 1.6;
-        }
-        
-        .explained-content h2 {
-            color: #1f2937;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #667eea;
-        }
-        
-        .explained-content p {
-            margin-bottom: 1rem;
-            color: #4b5563;
-        }
-        
-        .explained-content.loading {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-        
-        /* Result Section Styles */
-        .result-section {
-            margin-bottom: 2rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-        
-        .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            font-weight: bold;
-            font-size: 1.125rem;
-        }
-        
-        .section-content {
-            padding: 1.5rem;
-            background: white;
-        }
-        
-        .pythagorean-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            max-width: 300px;
-            margin: 1rem auto;
-        }
-        
-        .pythagorean-cell {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f3f4f6;
-            border: 2px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-        
-        .pythagorean-cell.active {
-            background: #667eea;
-            color: white;
-            border-color: #5a67d8;
-        }
+        .tab-container { background: white; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .tab-buttons { display: flex; background: #f3f4f6; border-bottom: 2px solid #e5e7eb; }
+        .tab-button { flex: 1; padding: 1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: #6b7280; border: none; }
+        .tab-button.active { background: white; color: #667eea; border-bottom: 3px solid #667eea; }
+        .tab-pane { display: none; padding: 1.5rem; min-height: 500px; }
+        .tab-pane.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .data-item { background: #f9fafb; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #667eea; text-align: center; }
+        .number-button { background: #667eea; color: white; padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 1.5rem; font-weight: bold; cursor: pointer; display: inline-block; border: none; }
+        .number-button.active { background: #48bb78; }
+        .result-section { margin-bottom: 2rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; overflow: hidden; }
+        .section-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 1.5rem; font-weight: bold; }
+        .pythagorean-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; max-width: 300px; margin: 1rem auto; }
+        .pythagorean-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #f3f4f6; border: 2px solid #d1d5db; border-radius: 0.5rem; font-weight: bold; }
+        .pythagorean-cell.active { background: #667eea; color: white; }
     </style>
 </head>
-<body class="bg-gray-50 font-sarabun">
+<body class="bg-gray-50">
 
-    <!-- Main Container -->
     <div class="container mx-auto px-4 py-8 max-w-6xl">
-        
-        <!-- Header -->
         <div class="text-center mb-6 p-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-white mb-2">
-                <i class="fas fa-chart-line mr-3"></i>🔮 ผลการวิเคราะห์ Psychomatrix
-            </h1>
-            <p class="text-purple-100">ผลลัพธ์จากการคำนวณเลขศาสตร์และฐานข้อมูล</p>
+            <h1 class="text-3xl font-bold text-white mb-2"><i class="fas fa-chart-line mr-3"></i>🔮 ผลการวิเคราะห์ Psychomatrix</h1>
         </div>
 
-        <!-- Version Display -->
-        <div class="version-badge">
-            v4.0-Psychomatrix-Result-WORKING
-        </div>
-
-        <!-- Tab Container -->
         <div class="tab-container">
-            <!-- Tab Buttons -->
             <div class="tab-buttons">
-                <button class="tab-button active" onclick="switchTab('Main', this)">
-                    <i class="fas fa-chart-bar mr-2"></i>Main
-                </button>
-                <button class="tab-button" onclick="switchTab('Explained', this)">
-                    <i class="fas fa-book-open mr-2"></i>Explained
-                </button>
+                <button class="tab-button active" onclick="switchTab('Main', this)"><i class="fas fa-chart-bar mr-2"></i>Main</button>
+                <button class="tab-button" onclick="switchTab('Explained', this)"><i class="fas fa-book-open mr-2"></i>Explained</button>
             </div>
             
-            <!-- Tab Contents -->
             <div class="tab-content">
-                <!-- Main Tab -->
                 <div id="Main" class="tab-pane active">
-                    <!-- Loading Status -->
-                    <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
-                        <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดผลการวิเคราะห์...
-                    </div>
-
-                    <!-- No Data Message -->
-                    <div id="noDataMessage" class="hidden text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-yellow-400 text-5xl mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูลผลการวิเคราะห์</h3>
-                        <p class="text-gray-400 mb-6">กรุณากรอกข้อมูลที่หน้า Psychomatrix.html ก่อน</p>
-                        <a href="Psychomatrix.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
-                            <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
-                        </a>
-                    </div>
-
-                    <!-- Results Container -->
-                    <div id="resultsContainer" class="hidden space-y-8">
-                        <!-- Results will be inserted here -->
-                    </div>
+                    <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700">กำลังโหลด...</div>
+                    <div id="resultsContainer" class="hidden space-y-8"></div>
                 </div>
-
-                <!-- Explained Tab -->
                 <div id="Explained" class="tab-pane">
-                    <div class="explained-content loading">
-                        <i class="fas fa-hand-pointer text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">คลิกที่ตัวเลขในแท็บ <strong>Main</strong> เพื่อดูรายละเอียดที่นี่</p>
+                    <div class="explained-content text-center py-12 text-gray-500">
+                        <i class="fas fa-hand-pointer text-4xl mb-4"></i>
+                        <p>คลิกที่ตัวเลขในแท็บ Main เพื่อดูรายละเอียด</p>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Back Button -->
-        <div class="text-center mt-8">
-            <a href="Psychomatrix.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
-                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์ใหม่
-            </a>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script>
-        // Version Info
-        const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
-        const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
+        // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
+        const currentPath = window.location.pathname;
+        const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        const CONTENTS_DIR = 'PsychomatrixContents';
         
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 result.html', VERSION, 'loaded');
-            console.log('📍 BASE_PATH:', BASE_PATH);
-            loadAndDisplayResult();
-        });
+        // สร้าง URL พื้นฐานสำหรับ Content (Relative)
+        const CONTENT_BASE_URL = `${folderPath}/${CONTENTS_DIR}`;
 
-        // Tab Switching Function
+        document.addEventListener('DOMContentLoaded', loadAndDisplayResult);
+
         function switchTab(tabName, buttonElement) {
-            const panes = document.querySelectorAll('.tab-pane');
-            panes.forEach(pane => pane.classList.remove('active'));
-            
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
             buttonElement.classList.add('active');
         }
 
         function loadAndDisplayResult() {
-            const loadingEl = document.getElementById('loadingStatus');
-            const noDataEl = document.getElementById('noDataMessage');
-            const resultsContainer = document.getElementById('resultsContainer');
-
             const resultData = sessionStorage.getItem('psychomatrixResult');
+            if (!resultData) return;
+
+            const data = JSON.parse(resultData);
+            let html = '';
             
-            if (!resultData) {
-                loadingEl.classList.add('hidden');
-                noDataEl.classList.remove('hidden');
-                return;
+            if (data.results) {
+                data.results.forEach(res => html += createResultSection(res.data, res.title));
+            } else {
+                html += createResultSection(data, '📅 ผลการวิเคราะห์');
             }
 
-            try {
-                const data = JSON.parse(resultData);
-                console.log('📦 Loaded result data:', data);
-
-                if (!data.success) {
-                    throw new Error(data.error || 'API returned error');
-                }
-
-                let html = '';
-                
-                if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    console.log(`📊 Found ${data.results.length} results`);
-                    data.results.forEach((result, index) => {
-                        console.log(`  Result ${index}: ${result.type} | Destiny: ${result.data?.destiny_number} | LifePath: ${result.data?.life_path_number}`);
-                        html += createResultSectionFromResult(result);
-                    });
-                } else {
-                    console.log('📊 Single result mode');
-                    html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
-                }
-
-                resultsContainer.innerHTML = html;
-                loadingEl.classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-
-            } catch (error) {
-                console.error('❌ Error displaying result:', error);
-                loadingEl.classList.add('hidden');
-                noDataEl.classList.remove('hidden');
-                document.getElementById('noDataMessage').innerHTML = `
-                    <i class="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-red-500 mb-2">เกิดข้อผิดพลาด</h3>
-                    <p class="text-gray-400 mb-6">${error.message}</p>
-                    <a href="Psychomatrix.html" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">
-                        <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
-                    </a>
-                `;
-            }
+            document.getElementById('resultsContainer').innerHTML = html;
+            document.getElementById('loadingStatus').classList.add('hidden');
+            document.getElementById('resultsContainer').classList.remove('hidden');
         }
 
-        function createResultSectionFromResult(result) {
-            const type = result.type || 'unknown';
-            const title = result.title || '📊 ผลการวิเคราะห์';
-            const data = result.data || {};
-            const databaseData = result.database_data || null;
-            
-            return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
-        }
-
-        function createResultSection(id, title, data, type) {
-            const destinyNum = data.destiny_number;
-            const lifePathNum = data.life_path_number;
-            const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
-            
+        function createResultSection(data, title) {
             return `
                 <div class="result-section">
-                    <div class="section-header">
-                        <i class="fas fa-chart-bar mr-2"></i>${title}
-                    </div>
-                    <div class="section-content">
+                    <div class="section-header">${title}</div>
+                    <div class="section-content p-6">
                         <div class="data-grid">
-                            <div class="data-item">
-                                <div class="label">Destiny Number</div>
-                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
-                                <div class="description">${data.destiny_meaning || ''}</div>
-                            </div>
-                            <div class="data-item">
-                                <div class="label">Life Path Number</div>
-                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
-                                <div class="description">เส้นทางชีวิต</div>
-                            </div>
-                            <div class="data-item">
-                                <div class="label">Karmic Number</div>
-                                <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
-                                <div class="description">ภาระกรรม</div>
-                            </div>
-                            <div class="data-item">
-                                <div class="label">Life Lesson</div>
-                                ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum)}
-                                <div class="description">บทเรียนชีวิต</div>
-                            </div>
-                        </div>
-
-                        ${data.life_path_data ? `
-                            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                                <h4 class="font-bold text-blue-800 mb-2">
-                                    <i class="fas fa-database mr-2"></i>ข้อมูลจากฐานข้อมูล
-                                </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                                    ${Object.entries(data.life_path_data).map(([key, value]) => `
-                                        <div>
-                                            <span class="font-medium text-gray-700">${key.replace(/_/g, ' ')}:</span>
-                                            <span class="text-gray-600">${value || '-'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        <div class="mt-6">
-                            <h4 class="font-bold text-gray-800 mb-3">
-                                <i class="fas fa-th-large mr-2"></i>Pythagorean Square
-                            </h4>
-                            <div class="pythagorean-grid">
-                                <div class="pythagorean-cell">1</div>
-                                <div class="pythagorean-cell">2</div>
-                                <div class="pythagorean-cell">3</div>
-                                <div class="pythagorean-cell">4</div>
-                                <div class="pythagorean-cell active">5</div>
-                                <div class="pythagorean-cell">6</div>
-                                <div class="pythagorean-cell">7</div>
-                                <div class="pythagorean-cell">8</div>
-                                <div class="pythagorean-cell">9</div>
-                            </div>
-                            <div class="mt-3 p-3 bg-yellow-50 rounded-lg text-sm text-gray-700">
-                                <i class="fas fa-info-circle mr-2"></i>
-                                <strong>สรุปผลเลขแวดล้อมที่มีอิทธิผลสูง:</strong>
-                                <span class="ml-2">กำลังพัฒนา...</span>
-                            </div>
+                            ${renderNumberItem('Destiny', data.destiny_number, 'Destiny')}
+                            ${renderNumberItem('Life Path', data.life_path_number, 'LifePathNumber')}
+                            ${renderNumberItem('Life Lesson', data.thirdAndFourth?.lifeLesson, 'KarmicLesson')}
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        function createNumberButton(number, category, actualNumber) {
-            if (!number) return `<div class="text-gray">-</div>`;
-            
-            const isActive = number === actualNumber;
-            
-            // ✨ **EXPLICIT FILENAME MAPPING - ชัดเจน ไม่ผิดพลาด**
-            let filename;
-            switch(category) {
-                case 'Destiny':
-                    filename = `Destiny${number}.html`;
-                    break;
-                case 'LifePath':
-                    filename = `LifePathNumber${number}.html`; // ✨ ถูกต้อง
-                    break;
-                case 'KarmicLesson':
-                    filename = `KarmicLesson${number}.html`;
-                    break;
-                default:
-                    filename = `${category}${number}.html`;
-            }
-            
-            const url = `${BASE_PATH}/${filename}`;
-            
-            if (isActive) {
-                return `
-                    <button class="number-button active" 
-                            onclick="loadExplainedContent('${url}', '${category}', ${number})">
-                        ${number}
-                    </button>
-                `;
-            } else {
-                return `<div class="text-gray">${number}</div>`;
-            }
+        function renderNumberItem(label, num, filePrefix) {
+            if (!num) return `<div class="data-item"><div class="label">${label}</div>-</div>`;
+            const fileUrl = `${CONTENT_BASE_URL}/${filePrefix}${num}.html`;
+            return `
+                <div class="data-item">
+                    <div class="label text-sm text-gray-500 mb-2">${label}</div>
+                    <button class="number-button" onclick="loadContent('${fileUrl}', '${label}', ${num})">${num}</button>
+                </div>`;
         }
 
-        function loadExplainedContent(url, category, number) {
-            const explainedContent = document.querySelector('#Explained .explained-content');
-            
-            console.log(`🔄 Loading ${category}${number} from: ${url}`);
-            
-            explainedContent.innerHTML = `
-                <div class="explained-content loading">
-                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
-                    <p>กำลังโหลด ${category} ${number}...</p>
-                </div>
-            `;
-            
-            const explainedButton = document.querySelector('.tab-button:nth-child(2)');
-            switchTab('Explained', explainedButton);
-            
-            fetch(url, { 
-                method: 'GET',
-                cache: 'no-cache',
-                headers: { 'Accept': 'text/html' }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.text();
-                })
+        function loadContent(url, category, num) {
+            const container = document.querySelector('#Explained .explained-content');
+            container.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังโหลด...';
+            switchTab('Explained', document.querySelectorAll('.tab-button')[1]);
+
+            fetch(url)
+                .then(r => r.text())
                 .then(html => {
-                    console.log(`✅ Success loading ${url}`);
-                    
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     
-                    // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-                    fixRelativePathsInDom(doc);
-                    
-                    // Remove all <link> tags
-                    const links = doc.querySelectorAll('link');
-                    links.forEach(link => link.remove());
-                    
-                    let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
-                    
-                    if (!content || content.trim() === '') {
-                        throw new Error('เนื้อหาว่างเปล่า');
-                    }
-                    
-                    explainedContent.innerHTML = `
-                        <div class="explained-content">
-                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <h2 class="text-xl font-bold text-blue-800">${category} ${number}</h2>
-                            </div>
-                            ${content}
-                        </div>
-                    `;
-                })
-                .catch(error => {
-                    console.error(`❌ Error loading ${url}:`, error);
-                    explainedContent.innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-                            <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
-                            <p class="text-sm">${error.message}</p>
-                            <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
-                        </div>
-                    `;
-                });
-        }
+                    // 🖼️ แก้ไข Path รูปภาพให้ถูกต้องตามตำแหน่งไฟล์ Content
+                    doc.querySelectorAll('img').forEach(img => {
+                        const src = img.getAttribute('src');
+                        if (src && !src.startsWith('http') && !src.startsWith('/')) {
+                            img.src = `${CONTENT_BASE_URL}/${src}`;
+                        }
+                    });
 
-        // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-        function fixRelativePathsInDom(doc) {
-            console.log('  🔧 Fixing relative paths in DOM...');
-            
-            // Fix img src
-            const images = doc.querySelectorAll('img');
-            images.forEach(img => {
-                const src = img.getAttribute('src');
-                if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
-                    const newSrc = `${BASE_PATH}/${src}`;
-                    img.setAttribute('src', newSrc);
-                    console.log(`    ✓ Fixed img: ${src} → ${newSrc}`);
-                }
-            });
-            
-            // Fix link href (CSS)
-            const links = doc.querySelectorAll('link');
-            links.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('mailto') && !href.startsWith('tel')) {
-                    const newHref = `${BASE_PATH}/${href}`;
-                    link.setAttribute('href', newHref);
-                    console.log(`    ✓ Fixed link: ${href} → ${newHref}`);
-                }
-            });
-            
-            // Fix style background-image
-            const styledElements = doc.querySelectorAll('[style]');
-            styledElements.forEach(el => {
-                const style = el.getAttribute('style');
-                if (style && style.includes('background-image')) {
-                    const newStyle = style.replace(
-                        /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
-                        `background-image: url('${BASE_PATH}/$1')`
-                    );
-                    if (newStyle !== style) {
-                        el.setAttribute('style', newStyle);
-                        console.log(`    ✓ Fixed background-image in style`);
-                    }
-                }
-            });
-            
-            // Fix srcset
-            const srcsetElements = doc.querySelectorAll('[srcset]');
-            srcsetElements.forEach(el => {
-                const srcset = el.getAttribute('srcset');
-                if (srcset && !srcset.startsWith('http') && !srcset.startsWith('/') && !srcset.startsWith('data:')) {
-                    const newSrcset = srcset.split(',').map(src => {
-                        const parts = src.trim().split(' ');
-                        parts[0] = `${BASE_PATH}/${parts[0]}`;
-                        return parts.join(' ');
-                    }).join(', ');
-                    el.setAttribute('srcset', newSrcset);
-                    console.log(`    ✓ Fixed srcset: ${srcset} → ${newSrcset}`);
-                }
-            });
-            
-            console.log(`    ✅ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
+                    container.innerHTML = `
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-500 mb-4">
+                            <h2 class="text-2xl font-bold">${category} ${num}</h2>
+                        </div>
+                        <div class="prose max-w-none">${doc.body.innerHTML}</div>`;
+                })
+                .catch(err => {
+                    container.innerHTML = `<p class="text-red-500">ไม่พบข้อมูล: ${url}</p>`;
+                });
         }
     </script>
 </body>
