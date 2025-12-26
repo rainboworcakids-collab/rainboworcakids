@@ -214,6 +214,26 @@
             color: white;
             border-color: #5a67d8;
         }
+        
+        /* CSS เพิ่มเติม: แก้ไขปัญหา CSS ในไฟล์ที่ดึงมาไม่ทำงาน และคุมขนาดรูป */
+        .explained-content {
+            all: revert; /* คืนค่าพื้นฐานเพื่อให้สไตล์จาก style.css ทำงานได้ดีขึ้น */
+        }
+        
+        /* แก้ปัญหารูปใหญ่เกินไปในหน้าหลัก */
+        .explained-content img {
+            max-width: 150px !important; /* จำกัดขนาดรูปภาพ */
+            height: auto !important;
+            display: block;
+            margin: 1rem auto; /* จัดกลางรูป */
+        }
+
+        /* ปรับแต่ง Container ของเนื้อหาที่ดึงมา */
+        .external-html-content {
+            line-height: 1.6;
+            color: #333;
+        }
+ 
     </style>
 </head>
 <body class="bg-gray-50 font-sarabun">
@@ -292,18 +312,8 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v4.1 -Psychomatrix-Result-WORKING';
-        // const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
-        
-        // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
-        const currentPath = window.location.pathname;
-        const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-        const CONTENTS_DIR = 'PsychomatrixContents';
-        
-        // สร้าง URL พื้นฐานสำหรับ Content (Relative)
-        const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
-
-        
+        const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
+        const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
@@ -541,14 +551,21 @@
                         throw new Error('เนื้อหาว่างเปล่า');
                     }
                     
+                    // นำเนื้อหามาใส่โดยหุ้มด้วย class เพื่อให้ CSS ที่เราเพิ่มไว้ทำงาน
+                    // และรักษาสไตล์จาก style.css เดิม
                     explainedContent.innerHTML = `
-                        <div class="explained-content">
-                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <h2 class="text-xl font-bold text-blue-800">${category} ${number}</h2>
+                        <div class="external-html-content p-4">
+                            <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <h2 class="text-2xl font-bold text-blue-800" style="border:none; margin:0; padding:0;">
+                                    ${category} ${number}
+                                </h2>
                             </div>
-                            ${content}
+                            <div class="content-body">
+                                ${doc.body.innerHTML}
+                            </div>
                         </div>
                     `;
+
                 })
                 .catch(error => {
                     console.error(`❌ Error loading ${url}:`, error);
