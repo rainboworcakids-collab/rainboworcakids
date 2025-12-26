@@ -216,40 +216,55 @@
         }
         
         /* CSS เพิ่มเติม: แก้ไขปัญหา CSS ในไฟล์ที่ดึงมาไม่ทำงาน และคุมขนาดรูป */
-               /* แก้ไขปัญหา Layout ทับกันและรูปภาพ */
+        /* แก้ไขปัญหา Layout ทับกันและรูปภาพ */
         .explained-content .external-content-body {
-            all: revert; /* คืนค่าพื้นฐานเพื่อให้สไตล์จาก style.css ทำงาน */
-            display: block;
-            width: 100%;
-            position: relative;
-            padding-top: 20px;
+            all: revert;
+            display: block !important;
+            width: 100% !important;
+            position: relative !important;
+            padding: 20px !important;
+            overflow: hidden; /* ป้องกันเนื้อหาไหลออกนอกกรอบ */
         }
-        
-        
 
-        /* คุมรูปภาพให้นิ่งและไม่เบียดข้อความ */
+        /* บังคับรูปให้อยู่ซ้ายและมีระยะห่าง */
         .explained-content img {
-            max-width: 120px !important; 
+            width: 120px !important;
+            max-width: 120px !important;
             height: auto !important;
-            float: left; /* ให้รูปอยู่ซ้าย */
-            margin-right: 20px !important;
-            margin-bottom: 20px !important;
-            border-radius: 12px;
+            float: left !important;
+            margin: 0 25px 15px 0 !important; /* เว้นระยะด้านขวาและล่าง */
+            display: inline-block !important;
+            border-radius: 10px;
+            clear: both;
         }
 
-        /* แก้ปัญหาตัวอักษรทับรูป (Clearfix) */
-        .explained-content::after {
+        /* แก้ปัญหาตัวอักษร h1 ทับรูป - นี่คือจุดสำคัญที่สุด */
+        .explained-content h1 {
+            margin-left: 0 !important; /* ล้างค่า 145px จาก style.css */
+            padding-left: 0 !important;
+            display: block !important;
+            width: auto !important;
+            color: #1a365d !important;
+            font-size: 1.5rem !important;
+            line-height: 1.2 !important;
+            margin-top: 0 !important;
+            clear: none !important; /* ให้ h1 ไหลข้างรูปได้ */
+        }
+
+        /* แก้ปัญหาเนื้อหาอื่นๆ ทับรูป */
+        .explained-content p, 
+        .explained-content h2, 
+        .explained-content h3, 
+        .explained-content ul {
+            display: block !important;
+            clear: none !important; /* ยอมให้ข้อความล้อมรูป */
+        }
+
+        /* Clearfix เพื่อไม่ให้เนื้อหาถัดไปกระโดดขึ้นมาทับรูป */
+        .external-content-body::after {
             content: "";
             clear: both;
             display: table;
-        }
-
-        /* ปรับแต่งหัวข้อในไฟล์ที่ดึงมา */
-        .explained-content h1 {
-            margin-left: 0 !important; /* ยกเลิก margin-left เดิมที่ทำให้ตัวอักษรขยับไปทับรูป */
-            font-size: 1.5rem !important;
-            color: #1a365d !important;
-            clear: none;
         }
 
 
@@ -271,7 +286,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.1-Psychomatrix-Result-WORKING
+            v4.2-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -587,16 +602,20 @@
                     // นำเนื้อหามาใส่โดยหุ้มด้วย class เพื่อให้ CSS ที่เราเพิ่มไว้ทำงาน
                     // และรักษาสไตล์จาก style.css เดิม
                     explainedContent.innerHTML = `
-                        <div class="p-4 bg-white">
-                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <span class="text-sm font-bold text-blue-600 uppercase tracking-wider">${category}</span>
-                                <h2 class="text-2xl font-bold text-gray-800">${number}</h2>
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
+                                    <h2 class="text-2xl font-black text-blue-900">${number}</h2>
+                                </div>
                             </div>
+                            
                             <div class="external-content-body">
                                 ${pureContent}
                             </div>
                         </div>
                     `;
+
   
                     
                 })
