@@ -216,16 +216,16 @@
         }
         
  
-/* ==================== แก้ไข Layout รูปและข้อความ - ฉบับสมบูรณ์ ==================== */
 
-/* 🔥 กรอบหลัก: ทำให้รองรับ float อย่างสมบูรณ์แบบ */
+/* ==================== Float Layout ธรรมดา (ไม่มี animation) ==================== */
+
+/* กรอบหลัก: รองรับ float */
 .explained-content .external-content-body {
-    display: flow-root !important; /* ทันสมัยและเสถียรที่สุด */
+    display: flow-root !important;
     padding: 20px !important;
-    overflow: visible !important; /* ให้ข้อความไหลรอบรูปได้ */
 }
 
-/* 🔥 รูปภาพ: Float ซ้าย + ป้องกันการถูก CSS อื่นทับ */
+/* รูปภาพ: Float ซ้าย (ไม่มี transition) */
 .explained-content img {
     float: left !important;
     width: 120px !important;
@@ -234,51 +234,16 @@
     margin: 0 25px 15px 0 !important;
     border-radius: 10px;
     clear: none !important;
-    
-    /* ✅ ป้องกัน CSS อื่นมาเปลี่ยน display */
-    display: inline-block !important;
-    position: static !important; /* ไม่ใช้ absolute/relative */
 }
 
-/* 🔥 หัวข้อและข้อความ: ให้ล้อมรูปได้ */
+/* ข้อความ: ล้อมรูปได้ */
 .explained-content h1,
 .explained-content h2, 
 .explained-content h3, 
-.explained-content p, 
-.explained-content ul,
-.explained-content ol,
-.explained-content li {
+.explained-content p {
     clear: none !important;
     margin-left: 0 !important;
-    padding-left: 0 !important;
     overflow: hidden !important; /* ป้องกันข้อความล้ำออกนอกกรอบ */
-    display: block !important;
-}
-
-/* 🔥 กำหนด h1 ให้เสถียร */
-.explained-content h1 {
-    color: #1a365d !important;
-    font-size: 1.5rem !important;
-    line-height: 1.2 !important;
-    text-align: left !important;
-}
-
-/* 🔥 动画效果: บังคับให้ทำงานทุกที่ */
-.explained-content img {
-    transition: all 0.3s ease-in-out !important;
-}
-
-.explained-content img:hover {
-    transform: scale(1.05) !important;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
-    z-index: 10 !important;
-}
-
-/* 🔥 Clearfix ที่แข็งแกร่ง */
-.external-content-body::after {
-    content: "" !important;
-    display: table !important;
-    clear: both !important;
 }
 
 /* ================================================================= */
@@ -303,7 +268,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.5-Psychomatrix-Result-WORKING
+            v4.6-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -364,7 +329,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v4.5-Psychomatrix-Result-WORKING';
+        const VERSION = 'v4.6-Psychomatrix-Result-WORKING';
         
        // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
         const currentPath = window.location.pathname;
@@ -693,21 +658,27 @@ function loadExplainedContent(url, category, number) {
             // แก้ไขพาธ
             fixRelativePathsInDom(doc);
             
-            const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
+          //   const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
             
-            explainedContent.innerHTML = `
-                <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
-                            <h2 class="text-2xl font-black text-blue-900">${number}</h2>
+         
+                             // นำเฉพาะส่วน Body มาแสดง
+                    const pureContent = doc.body.innerHTML;
+                    
+                    explainedContent.innerHTML = `
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
+                                    <h2 class="text-2xl font-black text-blue-900">${number}</h2>
+                                </div>
+                            </div>
+                            
+                            <div class="external-content-body">
+                                ${pureContent}
+                            </div>
                         </div>
-                    </div>
-                    <div class="external-content-body">
-                        ${pureContent}
-                    </div>
-                </div>
-            `;
+                    `;
+
             
             // ✅ **สำคัญ: แก้ไข CSS ของรูปหลัง render ทันที**
             setTimeout(() => {
