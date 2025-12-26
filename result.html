@@ -11,8 +11,8 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pre-load CSS -->
-    <link rel="stylesheet" href="/rainboworcakids/PsychomatrixContents/style.css">
+    <!-- Chart.js (สำหรับ Pinnacle) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
@@ -31,151 +31,12 @@
             font-family: monospace;
             z-index: 1000;
         }
-        
-        /* Tab Styles */
-        .tab-container {
-            background: white;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .tab-buttons {
-            display: flex;
-            background: #f3f4f6;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 1rem;
-            background: transparent;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #6b7280;
-        }
-        
-        .tab-button.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-        
-        .tab-button:hover {
-            background: #e5e7eb;
-        }
-        
-        .tab-content {
-            padding: 1.5rem;
-            min-height: 500px;
-        }
-        
-        .tab-pane {
-            display: none;
-        }
-        
-        .tab-pane.active {
-            display: block;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        /* Data Grid Styles */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .data-item {
-            background: #f9fafb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #667eea;
-            text-align: center;
-        }
-        
-        .data-item .label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-        }
-        
-        .data-item .number-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .data-item .number-button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .data-item .number-button.active {
-            background: #48bb78;
-        }
-        
-        .data-item .text-gray {
-            color: #9ca3af;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .data-item .description {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 0.5rem;
-        }
-        
-        /* Explained Tab Content */
-        .explained-content {
-            line-height: 1.6;
-        }
-        
-        .explained-content h2 {
-            color: #1f2937;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #667eea;
-        }
-        
-        .explained-content p {
-            margin-bottom: 1rem;
-            color: #4b5563;
-        }
-        
-        .explained-content.loading {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
-        }
-        
-        /* Result Section Styles */
         .result-section {
             margin-bottom: 2rem;
             border: 1px solid #e5e7eb;
             border-radius: 0.75rem;
             overflow: hidden;
         }
-        
         .section-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -183,12 +44,22 @@
             font-weight: bold;
             font-size: 1.125rem;
         }
-        
         .section-content {
             padding: 1.5rem;
             background: white;
         }
-        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .data-item {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border-left: 4px solid #667eea;
+        }
         .pythagorean-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -196,7 +67,6 @@
             max-width: 300px;
             margin: 1rem auto;
         }
-        
         .pythagorean-cell {
             aspect-ratio: 1;
             display: flex;
@@ -208,11 +78,41 @@
             font-weight: bold;
             font-size: 1.5rem;
         }
-        
         .pythagorean-cell.active {
             background: #667eea;
             color: white;
             border-color: #5a67d8;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #38a169;
         }
     </style>
 </head>
@@ -231,58 +131,31 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.0-Psychomatrix-Result-WORKING
+            v2.1-Dynamic-Path
         </div>
 
-        <!-- Tab Container -->
-        <div class="tab-container">
-            <!-- Tab Buttons -->
-            <div class="tab-buttons">
-                <button class="tab-button active" onclick="switchTab('Main', this)">
-                    <i class="fas fa-chart-bar mr-2"></i>Main
-                </button>
-                <button class="tab-button" onclick="switchTab('Explained', this)">
-                    <i class="fas fa-book-open mr-2"></i>Explained
-                </button>
-            </div>
-            
-            <!-- Tab Contents -->
-            <div class="tab-content">
-                <!-- Main Tab -->
-                <div id="Main" class="tab-pane active">
-                    <!-- Loading Status -->
-                    <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
-                        <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดผลการวิเคราะห์...
-                    </div>
+        <!-- Loading Status -->
+        <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
+            <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดผลการวิเคราะห์...
+        </div>
 
-                    <!-- No Data Message -->
-                    <div id="noDataMessage" class="hidden text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-yellow-400 text-5xl mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูลผลการวิเคราะห์</h3>
-                        <p class="text-gray-400 mb-6">กรุณากรอกข้อมูลที่หน้า Psychomatrix.html ก่อน</p>
-                        <a href="Psychomatrix.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
-                            <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
-                        </a>
-                    </div>
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="hidden text-center py-12">
+            <i class="fas fa-exclamation-triangle text-yellow-400 text-5xl mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูลผลการวิเคราะห์</h3>
+            <p class="text-gray-400 mb-6">กรุณากรอกข้อมูลที่หน้า Psychomatrix.html ก่อน</p>
+            <a href="Psychomatrix.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
+                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
+            </a>
+        </div>
 
-                    <!-- Results Container -->
-                    <div id="resultsContainer" class="hidden space-y-8">
-                        <!-- Results will be inserted here -->
-                    </div>
-                </div>
-
-                <!-- Explained Tab -->
-                <div id="Explained" class="tab-pane">
-                    <div class="explained-content loading">
-                        <i class="fas fa-hand-pointer text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">คลิกที่ตัวเลขในแท็บ <strong>Main</strong> เพื่อดูรายละเอียดที่นี่</p>
-                    </div>
-                </div>
-            </div>
+        <!-- Results Container -->
+        <div id="resultsContainer" class="hidden space-y-8">
+            <!-- Results will be inserted here -->
         </div>
 
         <!-- Back Button -->
-        <div class="text-center mt-8">
+        <div id="backButtonSection" class="hidden text-center mt-8">
             <a href="Psychomatrix.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
                 <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์ใหม่
             </a>
@@ -292,32 +165,98 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
-        const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
+        const VERSION = 'v2.1-Dynamic-Path';
         
+        // 🎯 Dynamic Path Resolver
+        function getBasePath() {
+            const currentPath = window.location.pathname;
+            const isGitHubPages = currentPath.includes('/rainboworcakids/');
+            const isSubfolder = currentPath.includes('/PsychomatrixContents/');
+            
+            console.log('🔍 Path Debug - currentPath:', currentPath);
+            console.log('🔍 Path Debug - isGitHubPages:', isGitHubPages);
+            console.log('🔍 Path Debug - isSubfolder:', isSubfolder);
+            
+            // ถ้าอยู่ในโฟลเดอร์ PsychomatrixContents/ ให้ย้อนกลับไป root
+            if (isSubfolder) {
+                return '../';
+            }
+            
+            // ถ้าอยู่ root ของโปรเจค ไม่ต้องเพิ่ม prefix
+            return '';
+        }
+
+        // 🎯 Dynamic Detail Page URL Generator
+        function getDetailPageUrl(type, number) {
+            const basePath = getBasePath();
+            
+            // แมพ type เป็น filename pattern
+            const pageMap = {
+                'lifePath': `LifePathNumber${number}.html`,
+                'destiny': `Destiny${number}.html`,
+                'karmic': `KarmicLesson${number}.html`,
+                'birth': `LifePathNumber${number}.html`, // default for birth date
+                'idcard': `LifePathNumber${number}.html`,
+                'name': `Destiny${number}.html`
+            };
+            
+            const filename = pageMap[type] || `LifePathNumber${number}.html`;
+            const fullPath = basePath + 'PsychomatrixContents/' + filename;
+            
+            console.log('🚀 Navigating to:', fullPath);
+            return fullPath;
+        }
+
+        // 🎯 Show Detail Page Function
+        function showDetailPage(type, number) {
+            if (!number) {
+                alert('⚠️ ไม่พบเลขสำหรับ type: ' + type);
+                return;
+            }
+            
+            const url = getDetailPageUrl(type, number);
+            
+            // เพิ่ม loading indicator
+            const btn = event?.target;
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลด...';
+                btn.disabled = true;
+            }
+            
+            // Redirect with error handling
+            fetch(url, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = url;
+                    } else {
+                        throw new Error(`ไม่พบไฟล์: ${url} (HTTP ${response.status})`);
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Navigation Error:', error);
+                    alert(`ไม่สามารถโหลดหน้ารายละเอียดได้\n\n${error.message}\n\nโปรดตรวจสอบว่าไฟล์มีอยู่จริงในโฟลเดอร์ PsychomatrixContents/`);
+                    
+                    // Reset button
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-external-link-alt mr-2"></i>ดูรายละเอียด';
+                        btn.disabled = false;
+                    }
+                });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
-            console.log('📍 BASE_PATH:', BASE_PATH);
+            console.log('📍 Base Path:', getBasePath());
             loadAndDisplayResult();
         });
-
-        // Tab Switching Function
-        function switchTab(tabName, buttonElement) {
-            const panes = document.querySelectorAll('.tab-pane');
-            panes.forEach(pane => pane.classList.remove('active'));
-            
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabName).classList.add('active');
-            buttonElement.classList.add('active');
-        }
 
         function loadAndDisplayResult() {
             const loadingEl = document.getElementById('loadingStatus');
             const noDataEl = document.getElementById('noDataMessage');
             const resultsContainer = document.getElementById('resultsContainer');
+            const backBtnEl = document.getElementById('backButtonSection');
 
+            // โหลดจาก sessionStorage
             const resultData = sessionStorage.getItem('psychomatrixResult');
             
             if (!resultData) {
@@ -334,22 +273,30 @@
                     throw new Error(data.error || 'API returned error');
                 }
 
+                // สร้าง HTML สำหรับแต่ละประเภทข้อมูล
                 let html = '';
                 
-                if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    console.log(`📊 Found ${data.results.length} results`);
-                    data.results.forEach((result, index) => {
-                        console.log(`  Result ${index}: ${result.type} | Destiny: ${result.data?.destiny_number} | LifePath: ${result.data?.life_path_number}`);
-                        html += createResultSectionFromResult(result);
-                    });
-                } else {
-                    console.log('📊 Single result mode');
-                    html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
+                // 1. Birth Date Results
+                if (data.birth_date && data.destiny_number) {
+                    html += createResultSection('birth-date', '📅 ข้อมูลวันเกิด', data, 'birth');
+                }
+                
+                // 2. ID Card Results
+                if (data.id_card && data.destiny_number) {
+                    html += createResultSection('id-card', '🪪 ข้อมูลบัตรประชาชน', data, 'idcard');
+                }
+                
+                // 3. Full Name Results
+                if (data.full_name && data.destiny_number) {
+                    html += createResultSection('full-name', '✍️ ข้อมูลชื่อ-สกุล', data, 'name');
                 }
 
                 resultsContainer.innerHTML = html;
+
+                // แสดงส่วนต่างๆ
                 loadingEl.classList.add('hidden');
                 resultsContainer.classList.remove('hidden');
+                backBtnEl.classList.remove('hidden');
 
             } catch (error) {
                 console.error('❌ Error displaying result:', error);
@@ -366,49 +313,46 @@
             }
         }
 
-        function createResultSectionFromResult(result) {
-            const type = result.type || 'unknown';
-            const title = result.title || '📊 ผลการวิเคราะห์';
-            const data = result.data || {};
-            const databaseData = result.database_data || null;
-            
-            return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
-        }
-
         function createResultSection(id, title, data, type) {
-            const destinyNum = data.destiny_number;
-            const lifePathNum = data.life_path_number;
-            const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+            const sectionId = `section-${id}`;
+            const pythagoreanId = `pythagorean-${id}`;
+            
+            // ดึงตัวเลขสำหรับสร้างลิงก์
+            const number = data.destiny_number || data.life_path_number || '';
             
             return `
-                <div class="result-section">
+                <div class="result-section" id="${sectionId}">
+                    <!-- Section 1: Header -->
                     <div class="section-header">
                         <i class="fas fa-chart-bar mr-2"></i>${title}
                     </div>
+                    
+                    <!-- Section 2: Data Display -->
                     <div class="section-content">
                         <div class="data-grid">
                             <div class="data-item">
-                                <div class="label">Destiny Number</div>
-                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
-                                <div class="description">${data.destiny_meaning || ''}</div>
+                                <div class="text-sm text-gray-600">Destiny Number</div>
+                                <div class="text-2xl font-bold text-purple-700">${data.destiny_number || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">${data.destiny_meaning || ''}</div>
                             </div>
                             <div class="data-item">
-                                <div class="label">Life Path Number</div>
-                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
-                                <div class="description">เส้นทางชีวิต</div>
+                                <div class="text-sm text-gray-600">Life Path Number</div>
+                                <div class="text-2xl font-bold text-blue-700">${data.life_path_number || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">เส้นทางชีวิต</div>
                             </div>
                             <div class="data-item">
-                                <div class="label">Karmic Number</div>
+                                <div class="text-sm text-gray-600">Karmic Number</div>
                                 <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
-                                <div class="description">ภาระกรรม</div>
+                                <div class="text-xs text-gray-500 mt-1">ภาระกรรม</div>
                             </div>
                             <div class="data-item">
-                                <div class="label">Life Lesson</div>
-                                ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum)}
-                                <div class="description">บทเรียนชีวิต</div>
+                                <div class="text-sm text-gray-600">Life Lesson</div>
+                                <div class="text-2xl font-bold text-green-700">${data.thirdAndFourth?.lifeLesson || '-'}</div>
+                                <div class="text-xs text-gray-500 mt-1">บทเรียนชีวิต</div>
                             </div>
                         </div>
 
+                        <!-- ข้อมูลจากฐานข้อมูล -->
                         ${data.life_path_data ? `
                             <div class="mt-4 p-4 bg-blue-50 rounded-lg">
                                 <h4 class="font-bold text-blue-800 mb-2">
@@ -425,11 +369,12 @@
                             </div>
                         ` : ''}
 
+                        <!-- Section 3: Pythagorean Square (Placeholder) -->
                         <div class="mt-6">
                             <h4 class="font-bold text-gray-800 mb-3">
                                 <i class="fas fa-th-large mr-2"></i>Pythagorean Square
                             </h4>
-                            <div class="pythagorean-grid">
+                            <div class="pythagorean-grid" id="${pythagoreanId}">
                                 <div class="pythagorean-cell">1</div>
                                 <div class="pythagorean-cell">2</div>
                                 <div class="pythagorean-cell">3</div>
@@ -446,171 +391,23 @@
                                 <span class="ml-2">กำลังพัฒนา...</span>
                             </div>
                         </div>
+
+                        <!-- Section 4: Action Buttons -->
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="showDetailPage('${type}', '${number}')">
+                                <i class="fas fa-external-link-alt mr-2"></i>ดูรายละเอียด
+                            </button>
+                            <button class="btn btn-secondary" onclick="showPinnacleDetail('${type}')">
+                                <i class="fas fa-mountain mr-2"></i>Pinnacle Cycle
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
-        function createNumberButton(number, category, actualNumber) {
-            if (!number) return `<div class="text-gray">-</div>`;
-            
-            const isActive = number === actualNumber;
-            
-            // ✨ **EXPLICIT FILENAME MAPPING - ชัดเจน ไม่ผิดพลาด**
-            let filename;
-            switch(category) {
-                case 'Destiny':
-                    filename = `Destiny${number}.html`;
-                    break;
-                case 'LifePath':
-                    filename = `LifePathNumber${number}.html`; // ✨ ถูกต้อง
-                    break;
-                case 'KarmicLesson':
-                    filename = `KarmicLesson${number}.html`;
-                    break;
-                default:
-                    filename = `${category}${number}.html`;
-            }
-            
-            const url = `${BASE_PATH}/${filename}`;
-            
-            if (isActive) {
-                return `
-                    <button class="number-button active" 
-                            onclick="loadExplainedContent('${url}', '${category}', ${number})">
-                        ${number}
-                    </button>
-                `;
-            } else {
-                return `<div class="text-gray">${number}</div>`;
-            }
-        }
-
-        function loadExplainedContent(url, category, number) {
-            const explainedContent = document.querySelector('#Explained .explained-content');
-            
-            console.log(`🔄 Loading ${category}${number} from: ${url}`);
-            
-            explainedContent.innerHTML = `
-                <div class="explained-content loading">
-                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
-                    <p>กำลังโหลด ${category} ${number}...</p>
-                </div>
-            `;
-            
-            const explainedButton = document.querySelector('.tab-button:nth-child(2)');
-            switchTab('Explained', explainedButton);
-            
-            fetch(url, { 
-                method: 'GET',
-                cache: 'no-cache',
-                headers: { 'Accept': 'text/html' }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    console.log(`✅ Success loading ${url}`);
-                    
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-                    fixRelativePathsInDom(doc);
-                    
-                    // Remove all <link> tags
-                    const links = doc.querySelectorAll('link');
-                    links.forEach(link => link.remove());
-                    
-                    let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
-                    
-                    if (!content || content.trim() === '') {
-                        throw new Error('เนื้อหาว่างเปล่า');
-                    }
-                    
-                    explainedContent.innerHTML = `
-                        <div class="explained-content">
-                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <h2 class="text-xl font-bold text-blue-800">${category} ${number}</h2>
-                            </div>
-                            ${content}
-                        </div>
-                    `;
-                })
-                .catch(error => {
-                    console.error(`❌ Error loading ${url}:`, error);
-                    explainedContent.innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-                            <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
-                            <p class="text-sm">${error.message}</p>
-                            <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
-                        </div>
-                    `;
-                });
-        }
-
-        // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-        function fixRelativePathsInDom(doc) {
-            console.log('  🔧 Fixing relative paths in DOM...');
-            
-            // Fix img src
-            const images = doc.querySelectorAll('img');
-            images.forEach(img => {
-                const src = img.getAttribute('src');
-                if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
-                    const newSrc = `${BASE_PATH}/${src}`;
-                    img.setAttribute('src', newSrc);
-                    console.log(`    ✓ Fixed img: ${src} → ${newSrc}`);
-                }
-            });
-            
-            // Fix link href (CSS)
-            const links = doc.querySelectorAll('link');
-            links.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('mailto') && !href.startsWith('tel')) {
-                    const newHref = `${BASE_PATH}/${href}`;
-                    link.setAttribute('href', newHref);
-                    console.log(`    ✓ Fixed link: ${href} → ${newHref}`);
-                }
-            });
-            
-            // Fix style background-image
-            const styledElements = doc.querySelectorAll('[style]');
-            styledElements.forEach(el => {
-                const style = el.getAttribute('style');
-                if (style && style.includes('background-image')) {
-                    const newStyle = style.replace(
-                        /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
-                        `background-image: url('${BASE_PATH}/$1')`
-                    );
-                    if (newStyle !== style) {
-                        el.setAttribute('style', newStyle);
-                        console.log(`    ✓ Fixed background-image in style`);
-                    }
-                }
-            });
-            
-            // Fix srcset
-            const srcsetElements = doc.querySelectorAll('[srcset]');
-            srcsetElements.forEach(el => {
-                const srcset = el.getAttribute('srcset');
-                if (srcset && !srcset.startsWith('http') && !srcset.startsWith('/') && !srcset.startsWith('data:')) {
-                    const newSrcset = srcset.split(',').map(src => {
-                        const parts = src.trim().split(' ');
-                        parts[0] = `${BASE_PATH}/${parts[0]}`;
-                        return parts.join(' ');
-                    }).join(', ');
-                    el.setAttribute('srcset', newSrcset);
-                    console.log(`    ✓ Fixed srcset: ${srcset} → ${newSrcset}`);
-                }
-            });
-            
-            console.log(`    ✅ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
+        function showPinnacleDetail(type) {
+            alert(`🏔️ รายละเอียด Pinnacle Cycle สำหรับ ${type}\n\nกำลังพัฒนา...`);
         }
     </script>
 </body>
