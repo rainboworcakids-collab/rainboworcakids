@@ -216,37 +216,52 @@
         }
         
  
+/* ==================== V4.7 Fixed Layout (Flexbox) ==================== */
 
-/* ==================== Float Layout ธรรมดา (ไม่มี animation) ==================== */
-
-/* กรอบหลัก: รองรับ float */
-.explained-content .external-content-body {
-    display: flow-root !important;
-    padding: 20px !important;
-}
-
-/* รูปภาพ: Float ซ้าย (ไม่มี transition) */
-.explained-content img {
-    float: left !important;
-    width: 120px !important;
-    max-width: 120px !important;
-    height: auto !important;
-    margin: 0 25px 15px 0 !important;
-    border-radius: 10px;
-    clear: none !important;
-}
-
-/* ข้อความ: ล้อมรูปได้ */
-.explained-content h1,
-.explained-content h2, 
-.explained-content h3, 
-.explained-content p {
-    clear: none !important;
+/* บังคับให้หัวข้อ h1 ในไฟล์ย่อยไม่มี Margin-left ที่ทำให้ทับรูป */
+.explained-content h1 {
     margin-left: 0 !important;
-    overflow: hidden !important; /* ป้องกันข้อความล้ำออกนอกกรอบ */
+    padding-left: 0 !important;
+    color: #1a365d !important;
+    font-size: 1.5rem !important;
+    margin-top: 0 !important;
+    line-height: 1.3 !important;
 }
 
-/* ================================================================= */
+/* สร้างโครงสร้างแถว: รูปซ้าย ข้อความขวา */
+.external-content-body {
+    padding: 20px !important;
+    background: white;
+}
+
+/* จับคู่ Header (ที่มีรูป) ให้เป็น Flex */
+.external-content-body .page-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+/* จัดการรูปภาพให้นิ่ง */
+.external-content-body .number-container,
+.external-content-body .header-logo {
+    flex-shrink: 0 !important; /* ห้ามรูปหด */
+    width: 120px !important;
+}
+
+.external-content-body img {
+    width: 120px !important;
+    height: auto !important;
+    display: block !important;
+    border-radius: 10px;
+}
+
+/* เนื้อหาด้านล่างรูป (พวกลักษณะเด่น/อาชีพ) ให้แสดงผลปกติ */
+.leadership-traits, .career-paths, .practice-item {
+    clear: both !important;
+    margin-top: 15px !important;
+}
+
 
 
  
@@ -268,7 +283,7 @@
 
         <!-- Version Display -->
         <div class="version-badge">
-            v4.6-Psychomatrix-Result-WORKING
+            v4.7-Psychomatrix-Result-WORKING
         </div>
 
         <!-- Tab Container -->
@@ -329,7 +344,7 @@
     <!-- Scripts -->
     <script>
         // Version Info
-        const VERSION = 'v4.6-Psychomatrix-Result-WORKING';
+        const VERSION = 'v4.7-Psychomatrix-Result-WORKING';
         
        // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
         const currentPath = window.location.pathname;
@@ -661,16 +676,13 @@ function loadExplainedContent(url, category, number) {
           //   const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
             
          
-                             // นำเฉพาะส่วน Body มาแสดง
+                    // นำเฉพาะส่วน Body มาแสดง
                     const pureContent = doc.body.innerHTML;
                     
                     explainedContent.innerHTML = `
                         <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
-                                    <h2 class="text-2xl font-black text-blue-900">${number}</h2>
-                                </div>
+                            <div class="px-6 py-3 bg-gray-50 border-b border-gray-100">
+                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">${category} ${number}</span>
                             </div>
                             
                             <div class="external-content-body">
@@ -679,33 +691,14 @@ function loadExplainedContent(url, category, number) {
                         </div>
                     `;
 
-            
-            // ✅ **สำคัญ: แก้ไข CSS ของรูปหลัง render ทันที**
-            setTimeout(() => {
-                const images = explainedContent.querySelectorAll('img');
-                console.log(`📸 Found ${images.length} images`);
-                
-                images.forEach(img => {
-                    // บังคับ float อีกครั้ง
-                    img.style.setProperty('float', 'left', 'important');
-                    img.style.setProperty('width', '120px', 'important');
-                    img.style.setProperty('margin-right', '25px', 'important');
-                    img.style.setProperty('margin-bottom', '15px', 'important');
-                    img.style.setProperty('transition', 'all 0.3s ease-in-out', 'important');
-                    
-                    // ลบการ์ด CSS อื่นที่อาจมาทับ
-                    img.style.removeProperty('display');
-                    
-                    console.log(`   ✓ Fixed image: ${img.src}`);
-                });
-                
-                // ทำให้ข้อความแรกล้อมรูป
-                const firstText = explainedContent.querySelector('h1, h2, p');
-                if (firstText) {
-                    firstText.style.setProperty('overflow', 'hidden', 'important');
-                }
-                
-            }, 50);
+                    // ล้างคำสั่ง Inline style เดิมๆ ที่อาจจะติดมากับรูปภาพ
+                    setTimeout(() => {
+                        const images = explainedContent.querySelectorAll('img');
+                        images.forEach(img => {
+                            img.removeAttribute('style'); // ล้าง style เก่าทิ้งเพื่อให้ CSS ใหม่คุม 100%
+                        });
+                    }, 50);
+
             
         })
         .catch(error => {
