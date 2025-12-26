@@ -216,23 +216,43 @@
         }
         
         /* CSS เพิ่มเติม: แก้ไขปัญหา CSS ในไฟล์ที่ดึงมาไม่ทำงาน และคุมขนาดรูป */
-        .explained-content {
-            all: revert; /* คืนค่าพื้นฐานเพื่อให้สไตล์จาก style.css ทำงานได้ดีขึ้น */
+               /* แก้ไขปัญหา Layout ทับกันและรูปภาพ */
+        .explained-content .external-content-body {
+            all: revert; /* คืนค่าพื้นฐานเพื่อให้สไตล์จาก style.css ทำงาน */
+            display: block;
+            width: 100%;
+            position: relative;
+            padding-top: 20px;
         }
         
-        /* แก้ปัญหารูปใหญ่เกินไปในหน้าหลัก */
+        
+
+        /* คุมรูปภาพให้นิ่งและไม่เบียดข้อความ */
         .explained-content img {
-            max-width: 150px !important; /* จำกัดขนาดรูปภาพ */
+            max-width: 120px !important; 
             height: auto !important;
-            display: block;
-            margin: 1rem auto; /* จัดกลางรูป */
+            float: left; /* ให้รูปอยู่ซ้าย */
+            margin-right: 20px !important;
+            margin-bottom: 20px !important;
+            border-radius: 12px;
         }
 
-        /* ปรับแต่ง Container ของเนื้อหาที่ดึงมา */
-        .external-html-content {
-            line-height: 1.6;
-            color: #333;
+        /* แก้ปัญหาตัวอักษรทับรูป (Clearfix) */
+        .explained-content::after {
+            content: "";
+            clear: both;
+            display: table;
         }
+
+        /* ปรับแต่งหัวข้อในไฟล์ที่ดึงมา */
+        .explained-content h1 {
+            margin-left: 0 !important; /* ยกเลิก margin-left เดิมที่ทำให้ตัวอักษรขยับไปทับรูป */
+            font-size: 1.5rem !important;
+            color: #1a365d !important;
+            clear: none;
+        }
+
+
  
     </style>
 </head>
@@ -313,8 +333,16 @@
     <script>
         // Version Info
         const VERSION = 'v4.0-Psychomatrix-Result-WORKING';
-        const BASE_PATH = '/rainboworcakids/PsychomatrixContents';
         
+       // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
+        const currentPath = window.location.pathname;
+        const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        const CONTENTS_DIR = 'PsychomatrixContents';
+        
+        // สร้าง URL พื้นฐานสำหรับ Content (Relative)
+        const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
+
+
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 result.html', VERSION, 'loaded');
             console.log('📍 BASE_PATH:', BASE_PATH);
@@ -545,27 +573,32 @@
                     const links = doc.querySelectorAll('link');
                     links.forEach(link => link.remove());
                     
-                    let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
+                    // let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
                     
-                    if (!content || content.trim() === '') {
-                        throw new Error('เนื้อหาว่างเปล่า');
-                    }
+                    // if (!content || content.trim() === '') {
+                    //    throw new Error('เนื้อหาว่างเปล่า');
+                    // }
+                    
+                    
+                    // นำเฉพาะส่วน Body มาแสดง และหุ้มด้วย Class ที่เราเตรียมไว้
+                    const pureContent = doc.body.innerHTML;
+                    
                     
                     // นำเนื้อหามาใส่โดยหุ้มด้วย class เพื่อให้ CSS ที่เราเพิ่มไว้ทำงาน
                     // และรักษาสไตล์จาก style.css เดิม
                     explainedContent.innerHTML = `
-                        <div class="external-html-content p-4">
-                            <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                                <h2 class="text-2xl font-bold text-blue-800" style="border:none; margin:0; padding:0;">
-                                    ${category} ${number}
-                                </h2>
+                        <div class="p-4 bg-white">
+                            <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <span class="text-sm font-bold text-blue-600 uppercase tracking-wider">${category}</span>
+                                <h2 class="text-2xl font-bold text-gray-800">${number}</h2>
                             </div>
-                            <div class="content-body">
-                                ${doc.body.innerHTML}
+                            <div class="external-content-body">
+                                ${pureContent}
                             </div>
                         </div>
                     `;
-
+  
+                    
                 })
                 .catch(error => {
                     console.error(`❌ Error loading ${url}:`, error);
