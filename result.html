@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis Result</title>
+    <title>Psychomatrix Analysis Results</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,161 +11,143 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pre-load CSS -->
-    <link rel="stylesheet" href="/rainboworcakids/PsychomatrixContents/style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
+    
+    <!-- Psychomatrix Main CSS -->
+    <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
     <style>
-        body { font-family: 'Sarabun', sans-serif; }
+        /* Version badge */
         .version-badge {
             position: fixed;
-            bottom: 1rem;
-            right: 1rem;
+            top: 10px;
+            right: 10px;
             background: rgba(0,0,0,0.7);
             color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
             font-family: monospace;
             z-index: 1000;
         }
         
         /* Tab Styles */
-        .tab-container {
-            background: white;
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .tab-buttons {
-            display: flex;
-            background: #f3f4f6;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 1rem;
-            background: transparent;
+        .tablink {
+            background-color: #eee;
+            color: #aaa;
+            float: left;
             border: none;
-            font-weight: bold;
+            outline: none;
             cursor: pointer;
-            transition: all 0.2s;
-            color: #6b7280;
+            padding: 14px 16px;
+            font-size: 17px;
+            width: 25%;
+        }
+        .tablink:hover {
+            background-color: green;
+            color: yellow;
         }
         
-        .tab-button.active {
-            background: white;
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-        
-        .tab-button:hover {
-            background: #e5e7eb;
-        }
-        
-        .tab-content {
-            padding: 1.5rem;
-            min-height: 500px;
-        }
-        
-        .tab-pane {
+        .tabcontent {
             display: none;
+            padding: 20px;
+            border-top: none;
         }
         
-        .tab-pane.active {
+        .tabcontent.active {
             display: block;
-            animation: fadeIn 0.3s ease-in-out;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* Additional styles for loaded content */
+        .external-content-body {
+            padding: 20px !important;
+            background: white;
         }
         
-        /* Data Grid Styles */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+        .external-content-body img {
+            max-width: 100%;
+            height: auto;
         }
         
-        .data-item {
-            background: #f9fafb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #667eea;
-            text-align: center;
+        /* FIXED: Header layout for loaded content */
+        .external-content-body .page-header {
+            display: flex !important;
+            align-items: flex-start !important;
+            gap: 30px !important; /* เพิ่ม gap ให้มากขึ้น */
+            margin-bottom: 25px !important;
+            min-height: 140px; /* กำหนดความสูงขั้นต่ำ */
         }
         
-        .data-item .label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            margin-bottom: 0.5rem;
+        .external-content-body .number-container,
+        .external-content-body .header-logo {
+            flex-shrink: 0 !important;
+            width: 140px !important; /* เพิ่มความกว้างเล็กน้อย */
+            position: relative;
         }
         
-        .data-item .number-button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
+        .external-content-body img {
+            width: 140px !important; /* ปรับขนาดให้ใหญ่ขึ้นเล็กน้อย */
+            height: auto !important;
+            display: block !important;
+            border-radius: 10px;
+        }
+        
+        /* FIXED: ปรับหัวข้อ h1 ให้มีระยะห่างมากขึ้น */
+        .external-content-body h1 {
+            margin-left: 20px !important;
+            padding-left: 0 !important;
+            color: #1a365d !important;
+            font-size: 1.4rem !important; /* ลดขนาดลงเล็กน้อย */
+            margin-top: 0 !important;
+            line-height: 1.4 !important;
+            flex: 1; /* ให้ใช้พื้นที่ที่เหลือทั้งหมด */
+            word-wrap: break-word; /* ข้อความยาวให้ขึ้นบรรทัดใหม่ */
+            overflow-wrap: break-word;
+            max-width: calc(100% - 170px); /* ไม่ให้กว้างเกินไป */
+        }
+        
+        /* FIXED: ปรับปรุง layout ของ modern-number-overlay */
+        .external-content-body .modern-number-overlay {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+        
+        .external-content-body .modern-number {
+            width: 120px !important;
+            height: 120px !important;
+            top: 10px;
+            left: 10px;
+        }
+        
+        .external-content-body .modern-number.number-front {
+            z-index: 2;
+        }
+        
+        .external-content-body .modern-number.number-back {
+            z-index: 1;
+            transform: translate(10px, 10px);
+            opacity: 0.7;
+        }
+        
+        /* Loading animation */
+        .spinner {
             display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
         }
         
-        .data-item .number-button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .data-item .number-button.active {
-            background: #48bb78;
-        }
-        
-        .data-item .text-gray {
-            color: #9ca3af;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        
-        .data-item .description {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 0.5rem;
-        }
-        
-        /* Explained Tab Content */
-        .explained-content {
-            line-height: 1.6;
-        }
-        
-        .explained-content h2 {
-            color: #1f2937;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #667eea;
-        }
-        
-        .explained-content p {
-            margin-bottom: 1rem;
-            color: #4b5563;
-        }
-        
-        .explained-content.loading {
-            text-align: center;
-            padding: 3rem;
-            color: #6b7280;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
         /* Result Section Styles */
@@ -189,341 +171,588 @@
             background: white;
         }
         
-        .pythagorean-grid {
+        /* FIXED: Data Grid Styles - ปรับให้พอดีกับหน้า */
+        .data-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            max-width: 300px;
-            margin: 1rem auto;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* ลดความกว้างขั้นต่ำ */
+            gap: 1rem;
+            margin-bottom: 1.5rem;
         }
         
-        .pythagorean-cell {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f3f4f6;
-            border: 2px solid #d1d5db;
+        .data-item {
+            background: #f9fafb;
+            padding: 1rem;
             border-radius: 0.5rem;
-            font-weight: bold;
-            font-size: 1.5rem;
+            border-left: 4px solid #667eea;
+            text-align: center;
+            min-height: 120px; /* กำหนดความสูงขั้นต่ำ */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         
-        .pythagorean-cell.active {
+        .data-item .label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            min-height: 2.5em; /* กำหนดความสูงสำหรับ 2 บรรทัด */
+        }
+        
+        /* FIXED: ปุ่มตัวเลข - ป้องกันข้อความขึ้นบรรทัดใหม่ */
+        .data-item .number-button {
             background: #667eea;
             color: white;
-            border-color: #5a67d8;
+            border: none;
+            padding: 0.5rem 0.8rem; /* ลด padding แนวนอน */
+            border-radius: 0.375rem;
+            font-size: 1.8rem; /* ลดขนาดตัวเลขลง */
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            width: auto;
+            min-width: 60px;
+            max-width: 100%;
+            white-space: nowrap; /* ป้องกันตัวเลขขึ้นบรรทัดใหม่ */
+            overflow: hidden;
+            text-overflow: ellipsis; /* ถ้าตัวเลขยาวเกินให้แสดง ... */
+            margin: 0 auto; /* จัดกึ่งกลาง */
         }
         
- 
-/* ==================== V4.7 Fixed Layout (Flexbox) ==================== */
-
-/* บังคับให้หัวข้อ h1 ในไฟล์ย่อยไม่มี Margin-left ที่ทำให้ทับรูป */
-.explained-content h1 {
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    color: #1a365d !important;
-    font-size: 1.5rem !important;
-    margin-top: 0 !important;
-    line-height: 1.3 !important;
-}
-
-/* สร้างโครงสร้างแถว: รูปซ้าย ข้อความขวา */
-.external-content-body {
-    padding: 20px !important;
-    background: white;
-}
-
-/* จับคู่ Header (ที่มีรูป) ให้เป็น Flex */
-.external-content-body .page-header {
-    display: flex !important;
-    align-items: flex-start !important;
-    gap: 20px !important;
-    margin-bottom: 20px !important;
-}
-
-/* จัดการรูปภาพให้นิ่ง */
-.external-content-body .number-container,
-.external-content-body .header-logo {
-    flex-shrink: 0 !important; /* ห้ามรูปหด */
-    width: 120px !important;
-}
-
-.external-content-body img {
-    width: 120px !important;
-    height: auto !important;
-    display: block !important;
-    border-radius: 10px;
-}
-
-/* เนื้อหาด้านล่างรูป (พวกลักษณะเด่น/อาชีพ) ให้แสดงผลปกติ */
-.leadership-traits, .career-paths, .practice-item {
-    clear: both !important;
-    margin-top: 15px !important;
-}
-
-
-
- 
- 
-    </style>
-</head>
-<body class="bg-gray-50 font-sarabun">
-
-    <!-- Main Container -->
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        .data-item .number-button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
         
-        <!-- Header -->
-        <div class="text-center mb-6 p-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-white mb-2">
-                <i class="fas fa-chart-line mr-3"></i>🔮 ผลการวิเคราะห์ Psychomatrix
-            </h1>
-            <p class="text-purple-100">ผลลัพธ์จากการคำนวณเลขศาสตร์และฐานข้อมูล</p>
-        </div>
-
-        <!-- Version Display -->
-        <div class="version-badge">
-            v4.7-Psychomatrix-Result-WORKING
-        </div>
-
-        <!-- Tab Container -->
-        <div class="tab-container">
-            <!-- Tab Buttons -->
-            <div class="tab-buttons">
-                <button class="tab-button active" onclick="switchTab('Main', this)">
-                    <i class="fas fa-chart-bar mr-2"></i>Main
-                </button>
-                <button class="tab-button" onclick="switchTab('Explained', this)">
-                    <i class="fas fa-book-open mr-2"></i>Explained
-                </button>
-            </div>
+        .data-item .number-button.active {
+            background: #48bb78;
+        }
+        
+        .data-item .text-gray {
+            color: #9ca3af;
+            font-size: 1.8rem; /* ลดขนาดตัวเลขลง */
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .data-item .description {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+            line-height: 1.2;
+        }
+        
+        /* FIXED: ปรับปรุงการแสดงผลตัวเลขใน Main */
+        .number-display {
+            font-size: 2rem !important;
+            font-weight: bold;
+            margin: 0.5rem 0;
+            text-align: center;
+            word-break: keep-all; /* ไม่ให้ตัวเลขขาดบรรทัด */
+            white-space: nowrap; /* ไม่ให้ตัวเลขขึ้นบรรทัดใหม่ */
+        }
+        
+        /* เนื้อหาภายใน Explained */
+        .leadership-traits,
+        .career-paths,
+        .analysis-section,
+        .challenges,
+        .note-section {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .leadership-traits h2,
+        .career-paths h2,
+        .analysis-section h3,
+        .challenges h2,
+        .note-section h2 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        /* Print styles */
+        @media print {
+            .tablink, .version-badge, .no-print {
+                display: none !important;
+            }
+            .tabcontent {
+                display: block !important;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .data-grid {
+                grid-template-columns: repeat(2, 1fr); /* บนมือถือแสดง 2 คอลัมน์ */
+            }
             
-            <!-- Tab Contents -->
-            <div class="tab-content">
-                <!-- Main Tab -->
-                <div id="Main" class="tab-pane active">
-                    <!-- Loading Status -->
-                    <div id="loadingStatus" class="p-4 bg-yellow-50 rounded-lg border border-yellow-200 text-gray-700 mb-6">
-                        <i class="fas fa-spinner fa-spin mr-2"></i>กำลังโหลดผลการวิเคราะห์...
-                    </div>
+            .external-content-body .page-header {
+                flex-direction: column;
+                gap: 15px !important;
+            }
+            
+            .external-content-body h1 {
+                max-width: 100%;
+                font-size: 1.2rem !important;
+            }
+            
+            .external-content-body .number-container {
+                width: 120px !important;
+            }
+            
+            .data-item .number-button {
+                font-size: 1.6rem;
+                min-width: 50px;
+                padding: 0.4rem 0.6rem;
+            }
+        }
+    </style>
+    
+    <!-- Tailwind config -->
+    <script>
+    tailwind.config = {
+        prefix: 'tw-',
+        corePlugins: {
+            preflight: false
+        }
+    }
+    </script>
+</head>
+<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
 
-                    <!-- No Data Message -->
-                    <div id="noDataMessage" class="hidden text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-yellow-400 text-5xl mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-500 mb-2">ไม่พบข้อมูลผลการวิเคราะห์</h3>
-                        <p class="text-gray-400 mb-6">กรุณากรอกข้อมูลที่หน้า Psychomatrix.html ก่อน</p>
-                        <a href="Psychomatrix.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">
-                            <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
-                        </a>
-                    </div>
-
-                    <!-- Results Container -->
-                    <div id="resultsContainer" class="hidden space-y-8">
-                        <!-- Results will be inserted here -->
-                    </div>
-                </div>
-
-                <!-- Explained Tab -->
-                <div id="Explained" class="tab-pane">
-                    <div class="explained-content loading">
-                        <i class="fas fa-hand-pointer text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-600">คลิกที่ตัวเลขในแท็บ <strong>Main</strong> เพื่อดูรายละเอียดที่นี่</p>
-                    </div>
-                </div>
-            </div>
+    <!-- Version Badge -->
+    <div class="version-badge">
+        v5.2-Fixed-Layout
+    </div>
+    
+    <!-- Tab Buttons -->
+    <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
+        <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
+        <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
+    </div>
+    
+    <!-- Main Tab -->
+    <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
+        <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
+            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
+            Psychomatrix Analysis
+        </h1>
+        
+        <!-- Loading State -->
+        <div id="loadingSection" class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">Loading analysis results...</p>
+            <p id="loadingDetails" class="tw-mt-2 tw-text-sm tw-text-gray-500"></p>
         </div>
-
-        <!-- Back Button -->
-        <div class="text-center mt-8">
-            <a href="Psychomatrix.html" class="inline-flex items-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-200">
-                <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์ใหม่
-            </a>
+        
+        <!-- Error State -->
+        <div id="errorSection" class="tw-hidden tw-text-center tw-py-8">
+            <div class="tw-text-red-500 tw-text-4xl tw-mb-4">⚠️</div>
+            <h3 class="tw-text-xl tw-font-semibold tw-text-red-600">No analysis data found</h3>
+            <p id="errorMessage" class="tw-text-gray-600 tw-mt-2">Please fill in the data on Psychomatrix.html first</p>
+            <div id="debugInfo" class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left tw-text-sm tw-font-mono tw-hidden">
+                <p><strong>Debug Information:</strong></p>
+                <p id="debugSessionStorage"></p>
+                <p id="debugURLParams"></p>
+                <p id="debugLocalStorage"></p>
+            </div>
+            <button onclick="window.location.href='Psychomatrix.html'" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Return to Input Form
+            </button>
+            <button onclick="toggleDebugInfo()" class="tw-mt-2 tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Show Debug Info
+            </button>
+        </div>
+        
+        <!-- Results Container -->
+        <div id="resultsContainer" class="tw-hidden">
+            <!-- Results will be inserted here -->
+        </div>
+        
+        <div class="tw-mt-4 tw-text-right">
+            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">Return to Input Form</span>
         </div>
     </div>
+    
+    <!-- Explained Tab -->
+    <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
+        <div id="explainedContent" class="explained-content"></div>
+    </div>
 
-    <!-- Scripts -->
+    <!-- Debug Logger -->
+    <!-- script src="js/debug-logger.js"></script -->
+
     <script>
         // Version Info
-        const VERSION = 'v4.7-Psychomatrix-Result-WORKING';
+        const VERSION = 'v5.2-Fixed-Layout';
         
-       // 🛠️ ตรวจสอบ Path อัตโนมัติ (รองรับทั้ง GitHub และ Local Server)
+        // Configuration for GitHub Pages
         const currentPath = window.location.pathname;
         const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
         const CONTENTS_DIR = 'PsychomatrixContents';
-        
-        // สร้าง URL พื้นฐานสำหรับ Content (Relative)
         const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
-
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 result.html', VERSION, 'loaded');
-            console.log('📍 BASE_PATH:', BASE_PATH);
-            loadAndDisplayResult();
-        });
-
-        // Tab Switching Function
+        
+        console.log('🚀 DEBUG: result.html loaded -', VERSION);
+        console.log('📍 DEBUG: currentPath:', currentPath);
+        console.log('📍 DEBUG: folderPath:', folderPath);
+        console.log('📍 DEBUG: BASE_PATH:', BASE_PATH);
+        console.log('📍 DEBUG: CONTENTS_DIR:', CONTENTS_DIR);
+        
+        // Store pinnacle data
+        let pinnacleData = null;
+        
+        // Tab switching function
         function switchTab(tabName, buttonElement) {
-            const panes = document.querySelectorAll('.tab-pane');
-            panes.forEach(pane => pane.classList.remove('active'));
+            console.log('🔧 DEBUG: Switching to tab:', tabName);
             
-            const buttons = document.querySelectorAll('.tab-button');
-            buttons.forEach(btn => btn.classList.remove('active'));
+            // Hide all tab content
+            const tabContents = document.querySelectorAll('.tabcontent');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
             
-            document.getElementById(tabName).classList.add('active');
-            buttonElement.classList.add('active');
+            // Reset all tab buttons
+            const tabButtons = document.querySelectorAll('.tablink');
+            tabButtons.forEach(btn => {
+                btn.style.backgroundColor = "";
+                btn.style.color = "#aaa";
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Style active button
+            if (buttonElement) {
+                buttonElement.style.backgroundColor = '#f1f2ff';
+                buttonElement.style.color = '#00f';
+            }
         }
-
-        function loadAndDisplayResult() {
-            const loadingEl = document.getElementById('loadingStatus');
-            const noDataEl = document.getElementById('noDataMessage');
+        
+        // Toggle debug info
+        function toggleDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.classList.toggle('tw-hidden');
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌐 DEBUG: DOM Content Loaded');
+            console.log('🌐 DEBUG: Psychomatrix Results Loaded');
+            console.log('🌐 DEBUG: Timestamp:', new Date().toISOString());
+            
+            // Log all sessionStorage keys
+            console.log('🔍 DEBUG: sessionStorage keys:', Object.keys(sessionStorage));
+            
+            // Log specific keys we're looking for
+            const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
+            console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
+            
+            if (psychomatrixResult) {
+                console.log('🔍 DEBUG: psychomatrixResult length:', psychomatrixResult.length);
+                console.log('🔍 DEBUG: psychomatrixResult preview (first 500 chars):', psychomatrixResult.substring(0, 500));
+            }
+            
+            // Check for other possible storage locations
+            const localStorageData = localStorage.getItem('psychomatrixFormData');
+            console.log('🔍 DEBUG: localStorage psychomatrixFormData exists:', !!localStorageData);
+            
+            const lastData = localStorage.getItem('lastPsychomatrixData');
+            console.log('🔍 DEBUG: localStorage lastPsychomatrixData exists:', !!lastData);
+            
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log('🔍 DEBUG: URL Parameters:', urlParams.toString());
+            
+            // Update loading details
+            const loadingDetails = document.getElementById('loadingDetails');
+            if (loadingDetails) {
+                loadingDetails.textContent = `Checking data sources...`;
+            }
+            
+            // Open default tab
+            setTimeout(() => {
+                document.getElementById("defaultOpen").click();
+                
+                // Load and display results
+                setTimeout(() => {
+                    loadAndDisplayResults();
+                }, 100);
+            }, 50);
+        });
+        
+        // Load results from sessionStorage
+        function loadAndDisplayResults() {
+            console.log('🔄 DEBUG: Starting loadAndDisplayResults()');
+            
+            const loadingSection = document.getElementById('loadingSection');
+            const errorSection = document.getElementById('errorSection');
             const resultsContainer = document.getElementById('resultsContainer');
-
+            const loadingDetails = document.getElementById('loadingDetails');
+            
+            if (loadingDetails) {
+                loadingDetails.textContent = `Checking sessionStorage for data...`;
+            }
+            
+            // Read from sessionStorage
             const resultData = sessionStorage.getItem('psychomatrixResult');
             
+            console.log('🔍 DEBUG: Checking sessionStorage for psychomatrixResult:', resultData ? '✅ Data found' : '❌ No data');
+            
             if (!resultData) {
-                loadingEl.classList.add('hidden');
-                noDataEl.classList.remove('hidden');
+                console.log('❌ DEBUG: No data in sessionStorage. Checking other sources...');
+                
+                // Check localStorage as fallback
+                const localStorageData = localStorage.getItem('psychomatrixFormData');
+                const lastData = localStorage.getItem('lastPsychomatrixData');
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `No sessionStorage data. Checking localStorage...`;
+                }
+                
+                // Update debug info
+                const debugSessionStorage = document.getElementById('debugSessionStorage');
+                const debugLocalStorage = document.getElementById('debugLocalStorage');
+                const debugURLParams = document.getElementById('debugURLParams');
+                
+                if (debugSessionStorage) {
+                    debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData ? 'Exists (' + resultData.length + ' chars)' : 'NOT FOUND'}`;
+                }
+                
+                if (debugLocalStorage) {
+                    debugLocalStorage.textContent = `localStorage.psychomatrixFormData: ${localStorageData ? 'Exists' : 'NOT FOUND'} | localStorage.lastPsychomatrixData: ${lastData ? 'Exists' : 'NOT FOUND'}`;
+                }
+                
+                if (debugURLParams) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    debugURLParams.textContent = `URL Parameters: ${urlParams.toString() || 'None'}`;
+                }
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    errorSection.classList.remove('tw-hidden');
+                }, 1000);
                 return;
             }
-
+            
             try {
-                const data = JSON.parse(resultData);
-                console.log('📦 Loaded result data:', data);
-
-                if (!data.success) {
-                    throw new Error(data.error || 'API returned error');
+                console.log('📦 DEBUG: Parsing result data...');
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Parsing JSON data (${resultData.length} characters)...`;
                 }
-
-                let html = '';
                 
-                if (data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    console.log(`📊 Found ${data.results.length} results`);
-                    data.results.forEach((result, index) => {
-                        console.log(`  Result ${index}: ${result.type} | Destiny: ${result.data?.destiny_number} | LifePath: ${result.data?.life_path_number}`);
-                        html += createResultSectionFromResult(result);
-                    });
-                } else {
-                    console.log('📊 Single result mode');
-                    html += createResultSection('single', '📅 ผลการวิเคราะห์', data, 'single');
+                const data = JSON.parse(resultData);
+                console.log('📦 DEBUG: Parsed data structure:', Object.keys(data));
+                console.log('📦 DEBUG: Data content preview:', JSON.stringify(data).substring(0, 300));
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Checking data validity...`;
                 }
-
-                resultsContainer.innerHTML = html;
-                loadingEl.classList.add('hidden');
-                resultsContainer.classList.remove('hidden');
-
+                
+                if (!data.success) {
+                    const errorMsg = data.error || 'API returned error';
+                    console.error('❌ DEBUG: API error:', errorMsg);
+                    throw new Error(errorMsg);
+                }
+                
+                console.log('✅ DEBUG: Data valid. Displaying results...');
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Rendering results...`;
+                }
+                
+                displayResults(data);
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    resultsContainer.classList.remove('tw-hidden');
+                    console.log('✅ DEBUG: Results displayed successfully');
+                }, 500);
+                
             } catch (error) {
-                console.error('❌ Error displaying result:', error);
-                loadingEl.classList.add('hidden');
-                noDataEl.classList.remove('hidden');
-                document.getElementById('noDataMessage').innerHTML = `
-                    <i class="fas fa-exclamation-circle text-red-400 text-5xl mb-4"></i>
-                    <h3 class="text-xl font-semibold text-red-500 mb-2">เกิดข้อผิดพลาด</h3>
-                    <p class="text-gray-400 mb-6">${error.message}</p>
-                    <a href="Psychomatrix.html" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">
-                        <i class="fas fa-arrow-left mr-2"></i>กลับไปหน้าวิเคราะห์
-                    </a>
-                `;
+                console.error('❌ DEBUG: Error in loadAndDisplayResults:', error);
+                console.error('❌ DEBUG: Error stack:', error.stack);
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Error: ${error.message}`;
+                }
+                
+                // Update error message
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = `Error: ${error.message}`;
+                }
+                
+                // Show debug info
+                const debugSessionStorage = document.getElementById('debugSessionStorage');
+                if (debugSessionStorage && resultData) {
+                    debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData.substring(0, 200)}...`;
+                }
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    errorSection.classList.remove('tw-hidden');
+                }, 1000);
             }
         }
-
+        
+        // Display results from API
+        function displayResults(data) {
+            console.log('🎨 DEBUG: Starting displayResults()');
+            console.log('🎨 DEBUG: Data received:', data);
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            let html = '';
+            
+            console.log('🎨 DEBUG: Checking results structure...');
+            console.log('🎨 DEBUG: data.results:', data.results);
+            console.log('🎨 DEBUG: data.data:', data.data);
+            
+            if (data.results && Array.isArray(data.results)) {
+                console.log(`🎨 DEBUG: Found ${data.results.length} results in array`);
+                data.results.forEach((result, index) => {
+                    console.log(`🎨 DEBUG: Result ${index}:`, result);
+                    html += createResultSectionFromResult(result);
+                });
+            } else if (data.data) {
+                console.log('🎨 DEBUG: Using single result mode with data.data');
+                html += createResultSection('single', '📅 Analysis Result', data.data || data, 'single');
+            } else {
+                console.log('🎨 DEBUG: No standard structure found, creating fallback display');
+                html += createFallbackDisplay(data);
+            }
+            
+            resultsContainer.innerHTML = html;
+            console.log('✅ DEBUG: HTML content set, length:', html.length);
+        }
+        
         function createResultSectionFromResult(result) {
             const type = result.type || 'unknown';
-            const title = result.title || '📊 ผลการวิเคราะห์';
+            const title = result.title || '📊 Analysis Result';
             const data = result.data || {};
             const databaseData = result.database_data || null;
             
             return createResultSection(type, title, {...data, life_path_data: databaseData}, type);
         }
-
+        
         function createResultSection(id, title, data, type) {
             const destinyNum = data.destiny_number;
             const lifePathNum = data.life_path_number;
             const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
             
+            // Extract pinnacle data if available
+            if (data.birth_date && destinyNum) {
+                pinnacleData = {
+                    lifePathNumber: lifePathNum || destinyNum,
+                    birth_date: data.birth_date,
+                    UDate: data.birth_date ? data.birth_date.split('/')[0] : '',
+                    UMonth: data.birth_date ? data.birth_date.split('/')[1] : '',
+                    UYear: data.birth_date ? data.birth_date.split('/')[2] : ''
+                };
+                console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
+            }
+            
             return `
                 <div class="result-section">
                     <div class="section-header">
-                        <i class="fas fa-chart-bar mr-2"></i>${title}
+                        <i class="fas fa-chart-bar tw-mr-2"></i>${title}
                     </div>
                     <div class="section-content">
+                        <!-- Display basic info -->
+                        <div class="tw-mb-6 tw-p-4 tw-bg-gray-50 tw-rounded-lg">
+                            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
+                                ${data.birth_date ? `
+                                    <div class="tw-text-center">
+                                        <div class="tw-text-sm tw-text-gray-500">Date of Birth</div>
+                                        <div class="number-display tw-text-blue-600">${data.birth_date}</div>
+                                    </div>
+                                ` : ''}
+                                
+                                ${data.full_name ? `
+                                    <div class="tw-text-center">
+                                        <div class="tw-text-sm tw-text-gray-500">Full Name</div>
+                                        <div class="tw-text-lg tw-font-semibold tw-text-gray-800">${data.full_name}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Number Grid -->
                         <div class="data-grid">
                             <div class="data-item">
                                 <div class="label">Destiny Number</div>
                                 ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
-                                <div class="description">${data.destiny_meaning || ''}</div>
+                                <div class="description">${data.destiny_meaning || 'Personality and destiny'}</div>
                             </div>
                             <div class="data-item">
                                 <div class="label">Life Path Number</div>
                                 ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
-                                <div class="description">เส้นทางชีวิต</div>
+                                <div class="description">Life path and purpose</div>
                             </div>
                             <div class="data-item">
                                 <div class="label">Karmic Number</div>
-                                <div class="text-2xl font-bold text-red-700">${data.thirdAndFourth?.karmic || '-'}</div>
-                                <div class="description">ภาระกรรม</div>
+                                <div class="text-gray">${data.thirdAndFourth?.karmic || '-'}</div>
+                                <div class="description">Karmic debt</div>
                             </div>
                             <div class="data-item">
                                 <div class="label">Life Lesson</div>
                                 ${createNumberButton(lifeLessonNum, 'KarmicLesson', lifeLessonNum)}
-                                <div class="description">บทเรียนชีวิต</div>
+                                <div class="description">Life lessons</div>
                             </div>
                         </div>
-
+                        
                         ${data.life_path_data ? `
-                            <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-                                <h4 class="font-bold text-blue-800 mb-2">
-                                    <i class="fas fa-database mr-2"></i>ข้อมูลจากฐานข้อมูล
+                            <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
+                                <h4 class="tw-font-bold tw-text-blue-800 tw-mb-3 tw-text-lg">
+                                    <i class="fas fa-database tw-mr-2"></i>Database Information
                                 </h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-text-sm">
                                     ${Object.entries(data.life_path_data).map(([key, value]) => `
-                                        <div>
-                                            <span class="font-medium text-gray-700">${key.replace(/_/g, ' ')}:</span>
-                                            <span class="text-gray-600">${value || '-'}</span>
+                                        <div class="tw-py-2 tw-border-b tw-border-blue-100 last:tw-border-b-0">
+                                            <span class="tw-font-medium tw-text-gray-700">${key.replace(/_/g, ' ')}:</span>
+                                            <span class="tw-text-gray-600">${value || '-'}</span>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                         ` : ''}
-
-                        <div class="mt-6">
-                            <h4 class="font-bold text-gray-800 mb-3">
-                                <i class="fas fa-th-large mr-2"></i>Pythagorean Square
-                            </h4>
-                            <div class="pythagorean-grid">
-                                <div class="pythagorean-cell">1</div>
-                                <div class="pythagorean-cell">2</div>
-                                <div class="pythagorean-cell">3</div>
-                                <div class="pythagorean-cell">4</div>
-                                <div class="pythagorean-cell active">5</div>
-                                <div class="pythagorean-cell">6</div>
-                                <div class="pythagorean-cell">7</div>
-                                <div class="pythagorean-cell">8</div>
-                                <div class="pythagorean-cell">9</div>
-                            </div>
-                            <div class="mt-3 p-3 bg-yellow-50 rounded-lg text-sm text-gray-700">
-                                <i class="fas fa-info-circle mr-2"></i>
-                                <strong>สรุปผลเลขแวดล้อมที่มีอิทธิผลสูง:</strong>
-                                <span class="ml-2">กำลังพัฒนา...</span>
-                            </div>
+                        
+                        <!-- Buttons for additional content -->
+                        <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
+                            <button onclick="loadPythagoreanSquare()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                                Pythagorean Square
+                            </button>
+                            <button onclick="loadPinnacle()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4 tw-text-lg">
+                                Pinnacle Cycle
+                            </button>
                         </div>
                     </div>
                 </div>
             `;
         }
-
+        
         function createNumberButton(number, category, actualNumber) {
             if (!number) return `<div class="text-gray">-</div>`;
             
             const isActive = number === actualNumber;
             
-            // ✨ **EXPLICIT FILENAME MAPPING - ชัดเจน ไม่ผิดพลาด**
+            // Filename mapping
             let filename;
             switch(category) {
                 case 'Destiny':
                     filename = `Destiny${number}.html`;
                     break;
                 case 'LifePath':
-                    filename = `LifePathNumber${number}.html`; // ✨ ถูกต้อง
+                    filename = `LifePathNumber${number}.html`;
                     break;
                 case 'KarmicLesson':
                     filename = `KarmicLesson${number}.html`;
@@ -536,7 +765,7 @@
             
             if (isActive) {
                 return `
-                    <button class="number-button active" 
+                    <button class="number-button" 
                             onclick="loadExplainedContent('${url}', '${category}', ${number})">
                         ${number}
                     </button>
@@ -545,21 +774,166 @@
                 return `<div class="text-gray">${number}</div>`;
             }
         }
-
-/*
-        function loadExplainedContent(url, category, number) {
-            const explainedContent = document.querySelector('#Explained .explained-content');
+        
+        function createFallbackDisplay(data) {
+            console.log('🎨 DEBUG: Creating fallback display for data:', data);
             
-            console.log(`🔄 Loading ${category}${number} from: ${url}`);
+            return `
+                <div class="result-section">
+                    <div class="section-header">
+                        <i class="fas fa-exclamation-triangle tw-mr-2"></i>Raw Analysis Result
+                    </div>
+                    <div class="section-content">
+                        <p class="tw-ml-4 tw-mt-2 tw-text-gray-600">The data structure is not in the expected format. Here's what was received:</p>
+                        <div class="tw-ml-4 tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-font-mono tw-text-sm">
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                        
+                        <!-- Buttons for additional content -->
+                        <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
+                            <button onclick="loadPythagoreanSquare()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block">
+                                Pythagorean Square
+                            </button>
+                            <button onclick="loadPinnacle()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4">
+                                Pinnacle Cycle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load Pythagorean Square
+        function loadPythagoreanSquare() {
+            console.log('📖 DEBUG: Loading Pythagorean Square');
+            const url = `${BASE_PATH}/PythagoreanSquare.html`;
+            console.log('📖 DEBUG: URL:', url);
+            loadContent(url, 'Pythagorean Square');
+        }
+        
+        // Load Pinnacle
+        function loadPinnacle() {
+            console.log('📖 DEBUG: Loading Pinnacle Cycle');
+            if (!pinnacleData || !pinnacleData.lifePathNumber) {
+                alert('⚠️ No birth date data available for Pinnacle Cycle analysis');
+                console.log('⚠️ DEBUG: No pinnacleData available:', pinnacleData);
+                return;
+            }
+            
+            const url = `${BASE_PATH}/pinnacle.html`;
+            console.log('📖 DEBUG: Pinnacle URL:', url);
+            loadContent(url, 'Pinnacle Cycle');
+        }
+        
+        // Load Numerology Content
+        function loadNumerologyContent(category, number) {
+            console.log(`📖 DEBUG: Loading ${category} ${number}`);
+            
+            let filename;
+            switch(category) {
+                case 'Destiny':
+                    filename = `Destiny${number}.html`;
+                    break;
+                case 'LifePath':
+                    filename = `LifePathNumber${number}.html`;
+                    break;
+                case 'KarmicLesson':
+                    filename = `KarmicLesson${number}.html`;
+                    break;
+                default:
+                    filename = `${category}${number}.html`;
+            }
+            
+            const url = `${BASE_PATH}/${filename}`;
+            console.log('📖 DEBUG: Numerology URL:', url);
+            loadExplainedContent(url, category, number);
+        }
+        
+        // Load content into Explained tab
+        function loadContent(url, title) {
+            console.log(`📥 DEBUG: Starting loadContent for ${title} from ${url}`);
+            
+            const explainedContent = document.getElementById('explainedContent');
+            const explainedButton = document.querySelector('.tablink:nth-child(2)');
+            
+            if (!explainedContent) {
+                console.error('❌ DEBUG: explainedContent element not found!');
+                return;
+            }
             
             explainedContent.innerHTML = `
-                <div class="explained-content loading">
-                    <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
-                    <p>กำลังโหลด ${category} ${number}...</p>
+                <div class="tw-text-center tw-py-8">
+                    <div class="spinner"></div>
+                    <p class="tw-mt-4 tw-text-gray-600">Loading ${title}...</p>
+                    <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
                 </div>
             `;
             
-            const explainedButton = document.querySelector('.tab-button:nth-child(2)');
+            switchTab('Explained', explainedButton);
+            
+            console.log(`📥 DEBUG: Fetching ${url}`);
+            
+            fetch(url)
+                .then(response => {
+                    console.log(`📥 DEBUG: Fetch response status: ${response.status} ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log(`✅ DEBUG: Success loading ${url}, length: ${html.length} characters`);
+                    
+                    // Fix relative paths
+                    const fixedHtml = fixRelativePaths(html);
+                    
+                    explainedContent.innerHTML = `
+                        <div class="external-content-body">
+                            ${fixedHtml}
+                        </div>
+                    `;
+                    
+                    console.log('✅ DEBUG: Content loaded into explainedContent');
+                    
+                    // เรียกฟังก์ชันปรับปรุง layout หลังจากโหลดเนื้อหาเสร็จ
+                    setTimeout(() => {
+                        adjustExplainedLayout();
+                    }, 100);
+                    
+                })
+                .catch(error => {
+                    console.error(`❌ DEBUG: Error loading ${url}:`, error);
+                    explainedContent.innerHTML = `
+                        <div class="tw-text-center tw-py-8 tw-text-red-500">
+                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                            <p class="tw-font-bold">Cannot load content</p>
+                            <p class="tw-text-sm">${error.message}</p>
+                            <p class="tw-text-sm tw-text-gray-500 tw-mt-2">URL: ${url}</p>
+                            <button onclick="window.open('${url}', '_blank')" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded">
+                                Open in New Tab
+                            </button>
+                        </div>
+                    `;
+                });
+        }
+        
+        // Load explained content (สำหรับปุ่มตัวเลข)
+        function loadExplainedContent(url, category, number) {
+            console.log(`🔄 DEBUG: Loading ${category} ${number} from: ${url}`);
+            
+            const explainedContent = document.getElementById('explainedContent');
+            const explainedButton = document.querySelector('.tablink:nth-child(2)');
+            
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8">
+                    <div class="spinner"></div>
+                    <p class="tw-mt-4 tw-text-gray-600">Loading ${category} ${number}...</p>
+                    <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
+                </div>
+            `;
+            
             switchTab('Explained', explainedButton);
             
             fetch(url, { 
@@ -574,209 +948,159 @@
                     return response.text();
                 })
                 .then(html => {
-                    console.log(`✅ Success loading ${url}`);
+                    console.log(`✅ DEBUG: Success loading ${url} (${html.length} bytes)`);
                     
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
+                    // Fix relative paths
+                    const fixedHtml = fixRelativePaths(html);
                     
-                    // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-                    fixRelativePathsInDom(doc);
-                    
-                    // Remove all <link> tags
-                    const links = doc.querySelectorAll('link');
-                    links.forEach(link => link.remove());
-                    
-                    // let content = doc.body?.innerHTML || doc.documentElement.innerHTML;
-                    
-                    // if (!content || content.trim() === '') {
-                    //    throw new Error('เนื้อหาว่างเปล่า');
-                    // }
-                    
-                    
-                    // นำเฉพาะส่วน Body มาแสดง และหุ้มด้วย Class ที่เราเตรียมไว้
-                    const pureContent = doc.body.innerHTML;
-                    
-                    
-                    // นำเนื้อหามาใส่โดยหุ้มด้วย class เพื่อให้ CSS ที่เราเพิ่มไว้ทำงาน
-                    // และรักษาสไตล์จาก style.css เดิม
                     explainedContent.innerHTML = `
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                                <div class="flex items-baseline gap-2">
-                                    <span class="text-xs font-black text-blue-400 uppercase tracking-widest">${category}</span>
-                                    <h2 class="text-2xl font-black text-blue-900">${number}</h2>
-                                </div>
-                            </div>
-                            
-                            <div class="external-content-body">
-                                ${pureContent}
-                            </div>
+                        <div class="external-content-body">
+                            ${fixedHtml}
                         </div>
                     `;
-
-  
+                    
+                    // เรียกฟังก์ชันปรับปรุง layout หลังจากโหลดเนื้อหาเสร็จ
+                    setTimeout(() => {
+                        adjustExplainedLayout();
+                    }, 100);
                     
                 })
                 .catch(error => {
-                    console.error(`❌ Error loading ${url}:`, error);
+                    console.error(`❌ DEBUG: Error loading ${url}:`, error);
                     explainedContent.innerHTML = `
-                        <div class="text-center py-8 text-red-500">
-                            <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-                            <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
-                            <p class="text-sm">${error.message}</p>
-                            <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
+                        <div class="tw-text-center tw-py-8 tw-text-red-500">
+                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                            <p class="tw-font-bold">Cannot load content</p>
+                            <p class="tw-text-sm">${error.message}</p>
+                            <p class="tw-text-sm tw-text-gray-500 tw-mt-2">URL: ${url}</p>
                         </div>
                     `;
                 });
         }
-*/
-
-
-
-
-function loadExplainedContent(url, category, number) {
-    const explainedContent = document.querySelector('#Explained .explained-content');
-    
-    console.log(`🔄 Loading ${category}${number} from: ${url}`);
-    
-    explainedContent.innerHTML = `
-        <div class="explained-content loading">
-            <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-4"></i>
-            <p>กำลังโหลด ${category} ${number}...</p>
-        </div>
-    `;
-    
-    const explainedButton = document.querySelector('.tab-button:nth-child(2)');
-    switchTab('Explained', explainedButton);
-    
-    fetch(url, { 
-        method: 'GET',
-        cache: 'no-cache',
-        headers: { 'Accept': 'text/html' }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.text();
-        })
-        .then(html => {
-            console.log(`✅ Success loading ${url} (${html.length} bytes)`);
+        
+        // ปรับปรุง layout ของเนื้อหาใน Explained Tab
+        function adjustExplainedLayout() {
+            const explainedContent = document.getElementById('explainedContent');
+            if (!explainedContent) return;
             
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // 🔧 ลบ CSS ที่อาจขัดขวาง
-            const elementsToRemove = doc.querySelectorAll('link[rel="stylesheet"], style, script');
-            elementsToRemove.forEach(el => el.remove());
-            
-            // แก้ไขพาธ
-            fixRelativePathsInDom(doc);
-            
-          //   const pureContent = doc.body?.innerHTML || doc.documentElement.innerHTML;
-            
-         
-                    // นำเฉพาะส่วน Body มาแสดง
-                    const pureContent = doc.body.innerHTML;
-                    
-                    explainedContent.innerHTML = `
-                        <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="px-6 py-3 bg-gray-50 border-b border-gray-100">
-                                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">${category} ${number}</span>
-                            </div>
-                            
-                            <div class="external-content-body">
-                                ${pureContent}
-                            </div>
-                        </div>
-                    `;
-
-                    // ล้างคำสั่ง Inline style เดิมๆ ที่อาจจะติดมากับรูปภาพ
-                    setTimeout(() => {
-                        const images = explainedContent.querySelectorAll('img');
-                        images.forEach(img => {
-                            img.removeAttribute('style'); // ล้าง style เก่าทิ้งเพื่อให้ CSS ใหม่คุม 100%
-                        });
-                    }, 50);
-
-            
-        })
-        .catch(error => {
-            console.error(`❌ Error loading ${url}:`, error);
-            explainedContent.innerHTML = `
-                <div class="text-center py-8 text-red-500">
-                    <i class="fas fa-exclamation-triangle text-3xl mb-4"></i>
-                    <p class="font-bold">ไม่สามารถโหลดเนื้อหาได้</p>
-                    <p class="text-sm">${error.message}</p>
-                    <p class="text-sm text-gray-500 mt-2">URL: ${url}</p>
-                </div>
-            `;
-        });
-}
-
-
-
-
-
-        // 🔧 **DOM-based path fixing - สมบูรณ์แบบ**
-        function fixRelativePathsInDom(doc) {
-            console.log('  🔧 Fixing relative paths in DOM...');
-            
-            // Fix img src
-            const images = doc.querySelectorAll('img');
-            images.forEach(img => {
-                const src = img.getAttribute('src');
-                if (src && !src.startsWith('http') && !src.startsWith('/') && !src.startsWith('data:')) {
-                    const newSrc = `${BASE_PATH}/${src}`;
-                    img.setAttribute('src', newSrc);
-                    console.log(`    ✓ Fixed img: ${src} → ${newSrc}`);
-                }
-            });
-            
-            // Fix link href (CSS)
-            const links = doc.querySelectorAll('link');
-            links.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('mailto') && !href.startsWith('tel')) {
-                    const newHref = `${BASE_PATH}/${href}`;
-                    link.setAttribute('href', newHref);
-                    console.log(`    ✓ Fixed link: ${href} → ${newHref}`);
-                }
-            });
-            
-            // Fix style background-image
-            const styledElements = doc.querySelectorAll('[style]');
-            styledElements.forEach(el => {
-                const style = el.getAttribute('style');
-                if (style && style.includes('background-image')) {
-                    const newStyle = style.replace(
-                        /background-image:\s*url\(['"]?(?!http|\/|data:)([^'")]+)['"]?\)/g,
-                        `background-image: url('${BASE_PATH}/$1')`
-                    );
-                    if (newStyle !== style) {
-                        el.setAttribute('style', newStyle);
-                        console.log(`    ✓ Fixed background-image in style`);
+            // หา header ในเนื้อหาที่โหลดมา
+            const pageHeader = explainedContent.querySelector('.page-header');
+            if (pageHeader) {
+                // ตรวจสอบว่ามี modern-number-overlay หรือไม่
+                const modernNumberOverlay = pageHeader.querySelector('.modern-number-overlay');
+                if (modernNumberOverlay) {
+                    // ถ้ามีให้ปรับแต่งเพิ่มเติม
+                    const numbers = modernNumberOverlay.querySelectorAll('.modern-number');
+                    if (numbers.length >= 2) {
+                        numbers[0].style.left = '0';
+                        numbers[0].style.top = '0';
+                        numbers[0].style.width = '120px';
+                        numbers[0].style.height = '120px';
+                        
+                        numbers[1].style.left = '20px';
+                        numbers[1].style.top = '20px';
+                        numbers[1].style.width = '120px';
+                        numbers[1].style.height = '120px';
+                        numbers[1].style.opacity = '0.6';
                     }
                 }
-            });
+            }
             
-            // Fix srcset
-            const srcsetElements = doc.querySelectorAll('[srcset]');
-            srcsetElements.forEach(el => {
-                const srcset = el.getAttribute('srcset');
-                if (srcset && !srcset.startsWith('http') && !srcset.startsWith('/') && !srcset.startsWith('data:')) {
-                    const newSrcset = srcset.split(',').map(src => {
-                        const parts = src.trim().split(' ');
-                        parts[0] = `${BASE_PATH}/${parts[0]}`;
-                        return parts.join(' ');
-                    }).join(', ');
-                    el.setAttribute('srcset', newSrcset);
-                    console.log(`    ✓ Fixed srcset: ${srcset} → ${newSrcset}`);
-                }
-            });
-            
-            console.log(`    ✅ Fixed ${images.length} images, ${links.length} links, ${styledElements.length} styled elements`);
+            // ปรับปรุงหัวข้อ h1 ให้มีระยะห่างที่เหมาะสม
+            const h1 = explainedContent.querySelector('h1');
+            if (h1) {
+                h1.style.marginLeft = '20px';
+                h1.style.paddingTop = '10px';
+                h1.style.maxWidth = 'calc(100% - 160px)';
+            }
         }
+        
+        // Fix relative paths for GitHub Pages
+        function fixRelativePaths(html) {
+            console.log('🔧 DEBUG: Fixing relative paths in HTML');
+            
+            let fixedHtml = html;
+            
+            // Fix img src paths
+            fixedHtml = fixedHtml.replace(/src="([^"]*)"/g, function(match, path) {
+                if (path.startsWith('http') || path.startsWith('//') || path.startsWith('data:')) {
+                    return match;
+                }
+                
+                let newPath;
+                if (path.startsWith('/')) {
+                    newPath = `${BASE_PATH}${path}`;
+                } else if (path.startsWith('./')) {
+                    newPath = `${BASE_PATH}/${path.substring(2)}`;
+                } else {
+                    newPath = `${BASE_PATH}/${path}`;
+                }
+                
+                console.log(`🔧 DEBUG: Fixed img path: ${path} -> ${newPath}`);
+                return `src="${newPath}"`;
+            });
+            
+            // Fix link href paths for CSS
+            fixedHtml = fixedHtml.replace(/href="([^"]*\.css)"/g, function(match, path) {
+                if (path.startsWith('http') || path.startsWith('//')) {
+                    return match;
+                }
+                
+                let newPath;
+                if (path.startsWith('/')) {
+                    newPath = `${BASE_PATH}${path}`;
+                } else if (path.startsWith('./')) {
+                    newPath = `${BASE_PATH}/${path.substring(2)}`;
+                } else {
+                    newPath = `${BASE_PATH}/${path}`;
+                }
+                
+                console.log(`🔧 DEBUG: Fixed CSS path: ${path} -> ${newPath}`);
+                return `href="${newPath}"`;
+            });
+            
+            return fixedHtml;
+        }
+        
+        // Manual test function
+        window.testResultPage = function() {
+            console.log('🧪 DEBUG: Manual test started');
+            
+            // Test with sample data
+            const sampleData = {
+                success: true,
+                results: [
+                    {
+                        title: 'Sample Analysis',
+                        type: 'basic',
+                        data: {
+                            destiny_number: 11,
+                            life_path_number: 6,
+                            birth_date: '22/05/1968',
+                            full_name: 'John Smith',
+                            destiny_meaning: 'Intuitive and inspiring leader',
+                            thirdAndFourth: {
+                                karmic: '40',
+                                lifeLesson: 5
+                            }
+                        },
+                        database_data: {
+                            traits: 'Intuitive, Family-oriented',
+                            career: 'Counselor, Teacher',
+                            challenges: 'Over-sensitivity'
+                        }
+                    }
+                ]
+            };
+            
+            sessionStorage.setItem('psychomatrixResult', JSON.stringify(sampleData));
+            console.log('🧪 DEBUG: Sample data set in sessionStorage');
+            
+            // Reload the page
+            location.reload();
+        };
+        
+        console.log('✅ DEBUG: result.html script loaded completely');
     </script>
 </body>
 </html>
