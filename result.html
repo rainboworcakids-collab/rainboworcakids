@@ -665,36 +665,18 @@
                         <i class="fas fa-chart-bar tw-mr-2"></i>${title}
                     </div>
                     <div class="section-content">
-                        <!-- Display basic info -->
-                        <div class="tw-mb-6 tw-p-4 tw-bg-gray-50 tw-rounded-lg">
-                            <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4">
-                                ${data.birth_date ? `
-                                    <div class="tw-text-center">
-                                        <div class="tw-text-sm tw-text-gray-500">Date of Birth</div>
-                                        <div class="number-display tw-text-blue-600">${data.birth_date}</div>
-                                    </div>
-                                ` : ''}
-                                
-                                ${data.full_name ? `
-                                    <div class="tw-text-center">
-                                        <div class="tw-text-sm tw-text-gray-500">Full Name</div>
-                                        <div class="tw-text-lg tw-font-semibold tw-text-gray-800">${data.full_name}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
                         
                         <!-- Number Grid -->
                         <div class="data-grid">
                             <div class="data-item">
-                                <div class="label">Destiny Number</div>
-                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
-                                <div class="description">${data.destiny_meaning || 'Personality and destiny'}</div>
-                            </div>
-                            <div class="data-item">
                                 <div class="label">Life Path Number</div>
                                 ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
                                 <div class="description">Life path and purpose</div>
+                            </div>                        
+                            <div class="data-item">
+                                <div class="label">Destiny Number</div>
+                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
+                                <div class="description">${data.destiny_meaning || 'Personality and destiny'}</div>
                             </div>
                             <div class="data-item">
                                 <div class="label">Karmic Number</div>
@@ -710,9 +692,6 @@
                         
                         ${data.life_path_data ? `
                             <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                                <h4 class="tw-font-bold tw-text-blue-800 tw-mb-3 tw-text-lg">
-                                    <i class="fas fa-database tw-mr-2"></i>Database Information
-                                </h4>
                                 <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-text-sm">
                                     ${Object.entries(data.life_path_data).map(([key, value]) => `
                                         <div class="tw-py-2 tw-border-b tw-border-blue-100 last:tw-border-b-0">
