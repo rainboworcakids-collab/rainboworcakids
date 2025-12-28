@@ -22,7 +22,7 @@
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
     <style>
-        /* Version badge */
+        /* (CSS styles remain the same, no changes needed) */
         .version-badge {
             position: fixed;
             top: 10px;
@@ -312,6 +312,53 @@
                 padding: 0.4rem 0.6rem;
             }
         }
+        
+        /* NEW: Styles for LifePathProperty.json data display */
+        .life-path-details {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6f7ff 100%);
+            border-radius: 0.75rem;
+            border: 1px solid #dbeafe;
+        }
+        
+        .life-path-details h3 {
+            color: #1e40af;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #93c5fd;
+            padding-bottom: 0.5rem;
+        }
+        
+        .life-path-detail-item {
+            margin-bottom: 1.25rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .life-path-detail-item h4 {
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .life-path-detail-item p {
+            color: #4b5563;
+            line-height: 1.5;
+        }
+        
+        .inherent-dread {
+            background: #fef2f2 !important;
+            border-left: 4px solid #ef4444;
+        }
+        
+        .inherent-dread h4 {
+            color: #dc2626;
+        }
     </style>
     
     <!-- Tailwind config -->
@@ -328,7 +375,7 @@
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v5.2-Fixed-Layout
+        v5.7-Fixed-Errors
     </div>
     
     <!-- Tab Buttons -->
@@ -384,13 +431,12 @@
     <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
         <div id="explainedContent" class="explained-content"></div>
     </div>
-
-    <!-- Debug Logger -->
-    <!-- script src="js/debug-logger.js"></script -->
+    <!--  โหลด Debug Logger ก่อน -->
+    <script src="js/debug-logger.js"></script>
 
     <script>
         // Version Info
-        const VERSION = 'v5.2-Fixed-Layout';
+        const VERSION = 'v5.5-Fixed-Errors';
         
         // Configuration for GitHub Pages
         const currentPath = window.location.pathname;
@@ -406,6 +452,9 @@
         
         // Store pinnacle data
         let pinnacleData = null;
+        
+        // Store LifePathProperty.json data
+        let lifePathProperties = null;
         
         // Tab switching function
         function switchTab(tabName, buttonElement) {
@@ -489,8 +538,156 @@
             }, 50);
         });
         
+        // Load LifePathProperty.json - FIXED: ใช้ชื่อฟังก์ชันที่ถูกต้อง
+        async function loadLifePathProperties() {
+            console.log('🔄 DEBUG: loadLifePathProperties() called');
+            
+            // ลองหลายๆ path ที่เป็นไปได้
+            const possiblePaths = [
+                `${folderPath}/data/LifePathProperty.json`,
+                `./data/LifePathProperty.json`,
+                `../data/LifePathProperty.json`,
+                `${window.location.origin}${folderPath}/data/LifePathProperty.json`
+            ];
+            
+            for (const lifePathUrl of possiblePaths) {
+                console.log(`📂 DEBUG: Trying to load LifePathProperty.json from:`, lifePathUrl);
+                
+                try {
+                    const response = await fetch(lifePathUrl);
+                    console.log(`📂 DEBUG: Fetch response for ${lifePathUrl}:`, response.status, response.statusText);
+                    
+                    if (!response.ok) {
+                        console.log(`❌ DEBUG: Failed to load from ${lifePathUrl}, trying next...`);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ DEBUG: Loaded LifePathProperty.json successfully from:', lifePathUrl);
+                    console.log('✅ DEBUG: Raw data type:', typeof data);
+                    console.log('✅ DEBUG: Data structure:', data);
+                    
+                    // Handle different data structures
+                    if (Array.isArray(data)) {
+                        console.log('✅ DEBUG: Data is an array, length:', data.length);
+                        lifePathProperties = data;
+                    } else if (typeof data === 'object' && data !== null) {
+                        console.log('✅ DEBUG: Data is an object, keys:', Object.keys(data));
+                        
+                        // Try to convert object to array
+                        // Method 1: Check if it has numeric keys (like {"1": {...}, "2": {...}})
+                        const numericKeys = Object.keys(data).filter(key => !isNaN(key));
+                        if (numericKeys.length > 0) {
+                            console.log('✅ DEBUG: Object has numeric keys, converting to array');
+                            lifePathProperties = Object.values(data).map((item, index) => {
+                                // Ensure each item has LifePathNumber
+                                if (!item.LifePathNumber && numericKeys[index]) {
+                                    item.LifePathNumber = parseInt(numericKeys[index]);
+                                }
+                                return item;
+                            });
+                        } 
+                        // Method 2: Try to access by LifePathNumber property
+                        else if (Object.values(data).some(item => item.LifePathNumber)) {
+                            console.log('✅ DEBUG: Object values have LifePathNumber property');
+                            lifePathProperties = Object.values(data);
+                        } else {
+                            console.log('⚠️ DEBUG: Object structure not recognized, using as-is');
+                            lifePathProperties = data; // Keep as object
+                        }
+                    } else {
+                        console.error('❌ DEBUG: Unknown data format:', typeof data);
+                        lifePathProperties = null;
+                    }
+                    
+                    console.log('✅ DEBUG: Final lifePathProperties:', lifePathProperties);
+                    return lifePathProperties;
+                    
+                } catch (error) {
+                    console.log(`❌ DEBUG: Error loading from ${lifePathUrl}:`, error.message);
+                    continue;
+                }
+            }
+            
+            console.error('❌ DEBUG: Failed to load LifePathProperty.json from all paths');
+            lifePathProperties = null;
+            return null;
+        }
+        
+        // Get life path details from JSON - FIXED: ใช้ทั้ง array และ object
+        function getLifePathDetails(lifePathNumber) {
+    console.log("🔍 DEBUG: getLifePathDetails() called for number:", lifePathNumber);
+    
+    // ตรวจสอบว่า lifePathProperties มีข้อมูลและมีโครงสร้างถูกต้อง
+    if (!lifePathProperties || !lifePathProperties.LifePath || !Array.isArray(lifePathProperties.LifePath)) {
+        console.log("❌ DEBUG: lifePathProperties not loaded properly or wrong structure");
+        return null;
+    }
+    
+    // แปลงตัวเลขเป็น string เพื่อค้นหา (เพราะใน JSON เก็บ ID เป็น string)
+    const targetId = lifePathNumber.toString();
+    
+    console.log("🔍 DEBUG: Searching for ID:", targetId);
+    console.log("🔍 DEBUG: LifePath array length:", lifePathProperties.LifePath.length);
+    
+    // ค้นหาใน array LifePath
+    const foundItem = lifePathProperties.LifePath.find(item => {
+        if (item && item.ID) {
+            const match = item.ID === targetId;
+            if (match) {
+                console.log("✅ DEBUG: Found matching item:", item);
+            }
+            return match;
+        }
+        return false;
+    });
+    
+    if (foundItem) {
+        console.log("✅ DEBUG: Successfully found life path details for number:", lifePathNumber);
+        return foundItem;
+    } else {
+        console.log("❌ DEBUG: No life path found for number:", lifePathNumber);
+        console.log("❌ DEBUG: Available IDs:", lifePathProperties.LifePath.map(item => item.ID));
+        return null;
+    }
+}
+        
+        
+        // Create HTML for life path details
+        function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
+            console.log('🖼️ DEBUG: createLifePathDetailsHTML() called');
+            console.log('🖼️ DEBUG: lifePathNumber:', lifePathNumber);
+            console.log('🖼️ DEBUG: lifePathData:', lifePathData);
+            
+            if (!lifePathData) {
+                console.log('⚠️ DEBUG: No lifePathData for number:', lifePathNumber);
+                return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
+            }
+            
+            return `
+                <div class="life-path-details">
+                    <h3>Life Path Number ${lifePathNumber} Details</h3>
+                    
+                    <div class="life-path-detail-item">
+                        <h4>Short Definition</h4>
+                        <p>${lifePathData.ShortDefinition || 'No definition available'}</p>
+                    </div>
+                    
+                    <div class="life-path-detail-item">
+                        <h4>Meaning</h4>
+                        <p>${lifePathData.MEANING || 'No meaning available'}</p>
+                    </div>
+                    
+                    <div class="life-path-detail-item inherent-dread">
+                        <h4>Inherent Dread</h4>
+                        <p>${lifePathData.InherentDread || 'No inherent dread specified'}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
         // Load results from sessionStorage
-        function loadAndDisplayResults() {
+        async function loadAndDisplayResults() {
             console.log('🔄 DEBUG: Starting loadAndDisplayResults()');
             
             const loadingSection = document.getElementById('loadingSection');
@@ -550,8 +747,17 @@
                 }
                 
                 const data = JSON.parse(resultData);
-                console.log('📦 DEBUG: Parsed data structure:', Object.keys(data));
-                console.log('📦 DEBUG: Data content preview:', JSON.stringify(data).substring(0, 300));
+                console.log('📦 DEBUG: Parsed data structure:', data);
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Loading Life Path properties...`;
+                }
+                
+                // Load LifePathProperty.json
+                console.log('📦 DEBUG: Calling loadLifePathProperties()...');
+                await loadLifePathProperties();
+                console.log('📦 DEBUG: loadLifePathProperties() completed');
+                console.log('📦 DEBUG: lifePathProperties after load:', lifePathProperties);
                 
                 if (loadingDetails) {
                     loadingDetails.textContent = `Checking data validity...`;
@@ -647,6 +853,8 @@
             const lifePathNum = data.life_path_number;
             const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
             
+            console.log('🎨 DEBUG: Creating result section with data:', { destinyNum, lifePathNum, lifeLessonNum });
+            
             // Extract pinnacle data if available
             if (data.birth_date && destinyNum) {
                 pinnacleData = {
@@ -658,6 +866,12 @@
                 };
                 console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
             }
+            
+            // Get life path details from JSON
+            console.log('🎨 DEBUG: Getting life path details for number:', lifePathNum);
+            const lifePathDetails = getLifePathDetails(lifePathNum);
+            console.log('🎨 DEBUG: Life path details found:', lifePathDetails);
+            const lifePathDetailsHTML = createLifePathDetailsHTML(lifePathNum, lifePathDetails);
             
             return `
                 <div class="result-section">
@@ -690,18 +904,8 @@
                             </div>
                         </div>
                         
-                        ${data.life_path_data ? `
-                            <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                                <div class="tw-grid tw-grid-cols-1 md:tw-grid-cols-2 tw-gap-4 tw-text-sm">
-                                    ${Object.entries(data.life_path_data).map(([key, value]) => `
-                                        <div class="tw-py-2 tw-border-b tw-border-blue-100 last:tw-border-b-0">
-                                            <span class="tw-font-medium tw-text-gray-700">${key.replace(/_/g, ' ')}:</span>
-                                            <span class="tw-text-gray-600">${value || '-'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
+                        <!-- Display Life Path Details from JSON -->
+                        ${lifePathDetailsHTML}
                         
                         <!-- Buttons for additional content -->
                         <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
@@ -804,30 +1008,6 @@
             const url = `${BASE_PATH}/pinnacle.html`;
             console.log('📖 DEBUG: Pinnacle URL:', url);
             loadContent(url, 'Pinnacle Cycle');
-        }
-        
-        // Load Numerology Content
-        function loadNumerologyContent(category, number) {
-            console.log(`📖 DEBUG: Loading ${category} ${number}`);
-            
-            let filename;
-            switch(category) {
-                case 'Destiny':
-                    filename = `Destiny${number}.html`;
-                    break;
-                case 'LifePath':
-                    filename = `LifePathNumber${number}.html`;
-                    break;
-                case 'KarmicLesson':
-                    filename = `KarmicLesson${number}.html`;
-                    break;
-                default:
-                    filename = `${category}${number}.html`;
-            }
-            
-            const url = `${BASE_PATH}/${filename}`;
-            console.log('📖 DEBUG: Numerology URL:', url);
-            loadExplainedContent(url, category, number);
         }
         
         // Load content into Explained tab
@@ -1040,44 +1220,6 @@
             
             return fixedHtml;
         }
-        
-        // Manual test function
-        window.testResultPage = function() {
-            console.log('🧪 DEBUG: Manual test started');
-            
-            // Test with sample data
-            const sampleData = {
-                success: true,
-                results: [
-                    {
-                        title: 'Sample Analysis',
-                        type: 'basic',
-                        data: {
-                            destiny_number: 11,
-                            life_path_number: 6,
-                            birth_date: '22/05/1968',
-                            full_name: 'John Smith',
-                            destiny_meaning: 'Intuitive and inspiring leader',
-                            thirdAndFourth: {
-                                karmic: '40',
-                                lifeLesson: 5
-                            }
-                        },
-                        database_data: {
-                            traits: 'Intuitive, Family-oriented',
-                            career: 'Counselor, Teacher',
-                            challenges: 'Over-sensitivity'
-                        }
-                    }
-                ]
-            };
-            
-            sessionStorage.setItem('psychomatrixResult', JSON.stringify(sampleData));
-            console.log('🧪 DEBUG: Sample data set in sessionStorage');
-            
-            // Reload the page
-            location.reload();
-        };
         
         console.log('✅ DEBUG: result.html script loaded completely');
     </script>
