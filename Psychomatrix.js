@@ -209,136 +209,144 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(show ? '⏳ Loading shown' : '✅ Loading hidden');
     }
 
-    async function callPsychomatrixAPI(formData) {
-        console.log('==================== API CALL START ====================');
-        console.log('📤 Function: callPsychomatrixAPI()');
-        console.log('📡 Endpoint:', PSYCHOMATRIX_FUNCTION);
-        console.log('🕐 Time:', new Date().toLocaleString('th-TH'));
+
+async function callPsychomatrixAPI(formData) {
+    console.log('==================== API CALL START ====================');
+    console.log('📤 Function: callPsychomatrixAPI()');
+    console.log('📡 Endpoint:', PSYCHOMATRIX_FUNCTION);
+    console.log('🕐 Time:', new Date().toLocaleString('th-TH'));
+    
+    try {
+        showLoading(true);
         
-        try {
-            showLoading(true);
-            
-            // Log raw input
-            console.log('📥 Raw Input Data:', formData);
-            console.log('📊 Data Types:');
-            Object.entries(formData).forEach(([key, val]) => {
-                console.log(`   ${key}: ${typeof val} = ${val}`);
+        // Log raw input
+        console.log('📥 Raw Input Data:', formData);
+        console.log('📊 Data Types:');
+        Object.entries(formData).forEach(([key, val]) => {
+            console.log(`   ${key}: ${typeof val} = ${val}`);
+        });
+
+        // Build payload (เหมือนเดิมทุกประการ)
+        const payload = {
+            action: 'analyze',
+            search_name: formData.search_name || '',
+            use_average: Boolean(formData.use_average),
+            option: formData.option || 'BD',
+            birth_day: String(formData.birth_day || ''),
+            birth_month: String(formData.birth_month || ''),
+            birth_century: String(formData.birth_century || '20'),
+            birth_year: String(formData.birth_year || ''),
+            birth_hour: String(formData.birth_hour || '00'),
+            birth_minute: String(formData.birth_minute || '00'),
+            id_card: String(formData.id_card || ''),
+            full_name: String(formData.full_name || '')
+        };
+
+        // Add surrounding data if exists
+        if (formData.surrounding_data && typeof formData.surrounding_data === 'object') {
+            const filtered = {};
+            Object.entries(formData.surrounding_data).forEach(([k, v]) => {
+                if (v && String(v).trim()) filtered[k] = String(v).trim();
             });
-
-            // Build payload
-            const payload = {
-                action: 'analyze',
-                search_name: formData.search_name || '',
-                use_average: Boolean(formData.use_average),
-                option: formData.option || 'BD',
-                birth_day: String(formData.birth_day || ''),
-                birth_month: String(formData.birth_month || ''),
-                birth_century: String(formData.birth_century || '20'),
-                birth_year: String(formData.birth_year || ''),
-                birth_hour: String(formData.birth_hour || '00'),
-                birth_minute: String(formData.birth_minute || '00'),
-                id_card: String(formData.id_card || ''),
-                full_name: String(formData.full_name || '')
-            };
-
-            // Add surrounding data if exists
-            if (formData.surrounding_data && typeof formData.surrounding_data === 'object') {
-                const filtered = {};
-                Object.entries(formData.surrounding_data).forEach(([k, v]) => {
-                    if (v && String(v).trim()) filtered[k] = String(v).trim();
-                });
-                
-                if (Object.keys(filtered).length > 0) {
-                    payload.surrounding_data = filtered;
-                    console.log('📎 Surrounding data added:', Object.keys(filtered).length, 'fields');
-                } else {
-                    console.log('📎 No surrounding data to add (all empty)');
-                }
+            
+            if (Object.keys(filtered).length > 0) {
+                payload.surrounding_data = filtered;
+                console.log('📎 Surrounding data added:', Object.keys(filtered).length, 'fields');
             } else {
-                console.log('📎 No surrounding data in formData');
+                console.log('📎 No surrounding data to add (all empty)');
             }
-
-            console.log('📦 FINAL PAYLOAD:');
-            console.log('Method: POST');
-            console.log('Content-Type: application/json');
-            console.log('Body:', JSON.stringify(payload, null, 2));
-            
-            // Show payload size
-            const payloadSize = JSON.stringify(payload).length;
-            console.log(`📊 Payload size: ${payloadSize} bytes`);
-
-            const response = await fetch(PSYCHOMATRIX_FUNCTION, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload),
-                mode: 'cors',
-                cache: 'no-cache'
-            });
-
-            console.log('📥 Response received:', {
-                status: response.status,
-                statusText: response.statusText,
-                ok: response.ok,
-                headers: Object.fromEntries([...response.headers.entries()])
-            });
-
-            if (!response.ok) {
-                console.error('❌ Response NOT OK');
-                const errorText = await response.text();
-                console.error('Error body:', errorText);
-                
-                // Try to parse as JSON
-                let errorDetails = errorText;
-                try {
-                    const errorJson = JSON.parse(errorText);
-                    console.error('Parsed error JSON:', errorJson);
-                    errorDetails = JSON.stringify(errorJson, null, 2);
-                } catch (e) {
-                    console.error('Could not parse error as JSON, using raw text');
-                }
-                
-                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorDetails}`);
-            }
-
-            const result = await response.json();
-            console.log('✅ SUCCESS! Response data:', result);
-            
-            // Store in sessionStorage
-            console.log('💾 Storing result in sessionStorage...');
-            sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
-            console.log('✅ Stored successfully');
-            
-            // Redirect
-            console.log('🔄 Redirecting to result.html');
-            window.location.href = 'result.html';
-            
-        } catch (error) {
-            console.error('❌ CATCH BLOCK - API CALL FAILED:');
-            console.error('Error name:', error.name);
-            console.error('Error message:', error.message);
-            console.error('Stack trace:', error.stack);
-            
-            showLoading(false);
-            
-            // Enhanced error message
-            let errorMessage = error.message;
-            if (error.message.includes('400')) {
-                errorMessage += '\n\n💡 สาเหตุที่เป็นไปได้:\n' +
-                               '1. ข้อมูลขาด field ที่จำเป็นต้องใช้งาน\n' +
-                               '2. ชนิดข้อมูลไม่ถูกต้อง\n' +
-                               '3. Edge Function ไม่พบ field ที่ต้องการ\n\n' +
-                               '🔍 ตรวจสอบข้อมูลใน Debug Logger ที่มุมล่างขวา';
-            }
-            
-            alert(`❌ เกิดข้อผิดพลาด:\n\n${errorMessage}`);
-        } finally {
-            console.log('==================== API CALL END ====================');
-            setTimeout(() => showLoading(false), 1000);
+        } else {
+            console.log('📎 No surrounding data in formData');
         }
+
+        console.log('📦 FINAL PAYLOAD:');
+        console.log('Method: POST');
+        console.log('Content-Type: application/json');
+        console.log('Body:', JSON.stringify(payload, null, 2));
+        
+        // Show payload size
+        const payloadSize = JSON.stringify(payload).length;
+        console.log(`📊 Payload size: ${payloadSize} bytes`);
+
+        const response = await fetch(PSYCHOMATRIX_FUNCTION, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+
+        console.log('📥 Response received:', {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            headers: Object.fromEntries([...response.headers.entries()])
+        });
+
+        if (!response.ok) {
+            console.error('❌ Response NOT OK');
+            const errorText = await response.text();
+            console.error('Error body:', errorText);
+            
+            // Try to parse as JSON
+            let errorDetails = errorText;
+            try {
+                const errorJson = JSON.parse(errorText);
+                console.error('Parsed error JSON:', errorJson);
+                errorDetails = JSON.stringify(errorJson, null, 2);
+            } catch (e) {
+                console.error('Could not parse error as JSON, using raw text');
+            }
+            
+            throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorDetails}`);
+        }
+
+        const result = await response.json();
+        console.log('✅ SUCCESS! Response data:', result);
+        
+        // **เปลี่ยน: ตอนนี้ response มีโครงสร้าง { success: true, results: [...] }**
+        if (!result.success) {
+            throw new Error(result.error || 'API call was not successful');
+        }
+        
+        // Store in sessionStorage
+        console.log('💾 Storing result in sessionStorage...');
+        sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
+        console.log('✅ Stored successfully');
+        
+        // Redirect
+        console.log('🔄 Redirecting to result.html');
+        window.location.href = 'result.html';
+        
+    } catch (error) {
+        console.error('❌ CATCH BLOCK - API CALL FAILED:');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Stack trace:', error.stack);
+        
+        showLoading(false);
+        
+        // Enhanced error message
+        let errorMessage = error.message;
+        if (error.message.includes('400')) {
+            errorMessage += '\n\n💡 สาเหตุที่เป็นไปได้:\n' +
+                           '1. ข้อมูลขาด field ที่จำเป็นต้องใช้งาน\n' +
+                           '2. ชนิดข้อมูลไม่ถูกต้อง\n' +
+                           '3. Edge Function ไม่พบ field ที่ต้องการ\n\n' +
+                           '🔍 ตรวจสอบข้อมูลใน Debug Logger ที่มุมล่างขวา';
+        }
+        
+        alert(`❌ เกิดข้อผิดพลาด:\n\n${errorMessage}`);
+    } finally {
+        console.log('==================== API CALL END ====================');
+        setTimeout(() => showLoading(false), 1000);
     }
+}
+
+
 
     // ==================== MAIN FORM HANDLER ====================
 
