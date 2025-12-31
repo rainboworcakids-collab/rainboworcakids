@@ -25,10 +25,31 @@
             });
         });
     </script>
+
+      <!-- Tailwind config -->
+    <script>
+    tailwind.config = {
+        prefix: 'tw-',
+        corePlugins: {
+            preflight: false
+        }
+    }
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     
-
+ <!-- Version Badge -->
+    <div class="version-badge">
+        v7.8-Complete-Integration
+    </div>
+    
+    <!-- Tab Buttons -->
+    <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
+        <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
+        <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
+    </div>
+    
+   
 
     <script src="js/github-fix.js"></script>
 
