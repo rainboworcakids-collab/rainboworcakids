@@ -3,385 +3,506 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis Results</title>
+    <title>Psychomatrix Results - Test</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS จาก CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Psychomatrix Main CSS -->
-    <link rel="stylesheet" href="css/PsychomatrixStyle.css">
-    <link rel="stylesheet" href="css/result-style.css">
-    
-    <!-- Favicon -->
-    <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
-    
-    <!-- Tailwind config -->
-    <script>
-    tailwind.config = {
-        prefix: 'tw-',
-        corePlugins: {
-            preflight: false
-        }
-    }
-    </script>
-
+    <!-- Inline CSS แทนการเรียกไฟล์ภายนอก -->
     <style>
-        /* ฟอนต์พื้นฐานสำหรับแสดงข้อความ */
+        /* CSS พื้นฐาน */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f9fafb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .version {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #007bff;
+            border-bottom: 3px solid #007bff;
+        }
+        
+        .tab-content {
+            padding: 30px;
+            display: none;
+            min-height: 400px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .number-box {
+            display: inline-block;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .number-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .number-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .result-card {
             background: white;
+            border: 1px solid #e0e0e0;
             border-radius: 10px;
             padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 5px solid #3b82f6;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         
-        .number-badge {
-            display: inline-block;
-            background: #3b82f6;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 5px;
-            font-size: 1.2rem;
+        .result-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
         
         .data-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 10px;
-            background: #f8fafc;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #7f8c8d;
+        }
+        
+        .data-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .error-box {
+            background: #ffeaea;
+            border: 1px solid #ffcccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .error-title {
+            color: #e74c3c;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
         }
         
-        .label {
-            font-weight: bold;
-            color: #4b5563;
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
-        .value {
-            color: #1f2937;
-            font-weight: bold;
+        .btn-primary {
+            background: #3498db;
         }
         
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #6b7280;
+        .btn-secondary {
+            background: #95a5a6;
         }
         
-        .error {
-            text-align: center;
-            padding: 50px;
-            color: #dc2626;
-            background: #fef2f2;
-            border-radius: 10px;
-        }
-        
-        .section-title {
-            color: #1e40af;
-            border-bottom: 2px solid #dbeafe;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+        .btn-success {
+            background: #2ecc71;
         }
     </style>
 </head>
-<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
-
-    <!-- Version Badge -->
-    <div class="version-badge">
-        v7.5 (Simple Display)
-    </div>
-    
-    <!-- Tab Buttons -->
-    <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
-        <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
-        <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
-    </div>
-    
-    <!-- Main Tab -->
-    <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
-        <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
-            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
-            Psychomatrix Analysis - Simple Display
-        </h1>
-        
-        <!-- Loading State -->
-        <div id="loadingSection" class="loading">
-            <div class="spinner"></div>
-            <p class="tw-mt-4 tw-text-gray-600">Loading analysis results...</p>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="version">v7.5 TEST</div>
+            <h1 style="margin: 0; font-size: 32px;">
+                <i class="fas fa-chart-pie" style="margin-right: 15px;"></i>
+                Psychomatrix Analysis
+            </h1>
+            <p style="opacity: 0.9; margin-top: 10px;">Numerology Analysis Results</p>
         </div>
         
-        <!-- Error State -->
-        <div id="errorSection" class="error tw-hidden">
-            <div class="tw-text-red-500 tw-text-4xl tw-mb-4">⚠️</div>
-            <h3 class="tw-text-xl tw-font-semibold tw-text-red-600">No analysis data found</h3>
-            <p id="errorMessage" class="tw-text-gray-600 tw-mt-2">Please fill in the data on Psychomatrix.html first</p>
-            <button onclick="window.location.href='Psychomatrix.html'" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
-                Return to Input Form
-            </button>
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('main-tab')">Main Results</button>
+            <button class="tab" onclick="switchTab('explained-tab')">Explained</button>
+            <button class="tab" onclick="switchTab('debug-tab')">Debug Info</button>
         </div>
         
-        <!-- Results Container -->
-        <div id="resultsContainer" class="tw-hidden">
-            <!-- Results will be inserted here -->
-        </div>
-        
-        <div class="tw-mt-4 tw-text-right">
-            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">Return to Input Form</span>
-        </div>
-    </div>
-    
-    <!-- Explained Tab -->
-    <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
-        <div id="explainedContent" class="explained-content">
-            <h2 class="section-title">Explanation</h2>
-            <p>This is the simplified version of the result page. The full explanation content would appear here when you click on number buttons in the Main tab.</p>
-        </div>
-    </div>
-
-    <!-- ตรวจสอบสคริปต์ทั้งหมด -->
-    <div class="tw-mt-4 tw-text-center">
-        <button onclick="checkData()" class="tw-bg-yellow-500 hover:tw-bg-yellow-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
-            Check Session Data
-        </button>
-    </div>
-
-    <script>
-        // ฟังก์ชันสลับแท็บแบบง่าย
-        function switchTab(tabName, buttonElement) {
-            console.log('Switching to tab:', tabName);
+        <!-- Main Tab -->
+        <div id="main-tab" class="tab-content active">
+            <h2 class="result-title">Your Numerology Analysis</h2>
             
+            <!-- Loading State -->
+            <div id="loading">
+                <div class="spinner"></div>
+                <p style="text-align: center; color: #7f8c8d; margin-top: 20px;">
+                    Loading your analysis results...
+                </p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="error" style="display: none;">
+                <div class="error-box">
+                    <div style="font-size: 48px; color: #e74c3c; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 class="error-title">No Analysis Data Found</h3>
+                    <p style="color: #666; margin-bottom: 20px;">
+                        Please go back to the input form and analyze your data first.
+                    </p>
+                    <a href="Psychomatrix.html" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Return to Input Form
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Results Container -->
+            <div id="results" style="display: none;">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+        
+        <!-- Explained Tab -->
+        <div id="explained-tab" class="tab-content">
+            <h2 class="result-title">Explanation</h2>
+            <div class="result-card">
+                <p>This tab will show detailed explanations of your numerology numbers.</p>
+                <p>Click on any number in the Main tab to see its detailed meaning here.</p>
+            </div>
+        </div>
+        
+        <!-- Debug Tab -->
+        <div id="debug-tab" class="tab-content">
+            <h2 class="result-title">Debug Information</h2>
+            <div class="result-card">
+                <h3 style="color: #e74c3c; margin-bottom: 15px;">System Status</h3>
+                
+                <div class="data-row">
+                    <span class="data-label">Page Loaded:</span>
+                    <span class="data-value" id="debug-page-loaded">Yes</span>
+                </div>
+                
+                <div class="data-row">
+                    <span class="data-label">SessionStorage Data:</span>
+                    <span class="data-value" id="debug-session-data">Checking...</span>
+                </div>
+                
+                <div class="data-row">
+                    <span class="data-label">LocalStorage Data:</span>
+                    <span class="data-value" id="debug-local-data">Checking...</span>
+                </div>
+                
+                <div class="data-row">
+                    <span class="data-label">Scripts Loaded:</span>
+                    <span class="data-value" id="debug-scripts">All inline</span>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                    <button onclick="clearAllData()" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Clear All Data
+                    </button>
+                    <button onclick="reloadPage()" class="btn btn-primary">
+                        <i class="fas fa-redo"></i> Reload Page
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Inline -->
+    <script>
+        // ฟังก์ชันสลับแท็บ
+        function switchTab(tabId) {
             // ซ่อนแท็บทั้งหมด
-            const tabContents = document.querySelectorAll('.tabcontent');
-            tabContents.forEach(tab => {
+            document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // รีเซ็ตปุ่มแท็บทั้งหมด
-            const tabButtons = document.querySelectorAll('.tablink');
-            tabButtons.forEach(btn => {
-                btn.style.backgroundColor = "";
-                btn.style.color = "#aaa";
+            // ลบ active class จากปุ่มทั้งหมด
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
             });
             
             // แสดงแท็บที่เลือก
-            const selectedTab = document.getElementById(tabName);
-            if (selectedTab) {
-                selectedTab.classList.add('active');
-            }
+            document.getElementById(tabId).classList.add('active');
             
             // ตั้งค่าปุ่มที่เลือก
-            if (buttonElement) {
-                buttonElement.style.backgroundColor = '#f1f2ff';
-                buttonElement.style.color = '#00f';
-            }
+            event.target.classList.add('active');
         }
         
-        // ฟังก์ชันตรวจสอบข้อมูล
-        function checkData() {
-            console.log('Checking sessionStorage...');
+        // ฟังก์ชันโหลดผลลัพธ์
+        function loadResults() {
+            console.log('Loading results...');
+            
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const results = document.getElementById('results');
+            
+            // ตรวจสอบ sessionStorage
             const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
             
-            if (psychomatrixResult) {
-                try {
-                    const data = JSON.parse(psychomatrixResult);
-                    alert(`Found data in sessionStorage!\n\nNumber of results: ${data.results ? data.results.length : 1}\n\nCheck console for details.`);
-                    console.log('Session data:', data);
-                } catch (error) {
-                    alert('Error parsing sessionStorage data');
-                }
-            } else {
-                alert('No data found in sessionStorage');
-            }
-        }
-        
-        // ฟังก์ชันดึงข้อมูลและแสดงผล
-        function loadAndDisplayResults() {
-            console.log('Loading and displaying results...');
-            
-            const loadingSection = document.getElementById('loadingSection');
-            const errorSection = document.getElementById('errorSection');
-            const resultsContainer = document.getElementById('resultsContainer');
-            
-            // อ่านข้อมูลจาก sessionStorage
-            const resultData = sessionStorage.getItem('psychomatrixResult');
-            
-            if (!resultData) {
+            if (!psychomatrixResult) {
                 console.log('No data in sessionStorage');
                 setTimeout(() => {
-                    if (loadingSection) loadingSection.classList.add('tw-hidden');
-                    if (errorSection) errorSection.classList.remove('tw-hidden');
-                }, 1000);
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                }, 1500);
                 return;
             }
             
             try {
-                const data = JSON.parse(resultData);
-                console.log('Parsed data:', data);
+                const data = JSON.parse(psychomatrixResult);
+                console.log('Data found:', data);
                 
                 let html = '';
                 
+                // ตรวจสอบโครงสร้างข้อมูล
                 if (data.results && Array.isArray(data.results)) {
                     console.log(`Found ${data.results.length} results`);
                     
                     data.results.forEach((result, index) => {
-                        html += createResultSection(result, index);
+                        html += createResultCard(result, index);
                     });
                 } else if (data.data) {
-                    html += createSingleResultSection(data);
+                    // โครงสร้างเก่า
+                    html = createSingleResultCard(data);
                 } else {
-                    html += createFallbackDisplay(data);
+                    // ไม่รู้จักโครงสร้าง
+                    html = `
+                        <div class="error-box">
+                            <h3>Unknown Data Format</h3>
+                            <pre style="text-align: left; background: #f5f5f5; padding: 15px; border-radius: 5px; overflow: auto;">
+${JSON.stringify(data, null, 2)}
+                            </pre>
+                        </div>
+                    `;
                 }
                 
-                if (resultsContainer) {
-                    resultsContainer.innerHTML = html;
-                    resultsContainer.classList.remove('tw-hidden');
-                }
-                
-                setTimeout(() => {
-                    if (loadingSection) loadingSection.classList.add('tw-hidden');
-                    console.log('Results displayed successfully');
-                }, 500);
+                // แสดงผลลัพธ์
+                results.innerHTML = html;
+                loading.style.display = 'none';
+                results.style.display = 'block';
                 
             } catch (error) {
-                console.error('Error in loadAndDisplayResults:', error);
-                
-                setTimeout(() => {
-                    if (loadingSection) loadingSection.classList.add('tw-hidden');
-                    if (errorSection) {
-                        errorSection.classList.remove('tw-hidden');
-                        document.getElementById('errorMessage').textContent = `Error: ${error.message}`;
-                    }
-                }, 1000);
+                console.error('Error parsing data:', error);
+                loading.style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerHTML = `
+                    <div class="error-box">
+                        <h3>Error Loading Data</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
             }
         }
         
-        // สร้างส่วนผลลัพธ์
-        function createResultSection(result, index) {
-            const type = result.type || 'unknown';
-            const title = result.title || `Result ${index + 1}`;
+        // สร้างการ์ดผลลัพธ์
+        function createResultCard(result, index) {
             const data = result.data || {};
+            const title = result.title || `Result ${index + 1}`;
+            const type = result.type || 'Unknown';
             
-            const destinyNum = data.destiny_number;
-            const lifePathNum = data.life_path_number;
-            const karmicNum = data.thirdAndFourth?.karmic;
-            const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+            // สร้างตัวเลขต่างๆ
+            const numbersHtml = [
+                { label: 'Life Path', value: data.life_path_number },
+                { label: 'Destiny', value: data.destiny_number },
+                { label: 'Karmic', value: data.thirdAndFourth?.karmic },
+                { label: 'Life Lesson', value: data.thirdAndFourth?.lifeLesson }
+            ].map(num => {
+                if (!num.value && num.value !== 0) return '';
+                return `
+                    <div class="number-box">
+                        <div class="number-label">${num.label}</div>
+                        <div class="number-value">${num.value}</div>
+                    </div>
+                `;
+            }).join('');
             
             return `
                 <div class="result-card">
-                    <h2 class="section-title">${title} (${type})</h2>
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">
+                        ${title} <span style="font-size: 14px; color: #7f8c8d;">(${type})</span>
+                    </h3>
                     
-                    <div class="data-row">
-                        <div class="label">Life Path Number</div>
-                        <div class="value">
-                            ${lifePathNum ? `<span class="number-badge">${lifePathNum}</span>` : 'N/A'}
-                        </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        ${numbersHtml || '<p>No numbers found</p>'}
                     </div>
                     
                     <div class="data-row">
-                        <div class="label">Destiny Number</div>
-                        <div class="value">
-                            ${destinyNum ? `<span class="number-badge">${destinyNum}</span>` : 'N/A'}
-                        </div>
+                        <span class="data-label">Birth Date:</span>
+                        <span class="data-value">${data.birth_date || 'N/A'}</span>
                     </div>
                     
                     <div class="data-row">
-                        <div class="label">Karmic Number</div>
-                        <div class="value">
-                            ${karmicNum ? `<span class="number-badge">${karmicNum}</span>` : 'N/A'}
-                        </div>
+                        <span class="data-label">Full Name:</span>
+                        <span class="data-value">${data.full_name || 'N/A'}</span>
                     </div>
                     
                     <div class="data-row">
-                        <div class="label">Life Lesson Number</div>
-                        <div class="value">
-                            ${lifeLessonNum ? `<span class="number-badge">${lifeLessonNum}</span>` : 'N/A'}
-                        </div>
+                        <span class="data-label">ID Card:</span>
+                        <span class="data-value">${data.id_card || 'N/A'}</span>
                     </div>
                     
-                    ${data.birth_date ? `
-                    <div class="data-row">
-                        <div class="label">Birth Date</div>
-                        <div class="value">${data.birth_date}</div>
-                    </div>
-                    ` : ''}
-                    
-                    ${data.full_name ? `
-                    <div class="data-row">
-                        <div class="label">Full Name</div>
-                        <div class="value">${data.full_name}</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded">
-                        <h3 class="tw-font-bold tw-text-blue-800">How to use these numbers</h3>
-                        <p class="tw-text-gray-700 tw-mt-2">
-                            Each number represents different aspects of your personality and life path. 
-                            These are calculated from your birth date and name using Pythagorean numerology.
-                        </p>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                        <button onclick="showDetails(${index})" class="btn btn-success">
+                            <i class="fas fa-chart-bar"></i> Show Pythagorean Square
+                        </button>
                     </div>
                 </div>
             `;
         }
         
-        // สร้างส่วนผลลัพธ์เดี่ยว
-        function createSingleResultSection(data) {
+        // สร้างการ์ดผลลัพธ์เดี่ยว
+        function createSingleResultCard(data) {
             return `
                 <div class="result-card">
-                    <h2 class="section-title">Analysis Result</h2>
-                    <div class="data-row">
-                        <div class="label">Result Data</div>
-                        <div class="value">Single result mode</div>
-                    </div>
-                    <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data.data, null, 2)}</pre>
+                    <h3>Analysis Result</h3>
+                    <pre style="text-align: left; background: #f5f5f5; padding: 15px; border-radius: 5px; overflow: auto;">
+${JSON.stringify(data.data, null, 2)}
+                    </pre>
                 </div>
             `;
         }
         
-        // สร้างการแสดงผลสำรอง
-        function createFallbackDisplay(data) {
-            return `
-                <div class="result-card">
-                    <h2 class="section-title">Raw Analysis Result</h2>
-                    <p class="tw-text-gray-600">The data structure is not in the expected format.</p>
-                    <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data, null, 2)}</pre>
-                </div>
-            `;
+        // ฟังก์ชันแสดงรายละเอียด
+        function showDetails(index) {
+            alert(`Pythagorean Square for result ${index + 1} would show here.`);
+            switchTab('explained-tab');
         }
         
-        // เมื่อหน้าเว็บโหลดเสร็จ
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM fully loaded - Simple Display Version');
+        // ฟังก์ชัน debug
+        function updateDebugInfo() {
+            const sessionData = sessionStorage.getItem('psychomatrixResult');
+            const localData = localStorage.getItem('lifePathPropertiesCache');
             
-            // เปิดแท็บเริ่มต้น
-            setTimeout(() => {
-                try {
-                    const defaultTab = document.getElementById("defaultOpen");
-                    if (defaultTab) {
-                        defaultTab.click();
-                        console.log('Default tab opened');
-                    }
-                } catch (error) {
-                    console.error('Error opening default tab:', error);
-                }
+            document.getElementById('debug-session-data').textContent = 
+                sessionData ? 'Found (' + sessionData.length + ' chars)' : 'None';
                 
-                // โหลดและแสดงผลลัพธ์
-                setTimeout(() => {
-                    loadAndDisplayResults();
-                }, 100);
-            }, 50);
+            document.getElementById('debug-local-data').textContent = 
+                localData ? 'Found (' + localData.length + ' chars)' : 'None';
+        }
+        
+        // ฟังก์ชันล้างข้อมูล
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all stored data?')) {
+                sessionStorage.clear();
+                localStorage.clear();
+                alert('All data cleared. Page will reload.');
+                reloadPage();
+            }
+        }
+        
+        // ฟังก์ชันรีโหลดหน้า
+        function reloadPage() {
+            window.location.reload();
+        }
+        
+        // เมื่อหน้าโหลดเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded - Inline version');
+            
+            // อัปเดต debug info
+            updateDebugInfo();
+            
+            // โหลดผลลัพธ์หลังจาก delay สั้นๆ
+            setTimeout(() => {
+                loadResults();
+            }, 1000);
         });
     </script>
 </body>
