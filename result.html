@@ -1,59 +1,208 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis - RainbowOrcaKids</title>
+    <title>Psychomatrix Analysis Results</title>
     
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS -->
+    <!-- script src="https://cdn.tailwindcss.com"></script -->
     
-    <!-- Custom CSS -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
+    
+    <!-- Psychomatrix Main CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
-    
+    <link rel="stylesheet" href="css/result-style.css">
+
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
+    
+    <!-- ตรวจสอบ JavaScript ก่อนโหลด -->
     <script>
-        // ป้องกันการกด Enter ส่งฟอร์มโดยไม่ตั้งใจ
-        document.addEventListener('DOMContentLoaded', function() {
-            document.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                }
-            });
-        });
+        console.log('🔧 DEBUG: Starting page load...');
+        
+        // ตรวจสอบว่าไฟล์ JavaScript โหลดสำเร็จหรือไม่
+        window.checkScriptsLoaded = function() {
+            console.log('🔍 DEBUG: Checking loaded scripts:');
+            console.log('  - window.switchTab:', typeof window.switchTab === 'function' ? '✅ Loaded' : '❌ Missing');
+            console.log('  - window.pythagorean:', window.pythagorean ? '✅ Loaded' : '❌ Missing');
+            console.log('  - window.pythagorean.showPythagoreanSquare:', 
+                window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function' ? '✅ Loaded' : '❌ Missing');
+            
+            return {
+                switchTab: typeof window.switchTab === 'function',
+                pythagorean: !!window.pythagorean,
+                showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
+            };
+        };
     </script>
+    
+    <!-- Tailwind config -->
+    <script>
+    tailwind.config = {
+        prefix: 'tw-',
+        corePlugins: {
+            preflight: false
+        }
+    }
+    </script>
+    
+    
 </head>
-<body class="bg-gray-100 min-h-screen">
-    
-    <!-- Main Container -->
-    <div class="Container">
-        <!-- Header -->
-        <div class="text-center mb-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-white mb-2">🔮 Psychomatrix Analysis</h1>
-            <p class="text-blue-100">วิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
-        </div>
-    </div>    
-    
- <!-- Version Badge -->
+<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
+
+    <!-- Version Badge -->
     <div class="version-badge">
-        v901-Complete-Integration
+        v700-Complete-Integration
     </div>
     
     <!-- Tab Buttons -->
-    <div class="max-w-4xl mx-h-auto mx-auto rounded shadow">
+    <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
         <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
         <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
     </div>
     
-   
-
-    <script src="js/github-fix.js"></script>
-
-    <!--  โหลด Debug Logger ก่อน -->
-    <script src="js/debug-logger.js"></script>
+    <!-- Main Tab -->
+    <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
+        <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
+            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
+            Psychomatrix Analysis
+        </h1>
+        
+        <!-- Loading State -->
+        <div id="loadingSection" class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">Loading analysis results...</p>
+            <p id="loadingDetails" class="tw-mt-2 tw-text-sm tw-text-gray-500"></p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorSection" class="tw-hidden tw-text-center tw-py-8">
+            <div class="tw-text-red-500 tw-text-4xl tw-mb-4">⚠️</div>
+            <h3 class="tw-text-xl tw-font-semibold tw-text-red-600">No analysis data found</h3>
+            <p id="errorMessage" class="tw-text-gray-600 tw-mt-2">Please fill in the data on Psychomatrix.html first</p>
+            <div id="debugInfo" class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left tw-text-sm tw-font-mono tw-hidden">
+                <p><strong>Debug Information:</strong></p>
+                <p id="debugSessionStorage"></p>
+                <p id="debugURLParams"></p>
+                <p id="debugLocalStorage"></p>
+            </div>
+            <button onclick="window.location.href='Psychomatrix.html'" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Return to Input Form
+            </button>
+            <button onclick="toggleDebugInfo()" class="tw-mt-2 tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Show Debug Info
+            </button>
+        </div>
+        
+        <!-- Results Container -->
+        <div id="resultsContainer" class="tw-hidden">
+            <!-- Results will be inserted here -->
+        </div>
+        
+        <!-- Debug Buttons -->
+        <div class="tw-mt-8 tw-text-center tw-border-t tw-pt-4">
+            <button onclick="testPythagoreanButton()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
+                Test Pythagorean Button
+            </button>
+            <button onclick="checkScriptsLoaded()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm tw-ml-2">
+                Check Scripts
+            </button>
+        </div>
+        
+        <div class="tw-mt-4 tw-text-right">
+            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">Return to Input Form</span>
+        </div>
+    </div>
     
+    <!-- Explained Tab -->
+    <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
+        <div id="explainedContent" class="explained-content"></div>
+    </div>
+
+    <!-- JavaScript Files - เปลี่ยนลำดับการโหลด -->
+    <script src="js/pythagorean.js"></script>
+    <script src="js/result.js"></script>
+    <script src="js/debug-logger.js"></script>
+
+    <!-- ทดสอบการทำงานของปุ่ม -->
+    <script>
+        // ฟังก์ชันทดสอบปุ่ม Pythagorean
+        function testPythagoreanButton() {
+            console.log('🧪 DEBUG: Testing Pythagorean button...');
+            
+            // ตรวจสอบการโหลดสคริปต์
+            const scriptStatus = checkScriptsLoaded();
+            console.log('Script Status:', scriptStatus);
+            
+            // ตรวจสอบข้อมูล
+            console.log('Checking data...');
+            console.log('  - window.analysisData:', window.analysisData);
+            console.log('  - sessionStorage:', sessionStorage.getItem('psychomatrixResult') ? '✅ Has data' : '❌ No data');
+            
+            // พยายามเรียกใช้ฟังก์ชันโดยตรง
+            if (window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function') {
+                console.log('✅ DEBUG: Calling pythagorean.showPythagoreanSquare(0)...');
+                try {
+                    window.pythagorean.showPythagoreanSquare(0);
+                } catch (error) {
+                    console.error('❌ DEBUG: Error calling function:', error);
+                }
+            } else {
+                console.error('❌ DEBUG: pythagorean.showPythagoreanSquare is not available');
+                
+                // แสดง error ในหน้าจอ
+                const explainedContent = document.getElementById('explainedContent');
+                const explainedButton = document.querySelector('.tablink:nth-child(2)');
+                
+                if (explainedContent) {
+                    explainedContent.innerHTML = `
+                        <div class="tw-text-center tw-py-8 tw-text-red-500">
+                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                            <p class="tw-font-bold">JavaScript Function Error</p>
+                            <p class="tw-text-sm">pythagorean.showPythagoreanSquare is not a function</p>
+                            <div class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left">
+                                <p><strong>Possible causes:</strong></p>
+                                <ul class="tw-list-disc tw-list-inside tw-mt-2">
+                                    <li>pythagorean.js failed to load</li>
+                                    <li>JavaScript error in pythagorean.js</li>
+                                    <li>Function name mismatch</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    window.switchTab('Explained', explainedButton);
+                }
+            }
+        }
+        
+        // ตรวจสอบเมื่อโหลดหน้าเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DEBUG: DOM fully loaded');
+            
+            // ตรวจสอบอีกครั้งหลังจากโหลดเสร็จ
+            setTimeout(() => {
+                console.log('🔍 DEBUG: Final script check:');
+                console.log('  - window.pythagorean:', window.pythagorean);
+                console.log('  - Type of showPythagoreanSquare:', 
+                    window.pythagorean ? typeof window.pythagorean.showPythagoreanSquare : 'N/A');
+                
+                // ตรวจสอบว่ามีปุ่มในหน้าไหม
+                const resultContainer = document.getElementById('resultsContainer');
+                if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
+                    console.log('✅ DEBUG: Pythagorean buttons found in HTML');
+                } else {
+                    console.log('❌ DEBUG: No Pythagorean buttons found in HTML');
+                }
+            }, 2000);
+        });
+    </script>
+
 </body>
 </html>
-
