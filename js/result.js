@@ -44,24 +44,41 @@ function toggleDebugInfo() {
 // ===== MAIN INITIALIZATION =====
 
 // Initialize page
+// Initialize page - แก้ไขให้ตรวจสอบให้ละเอียดขึ้น
 function initializePage() {
-    console.log('🌐 DEBUG: initializePage() called');
+    console.log('🌐 DEBUG: initializePage() ถูกเรียก');
     
-    // ตรวจสอบว่าไฟล์ pythagorean.js โหลดแล้วหรือไม่
-    if (!window.pythagorean) {
-        console.error('❌ CRITICAL: pythagorean.js not loaded!');
+    // ตรวจสอบว่า pythagorean.js โหลดแล้วจริงๆ หรือไม่
+    console.log('🔍 DEBUG: ตรวจสอบ pythagorean object:', window.pythagorean);
+    
+    // ตรวจสอบว่ามีฟังก์ชันที่จำเป็นหรือไม่
+    const hasPythagoreanFunctions = window.pythagorean && 
+        typeof window.pythagorean.showPythagoreanSquare === 'function' &&
+        typeof window.pythagorean.showCombinedPythagoreanSquare === 'function';
+    
+    if (!hasPythagoreanFunctions) {
+        console.warn('⚠️ DEBUG: pythagorean.js โหลดไม่สมบูรณ์, ใช้ fallback functions');
         
-        // แสดง error message
-        const errorSection = document.getElementById('errorSection');
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorSection && errorMessage) {
-            errorMessage.textContent = 'JavaScript files failed to load. Please refresh the page.';
-            errorSection.classList.remove('tw-hidden');
-        }
-        return;
+        // สร้าง fallback functions
+        window.pythagorean = window.pythagorean || {};
+        window.pythagorean.showPythagoreanSquare = function(resultIndex) {
+            console.log(`📊 Fallback: showPythagoreanSquare สำหรับผลลัพธ์ที่ ${resultIndex}`);
+            // ใช้ fallback function จาก result.js
+            if (typeof showPythagoreanSquare === 'function') {
+                showPythagoreanSquare(resultIndex);
+            }
+        };
+        
+        window.pythagorean.showCombinedPythagoreanSquare = function(resultIndex) {
+            console.log(`📊 Fallback: showCombinedPythagoreanSquare สำหรับผลลัพธ์ที่ ${resultIndex}`);
+            // ใช้ฟังก์ชันเดียวกันกับแบบธรรมดา
+            if (typeof showPythagoreanSquare === 'function') {
+                showPythagoreanSquare(resultIndex);
+            }
+        };
+    } else {
+        console.log('✅ DEBUG: pythagorean.js โหลดสมบูรณ์พร้อมฟังก์ชันทั้งหมด');
     }
-    
-    console.log('🌐 DEBUG: All JavaScript files loaded successfully');
     
     // Log all sessionStorage keys
     console.log('🔍 DEBUG: sessionStorage keys:', Object.keys(sessionStorage));
