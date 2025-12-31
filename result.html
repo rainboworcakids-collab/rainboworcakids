@@ -31,51 +31,62 @@
         }
     }
     </script>
-    
-    <!-- Global Variables and Initialization -->
+
     <script>
-        // กำหนดตัวแปร global ก่อนโหลดไฟล์อื่น
-        window.analysisData = null;
-        window.pinnacleData = null;
-        window.lifePathProperties = null;
-        window.CONTENTS_DIR = 'PsychomatrixContents';
+    // ตรวจสอบว่าเป็น GitHub Pages หรือไม่
+    const currentPath = window.location.pathname;
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    
+    if (isGitHubPages) {
+        // สำหรับ GitHub Pages - ใช้วิธีง่ายๆ
+        // หาชื่อ repo จาก path
+        const pathParts = currentPath.split('/').filter(p => p);
+        const repoName = pathParts[0] || 'rainboworcakids';
         
-        // ตรวจสอบว่าเป็น GitHub Pages หรือไม่
-        const currentPath = window.location.pathname;
-        const isGitHubPages = window.location.hostname.includes('github.io');
+        // ตั้งค่า BASE_PATH
+        window.BASE_PATH = `/${repoName}/PsychomatrixContents`;
+        console.log('🌐 DEBUG: โหมด GitHub Pages, BASE_PATH:', window.BASE_PATH);
         
-        if (isGitHubPages) {
-            // สำหรับ GitHub Pages
-            const pathParts = currentPath.split('/').filter(p => p);
-            const REPO_NAME = pathParts[0] || 'rainboworcakids';
-            window.BASE_PATH = `/${REPO_NAME}/${window.CONTENTS_DIR}`;
-            console.log('🌐 DEBUG: GitHub Pages mode, BASE_PATH:', window.BASE_PATH);
-        } else {
-            // สำหรับ Apache/localhost
-            const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-            window.BASE_PATH = `${folderPath}/${window.CONTENTS_DIR}`;
-            console.log('🌐 DEBUG: Apache mode, BASE_PATH:', window.BASE_PATH);
-        }
-        
-        // ตรวจสอบการโหลดไฟล์
-        function checkScriptLoading() {
-            console.log('🔍 DEBUG: Checking script loading status...');
-            console.log('  - window.switchTab:', typeof window.switchTab);
-            console.log('  - window.pythagorean:', window.pythagorean);
-            console.log('  - window.analysisData:', window.analysisData);
-        }
-        
-        // เรียกตรวจสอบเมื่อโหลดหน้าเสร็จ
-        window.addEventListener('load', function() {
-            setTimeout(checkScriptLoading, 1000);
+        // แก้ไข path ของไฟล์ JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // รอให้ DOM โหลดก่อน แล้วค่อยแก้ไข path
+            setTimeout(function() {
+                const scripts = document.querySelectorAll('script[src^="js/"]');
+                scripts.forEach(script => {
+                    const oldSrc = script.getAttribute('src');
+                    const newSrc = `/${repoName}/${oldSrc}`;
+                    console.log(`🔄 เปลี่ยน path: ${oldSrc} -> ${newSrc}`);
+                    
+                    // สร้าง script ใหม่
+                    const newScript = document.createElement('script');
+                    newScript.src = newSrc;
+                    newScript.onload = function() {
+                        console.log(`✅ โหลดสำเร็จ: ${newSrc}`);
+                    };
+                    newScript.onerror = function() {
+                        console.error(`❌ โหลดล้มเหลว: ${newSrc}`);
+                    };
+                    
+                    // แทนที่ script เดิม
+                    script.parentNode.replaceChild(newScript, script);
+                });
+            }, 100);
         });
-    </script>
+        
+    } else {
+        // สำหรับ Apache/localhost
+        const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        window.BASE_PATH = `${folderPath}/PsychomatrixContents`;
+        console.log('🌐 DEBUG: โหมด Apache, BASE_PATH:', window.BASE_PATH);
+    }
+</script>
+    
 </head>
 <body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v7.32 
+        v7.4
     </div>
     
     <!-- Tab Buttons -->
@@ -138,6 +149,15 @@
     <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
         <div id="explainedContent" class="explained-content"></div>
     </div>
+
+
+    <!-- ในส่วนท้ายของหน้า เพิ่มปุ่มนี้ -->
+<div class="tw-mt-4 tw-text-center">
+    <button onclick="checkAllScripts()" class="tw-bg-yellow-500 hover:tw-bg-yellow-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
+        ตรวจสอบสคริปต์ทั้งหมด
+    </button>
+</div>
+
     
     <!--  โหลด Debug Logger ก่อน -->
     <script src="js/debug-logger.js"></script>
@@ -214,6 +234,24 @@
                 }
             }, 100);
         });
+
+        function checkAllScripts() {
+    console.log('🔧 ตรวจสอบสถานะสคริปต์ทั้งหมด:');
+    console.log('1. window.pythagorean:', window.pythagorean);
+    console.log('2. typeof showPythagoreanSquare:', typeof showPythagoreanSquare);
+    console.log('3. typeof switchTab:', typeof switchTab);
+    console.log('4. window.BASE_PATH:', window.BASE_PATH);
+    console.log('5. window.analysisData:', window.analysisData ? 'มีข้อมูล' : 'ไม่มีข้อมูล');
+    
+    // ตรวจสอบฟังก์ชันใน pythagorean object
+    if (window.pythagorean) {
+        console.log('6. pythagorean.showPythagoreanSquare:', typeof window.pythagorean.showPythagoreanSquare);
+        console.log('7. pythagorean.showCombinedPythagoreanSquare:', typeof window.pythagorean.showCombinedPythagoreanSquare);
+    }
+    
+    alert('ตรวจสอบเสร็จสิ้น ดูผลใน Console (F12)');
+}
+
     </script>
 
 </body>
