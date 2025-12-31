@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Psychomatrix Analysis Results</title>
     
+    <!-- Base URL for relative paths -->
+    <base href="./">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -50,13 +53,23 @@
                 showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
             };
         };
+        
+        // Detect environment and log
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        const isLocal = window.location.hostname.includes('localhost') || 
+                        window.location.hostname.includes('127.0.0.1');
+        
+        console.log('🌐 DEBUG: Page environment detected');
+        console.log('  - isGitHubPages:', isGitHubPages);
+        console.log('  - isLocal:', isLocal);
+        console.log('  - Full URL:', window.location.href);
     </script>
 </head>
 <body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v7.25-Complete-Integration
+        v7.51-MultiEnvironment-Support
     </div>
     
     <!-- Tab Buttons -->
@@ -123,7 +136,7 @@
         <div id="explainedContent" class="explained-content"></div>
     </div>
 
-    <!-- JavaScript Files - เปลี่ยนลำดับการโหลด -->
+    <!-- JavaScript Files -->
     <script src="js/pythagorean.js"></script>
     <script src="js/result.js"></script>
     <script src="js/debug-logger.js"></script>
