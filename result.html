@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Psychomatrix Analysis Results</title>
     
-    <!-- Preload Tailwind with fallback -->
-    <link rel="preconnect" href="https://cdn.tailwindcss.com">
-    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,165 +15,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
     
-    <!-- Basic inline styles for immediate display -->
-    <style>
-        /* Critical CSS for immediate rendering */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f3f4f6; 
-            color: #333;
-            line-height: 1.5;
-        }
-        .container { 
-            max-width: 1200px; 
-            margin: 0 auto; 
-            padding: 1rem;
-        }
-        .version-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: #3b82f6;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            z-index: 1000;
-        }
-        .tablink {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #f1f2ff;
-            color: #aaa;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            border-radius: 5px 5px 0 0;
-            margin-right: 5px;
-        }
-        .tablink.active {
-            background: white;
-            color: #3b82f6;
-        }
-        .tabcontent {
-            display: none;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .tabcontent.active {
-            display: block;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #2563eb;
-        }
-        .btn-danger {
-            background: #ef4444;
-        }
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        .result-section {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .section-header {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
-            border-bottom: 2px solid #4a90e2;
-            padding-bottom: 10px;
-        }
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .data-item {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-        }
-        .number-button {
-            font-size: 2rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-            margin: 10px;
-        }
-        .number-button:hover {
-            transform: scale(1.1);
-        }
-        img {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
-    
-    <!-- Load Tailwind async -->
-    <script>
-        // Load Tailwind asynchronously
-        (function() {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://cdn.tailwindcss.com';
-            
-            // Add fallback if CDN fails
-            link.onerror = function() {
-                console.log('❌ Tailwind CDN failed, loading fallback');
-                const fallback = document.createElement('script');
-                fallback.src = './js/tailwind-fallback.js';
-                document.head.appendChild(fallback);
-            };
-            
-            document.head.appendChild(link);
-        })();
-    </script>
-
     <!-- Psychomatrix Main CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     <link rel="stylesheet" href="css/result-style.css">
@@ -182,25 +22,44 @@
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
-    <!-- Tailwind config with prefix -->
+    
+    <!-- ตรวจสอบ JavaScript ก่อนโหลด -->
     <script>
-        // Minimal Tailwind config
-        tailwind.config = {
-            prefix: 'tw-',
-            corePlugins: {
-                preflight: false // Disable preflight to avoid conflicts
-            },
-            theme: {
-                extend: {}
-            }
-        }
+        console.log('🔧 DEBUG: Starting page load...');
+        
+        // ตรวจสอบว่าไฟล์ JavaScript โหลดสำเร็จหรือไม่
+        window.checkScriptsLoaded = function() {
+            console.log('🔍 DEBUG: Checking loaded scripts:');
+            console.log('  - window.switchTab:', typeof window.switchTab === 'function' ? '✅ Loaded' : '❌ Missing');
+            console.log('  - window.pythagorean:', window.pythagorean ? '✅ Loaded' : '❌ Missing');
+            console.log('  - window.pythagorean.showPythagoreanSquare:', 
+                window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function' ? '✅ Loaded' : '❌ Missing');
+            
+            return {
+                switchTab: typeof window.switchTab === 'function',
+                pythagorean: !!window.pythagorean,
+                showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
+            };
+        };
     </script>
+    
+    <!-- Tailwind config -->
+    <script>
+    tailwind.config = {
+        prefix: 'tw-',
+        corePlugins: {
+            preflight: false
+        }
+    }
+    </script>
+    
+    
 </head>
-<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
+<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v7.35-GitHub-Fixed
+        v8.4-Complete-Integration
     </div>
     
     <!-- Tab Buttons -->
@@ -212,8 +71,7 @@
     <!-- Main Tab -->
     <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
         <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
-            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4"
-                 onerror="this.onerror=null; this.src='https://placehold.co/72x72?text=Logo'">
+            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
             Psychomatrix Analysis
         </h1>
         
@@ -235,10 +93,10 @@
                 <p id="debugURLParams"></p>
                 <p id="debugLocalStorage"></p>
             </div>
-            <button onclick="window.location.href='Psychomatrix.html'" class="btn tw-mt-4">
+            <button onclick="window.location.href='Psychomatrix.html'" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
                 Return to Input Form
             </button>
-            <button onclick="toggleDebugInfo()" class="btn btn-danger tw-mt-2">
+            <button onclick="toggleDebugInfo()" class="tw-mt-2 tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
                 Show Debug Info
             </button>
         </div>
@@ -250,18 +108,16 @@
         
         <!-- Debug Buttons -->
         <div class="tw-mt-8 tw-text-center tw-border-t tw-pt-4">
-            <button onclick="testPythagoreanButton()" class="btn btn-danger">
+            <button onclick="testPythagoreanButton()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
                 Test Pythagorean Button
             </button>
-            <button onclick="checkScriptsLoaded()" class="btn tw-ml-2">
+            <button onclick="checkScriptsLoaded()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm tw-ml-2">
                 Check Scripts
             </button>
         </div>
         
         <div class="tw-mt-4 tw-text-right">
-            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">
-                Return to Input Form
-            </span>
+            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">Return to Input Form</span>
         </div>
     </div>
     
@@ -270,171 +126,82 @@
         <div id="explainedContent" class="explained-content"></div>
     </div>
 
-    <!-- Load essential scripts first -->
-    <script src="./js/debug-logger.js"></script>
-    <script src="./js/tailwind-fallback.js"></script>
-    
-    <!-- Load main scripts -->
+    <!-- JavaScript Files - เปลี่ยนลำดับการโหลด -->
+    <script src="js/pythagorean.js"></script>
+    <script src="js/result.js"></script>
+    <script src="js/debug-logger.js"></script>
+
+    <!-- ทดสอบการทำงานของปุ่ม -->
     <script>
-        // Function to load scripts dynamically with fallback
-        function loadScript(src, fallbackSrc) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => {
-                    console.log(`✅ Loaded: ${src}`);
-                    resolve();
-                };
-                script.onerror = () => {
-                    console.log(`❌ Failed: ${src}`);
-                    if (fallbackSrc) {
-                        console.log(`🔄 Trying fallback: ${fallbackSrc}`);
-                        loadScript(fallbackSrc).then(resolve).catch(reject);
-                    } else {
-                        reject(new Error(`Failed to load ${src}`));
-                    }
-                };
-                document.body.appendChild(script);
-            });
-        }
-        
-        // Load all required scripts
-        document.addEventListener('DOMContentLoaded', async function() {
-            console.log('📦 Loading scripts...');
+        // ฟังก์ชันทดสอบปุ่ม Pythagorean
+        function testPythagoreanButton() {
+            console.log('🧪 DEBUG: Testing Pythagorean button...');
             
-            try {
-                // Load scripts in order with fallbacks
-                await loadScript('./js/pythagorean.js', './js/pythagorean-fixed.js');
-                await loadScript('./js/result.js', './js/result-fixed.js');
+            // ตรวจสอบการโหลดสคริปต์
+            const scriptStatus = checkScriptsLoaded();
+            console.log('Script Status:', scriptStatus);
+            
+            // ตรวจสอบข้อมูล
+            console.log('Checking data...');
+            console.log('  - window.analysisData:', window.analysisData);
+            console.log('  - sessionStorage:', sessionStorage.getItem('psychomatrixResult') ? '✅ Has data' : '❌ No data');
+            
+            // พยายามเรียกใช้ฟังก์ชันโดยตรง
+            if (window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function') {
+                console.log('✅ DEBUG: Calling pythagorean.showPythagoreanSquare(0)...');
+                try {
+                    window.pythagorean.showPythagoreanSquare(0);
+                } catch (error) {
+                    console.error('❌ DEBUG: Error calling function:', error);
+                }
+            } else {
+                console.error('❌ DEBUG: pythagorean.showPythagoreanSquare is not available');
                 
-                console.log('✅ All scripts loaded successfully');
+                // แสดง error ในหน้าจอ
+                const explainedContent = document.getElementById('explainedContent');
+                const explainedButton = document.querySelector('.tablink:nth-child(2)');
                 
-                // Check if essential functions are available
-                setTimeout(() => {
-                    if (typeof window.switchTab !== 'function') {
-                        console.error('❌ switchTab function not found');
-                        // Define a basic switchTab function
-                        window.switchTab = function(tabName, element) {
-                            const tabs = document.querySelectorAll('.tabcontent');
-                            const buttons = document.querySelectorAll('.tablink');
-                            
-                            tabs.forEach(tab => {
-                                tab.classList.remove('active');
-                                if (tab.id === tabName) {
-                                    tab.classList.add('active');
-                                }
-                            });
-                            
-                            buttons.forEach(btn => {
-                                btn.classList.remove('active');
-                            });
-                            
-                            if (element) {
-                                element.classList.add('active');
-                            }
-                        };
-                    }
-                    
-                    // Open default tab
-                    const defaultTab = document.getElementById('defaultOpen');
-                    if (defaultTab) {
-                        defaultTab.click();
-                    }
-                }, 100);
-                
-            } catch (error) {
-                console.error('❌ Failed to load scripts:', error);
-                
-                // Show error to user
-                const loadingSection = document.getElementById('loadingSection');
-                if (loadingSection) {
-                    loadingSection.innerHTML = `
+                if (explainedContent) {
+                    explainedContent.innerHTML = `
                         <div class="tw-text-center tw-py-8 tw-text-red-500">
                             <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                            <h3 class="tw-text-xl tw-font-bold">Script Loading Error</h3>
-                            <p class="tw-mt-2">${error.message}</p>
-                            <button onclick="location.reload()" class="btn tw-mt-4">
-                                Reload Page
-                            </button>
+                            <p class="tw-font-bold">JavaScript Function Error</p>
+                            <p class="tw-text-sm">pythagorean.showPythagoreanSquare is not a function</p>
+                            <div class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left">
+                                <p><strong>Possible causes:</strong></p>
+                                <ul class="tw-list-disc tw-list-inside tw-mt-2">
+                                    <li>pythagorean.js failed to load</li>
+                                    <li>JavaScript error in pythagorean.js</li>
+                                    <li>Function name mismatch</li>
+                                </ul>
+                            </div>
                         </div>
                     `;
+                    window.switchTab('Explained', explainedButton);
                 }
             }
-        });
-    </script>
-
-    <!-- Inline script for basic functionality -->
-    <script>
-        // Basic utility functions
-        window.checkScriptsLoaded = function() {
-            console.log('🔍 Checking scripts...');
-            const status = {
-                switchTab: typeof window.switchTab === 'function',
-                pythagorean: !!window.pythagorean,
-                showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
-            };
-            console.log('Status:', status);
-            
-            // Show result in alert
-            alert(`Scripts status:
-            - switchTab: ${status.switchTab ? '✅' : '❌'}
-            - pythagorean: ${status.pythagorean ? '✅' : '❌'}
-            - showPythagoreanSquare: ${status.showPythagoreanSquare ? '✅' : '❌'}`);
-            
-            return status;
-        };
-        
-        window.testPythagoreanButton = function() {
-            console.log('🧪 Testing Pythagorean...');
-            
-            if (window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function') {
-                window.pythagorean.showPythagoreanSquare(0);
-            } else {
-                alert('❌ Pythagorean functions not available');
-            }
-        };
-        
-        window.toggleDebugInfo = function() {
-            const debugInfo = document.getElementById('debugInfo');
-            if (debugInfo) {
-                debugInfo.classList.toggle('tw-hidden');
-            }
-        };
-        
-        // Basic switchTab if not defined
-        if (typeof window.switchTab !== 'function') {
-            window.switchTab = function(tabName, element) {
-                console.log('🔧 Switching to tab:', tabName);
-                
-                // Hide all tabs
-                const tabs = document.querySelectorAll('.tabcontent');
-                tabs.forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                // Remove active from all buttons
-                const buttons = document.querySelectorAll('.tablink');
-                buttons.forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Show selected tab
-                const selectedTab = document.getElementById(tabName);
-                if (selectedTab) {
-                    selectedTab.classList.add('active');
-                }
-                
-                // Activate button
-                if (element) {
-                    element.classList.add('active');
-                }
-            };
         }
         
-        // Initialize on load
-        window.onload = function() {
-            console.log('✅ Page fully loaded');
-        };
+        // ตรวจสอบเมื่อโหลดหน้าเสร็จ
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ DEBUG: DOM fully loaded');
+            
+            // ตรวจสอบอีกครั้งหลังจากโหลดเสร็จ
+            setTimeout(() => {
+                console.log('🔍 DEBUG: Final script check:');
+                console.log('  - window.pythagorean:', window.pythagorean);
+                console.log('  - Type of showPythagoreanSquare:', 
+                    window.pythagorean ? typeof window.pythagorean.showPythagoreanSquare : 'N/A');
+                
+                // ตรวจสอบว่ามีปุ่มในหน้าไหม
+                const resultContainer = document.getElementById('resultsContainer');
+                if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
+                    console.log('✅ DEBUG: Pythagorean buttons found in HTML');
+                } else {
+                    console.log('❌ DEBUG: No Pythagorean buttons found in HTML');
+                }
+            }, 2000);
+        });
     </script>
 
 </body>
