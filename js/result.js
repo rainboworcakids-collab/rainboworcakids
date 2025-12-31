@@ -1,617 +1,729 @@
-// pythagorean.js - Pythagorean Square calculations using Edge Function
+// result.js - Main result handling functions
+console.log('🚀 DEBUG: result.js loaded');
 
-console.log('🚀 DEBUG: pythagorean.js เริ่มโหลด');
+// ===== GLOBAL FUNCTIONS =====
 
-try {
-    // ===== Edge Function Configuration =====
-    const EDGE_FUNCTION_URL = 'https://oibubvhuiuurkxhnefsw.supabase.co/functions/v1/psychomatrix-pythagorean';
-
-    // Create global namespace for pythagorean functions
-    const pythagorean = {
-        // Show Pythagorean Square
-        showPythagoreanSquare: async function(resultIndex) {
-            console.log(`📊 DEBUG: Showing Pythagorean Square for result ${resultIndex}`);
-            await this._calculatePythagoreanSquare(resultIndex, 'basic');
-        },
-
-        // Show Combined Pythagorean Square
-        showCombinedPythagoreanSquare: async function(resultIndex) {
-            console.log(`📊 DEBUG: Showing Combined Pythagorean Square for result ${resultIndex}`);
-            await this._calculatePythagoreanSquare(resultIndex, 'combined');
-        },
-
-        // Main calculation function using Edge Function
-        _calculatePythagoreanSquare: async function(resultIndex, calculationType) {
-            const explainedContent = document.getElementById('explainedContent');
-            const explainedButton = document.querySelector('.tablink:nth-child(2)');
-            
-            // ตรวจสอบว่ามีข้อมูลหรือไม่ (ใช้ฟังก์ชันตรวจสอบใหม่)
-            const analysisData = this._getAnalysisData();
-            
-            if (!analysisData) {
-                explainedContent.innerHTML = `
-                    <div class="tw-text-center tw-py-8 tw-text-red-500">
-                        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                        <p class="tw-font-bold">No analysis data available</p>
-                        <p class="tw-text-sm">Please analyze your data first on the Psychomatrix page</p>
-                        <button onclick="window.location.href='Psychomatrix.html'" 
-                                class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
-                            Go to Input Form
-                        </button>
-                    </div>
-                `;
-                window.switchTab('Explained', explainedButton);
-                return;
-            }
-            
-            // ดึงข้อมูลผลลัพธ์
-            let result = null;
-            let title = `Result ${resultIndex + 1}`;
-            
-            if (analysisData.results && Array.isArray(analysisData.results)) {
-                if (analysisData.results[resultIndex]) {
-                    result = analysisData.results[resultIndex];
-                    title = result.title || title;
-                } else if (analysisData.results.length > 0) {
-                    result = analysisData.results[0];
-                    title = result.title || title;
-                    resultIndex = 0;
-                }
-            } else if (analysisData.data) {
-                result = {
-                    data: analysisData.data,
-                    title: 'Analysis Result',
-                    type: 'full-name'
-                };
-                title = 'Analysis Result';
-            }
-            
-            if (!result) {
-                explainedContent.innerHTML = `
-                    <div class="tw-text-center tw-py-8 tw-text-red-500">
-                        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                        <p class="tw-font-bold">No Pythagorean Square data available</p>
-                    </div>
-                `;
-                window.switchTab('Explained', explainedButton);
-                return;
-            }
-            
-            // แสดง loading
-            explainedContent.innerHTML = `
-                <div class="tw-text-center tw-py-8">
-                    <div class="spinner"></div>
-                    <p class="tw-mt-4 tw-text-gray-600">Calculating Pythagorean Square...</p>
-                    <p class="tw-text-sm tw-text-gray-500">Using Edge Function: ${calculationType} calculation</p>
-                </div>
-            `;
-            window.switchTab('Explained', explainedButton);
-            
-            try {
-                // สร้าง request body สำหรับ Edge Function
-                const requestBody = {
-                    result_data: {
-                        type: result.type || 'full-name',
-                        data: result.data
-                    },
-                    calculation_type: calculationType
-                };
-                
-                // ถ้าเป็น combined type ให้ดึงข้อมูล surrounding numbers
-                if (calculationType === 'combined') {
-                    const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
-                    if (surroundingNumbers) {
-                        try {
-                            requestBody.surrounding_data = JSON.parse(surroundingNumbers);
-                            console.log('✅ DEBUG: Added surrounding data to request');
-                        } catch (error) {
-                            console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
-                        }
-                    }
-                }
-                
-                console.log('📤 DEBUG: Sending request to Edge Function:', requestBody);
-                
-                // เรียก Edge Function
-                const response = await fetch(EDGE_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Edge Function returned ${response.status}: ${response.statusText}`);
-                }
-                
-                const edgeResult = await response.json();
-                console.log('📥 DEBUG: Edge Function response:', edgeResult);
-                
-                if (!edgeResult.success) {
-                    throw new Error(edgeResult.error || 'Unknown error from Edge Function');
-                }
-                
-                // แสดงผลลัพธ์
-                this._displayEdgeFunctionResult(explainedContent, edgeResult, title, calculationType, resultIndex);
-                
-            } catch (error) {
-                console.error('❌ DEBUG: Error calling Edge Function:', error);
-                
-                // Fallback to local calculation
-                console.log('🔄 DEBUG: Falling back to local calculation');
-                if (calculationType === 'basic') {
-                    this._calculateLocally(result, resultIndex, analysisData);
-                } else {
-                    this._calculateCombinedLocally(result, resultIndex, analysisData);
-                }
-            }
-        },
-
-        // ฟังก์ชันตรวจสอบข้อมูลจากหลายแหล่ง
-        _getAnalysisData: function() {
-            console.log('🔍 DEBUG: Checking analysis data from all sources...');
-            
-            // 1. ตรวจสอบ window.analysisData
-            if (window.analysisData) {
-                console.log('✅ DEBUG: Found data in window.analysisData');
-                return window.analysisData;
-            }
-            
-            // 2. ตรวจสอบ sessionStorage
-            const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
-            if (psychomatrixResult) {
-                try {
-                    console.log('✅ DEBUG: Found data in sessionStorage');
-                    const data = JSON.parse(psychomatrixResult);
-                    window.analysisData = data; // ตั้งค่าใน global scope
-                    return data;
-                } catch (error) {
-                    console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
-                }
-            }
-            
-            // 3. ตรวจสอบ localStorage
-            const localStorageData = localStorage.getItem('psychomatrixFormData') || 
-                                    localStorage.getItem('lastPsychomatrixData');
-            if (localStorageData) {
-                try {
-                    console.log('✅ DEBUG: Found data in localStorage');
-                    const parsedData = JSON.parse(localStorageData);
-                    const data = {
-                        success: true,
-                        results: [
-                            {
-                                title: 'Analysis from Local Storage',
-                                type: 'full-name',
-                                data: parsedData
-                            }
-                        ]
-                    };
-                    window.analysisData = data;
-                    return data;
-                } catch (error) {
-                    console.error('❌ DEBUG: Error parsing localStorage data:', error);
-                }
-            }
-            
-            console.log('❌ DEBUG: No analysis data found in any source');
-            return null;
-        },
-
-        // แสดงผลลัพธ์จาก Edge Function
-        _displayEdgeFunctionResult: function(container, edgeResult, title, calculationType, resultIndex) {
-            let html = `
-                <div class="pythagorean-square-container">
-                    <h2>Pythagorean Square${calculationType === 'combined' ? ' (รวมเลขสิ่งแวดล้อม)' : ''} - ${title}</h2>
-            `;
-            
-            // Summary box
-            if (calculationType === 'combined') {
-                html += `
-                    <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
-                        <p><strong>หมายเหตุ:</strong> ตารางนี้รวมสถิติจาก:</p>
-                        <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                            <li>ข้อมูลหลัก (วันเกิด/บัตรประชาชน/ชื่อ)</li>
-                            <li>ตัวเลขพิเศษ (Life Path, Destiny, Karmic, Life Lesson)</li>
-                            <li>เลขสิ่งแวดล้อม 20 รายการจาก Local Storage</li>
-                        </ul>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="tw-mb-4 tw-p-3 tw-bg-blue-50 tw-rounded tw-text-sm">
-                        <p><strong>Data Summary:</strong></p>
-                        <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                            <li>Total digits analyzed: ${edgeResult.combined_number_string?.length || 0}</li>
-                            <li>Calculation type: ${edgeResult.calculation_type}</li>
-                            <li>Generated by: Edge Function</li>
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            // Pythagorean Square HTML จาก Edge Function
-            if (edgeResult.pythagorean_html) {
-                html += edgeResult.pythagorean_html;
-            } else {
-                html += '<p class="tw-text-red-500">No Pythagorean Square data available from Edge Function.</p>';
-            }
-            
-            // Influential numbers
-            if (edgeResult.influential_numbers && edgeResult.influential_numbers.length > 0) {
-                html += `
-                    <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                        <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง</h3>
-                        <p class="tw-text-gray-700">
-                            <strong>เลขที่มีอิทธิพลสูงสุด:</strong> 
-                            ${edgeResult.influential_numbers.join(', ')}
-                            (ปรากฏ ${edgeResult.max_count} ครั้ง)
-                        </p>
-                        <p class="tw-text-gray-700 tw-mt-2">
-                            <strong>เลขที่ขาดหายไป:</strong> 
-                            ${edgeResult.missing_numbers?.length > 0 ? edgeResult.missing_numbers.join(', ') : 'ไม่มี'}
-                        </p>
-                    </div>
-                `;
-            }
-            
-            // Description
-            html += `
-                <div class="tw-mt-8 tw-text-sm tw-text-gray-600">
-                    <p><strong>คำอธิบาย:</strong> ตาราง Pythagorean Square แสดงความถี่ของตัวเลข 1-9 จากข้อมูลของคุณ</p>
-                    <p class="tw-mt-2">ตัวเลขในวงเล็บแสดงจำนวนครั้งที่ปรากฏ ส่วนผลรวมแถว/คอลัมน์/แนวทแยงแสดงอิทธิพลของตัวเลขในแต่ละด้าน</p>
-                </div>
-            `;
-            
-            // Button for combined view (if currently basic)
-            if (calculationType === 'basic') {
-                html += `
-                    <div class="tw-mt-8 tw-text-center">
-                        <button onclick="pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
-                                class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
-                            Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
-                        </button>
-                    </div>
-                `;
-            }
-            
-            html += `</div>`;
-            
-            container.innerHTML = html;
-        },
-
-        // Fallback: คำนวณแบบ local (basic)
-        _calculateLocally: function(result, resultIndex, analysisData) {
-            console.log('🔄 DEBUG: Using local calculation (basic)');
-            const explainedContent = document.getElementById('explainedContent');
-            
-            const data = result.data || {};
-            const lifePathNum = data.life_path_number || data.lifePath;
-            const destinyNum = data.destiny_number || data.destiny;
-            const karmicNum = data.thirdAndFourth?.karmic || data.karmic;
-            const lifeLessonNum = data.thirdAndFourth?.lifeLesson || data.lifeLesson;
-            
-            // สร้าง number string
-            let numberString = '';
-            
-            if (result.number_string) {
-                numberString = result.number_string;
-            } else {
-                if (data.birth_date) {
-                    const birthNumbers = data.birth_date.replace(/[\/: ]/g, '');
-                    numberString += birthNumbers;
-                }
-                if (data.id_card) {
-                    numberString += data.id_card.replace(/\D/g, '');
-                }
-                if (data.full_name) {
-                    const cleanName = data.full_name.replace(/\s/g, '');
-                    numberString += this.convertNameToNumberString(cleanName);
-                }
-            }
-            
-            // เพิ่มตัวเลขพิเศษ
-            const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
-            specialNumbers.forEach(num => {
-                if (num !== undefined && num !== null && num !== '') {
-                    const numStr = num.toString();
-                    for (let i = 0; i < numStr.length; i++) {
-                        const digit = numStr[i];
-                        if (digit >= '1' && digit <= '9') {
-                            numberString += digit;
-                        }
-                    }
-                }
-            });
-            
-            // คำนวณและแสดงผล
-            const pythagoreanHTML = this.calculatePythagoreanSquareHTML(numberString);
-            const mostInfluentialHTML = this.calculateMostInfluentialNumbers(numberString);
-            
-            explainedContent.innerHTML = `
-                <div class="pythagorean-square-container">
-                    <h2>Pythagorean Square - ${result.title || `Result ${resultIndex + 1}`}</h2>
-                    <div class="tw-mb-4 tw-p-3 tw-bg-blue-50 tw-rounded tw-text-sm">
-                        <p><strong>Local Calculation Fallback</strong> (Edge Function failed)</p>
-                        <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                            <li>Total digits analyzed: ${numberString.length}</li>
-                            <li>Life Path: ${lifePathNum || 'N/A'}</li>
-                            <li>Destiny: ${destinyNum || 'N/A'}</li>
-                            <li>Karmic: ${karmicNum || 'N/A'}</li>
-                            <li>Life Lesson: ${lifeLessonNum || 'N/A'}</li>
-                        </ul>
-                    </div>
-                    ${pythagoreanHTML}
-                    ${mostInfluentialHTML}
-                    <div class="tw-mt-8 tw-text-center">
-                        <button onclick="pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
-                                class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
-                            Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
-                        </button>
-                    </div>
-                </div>
-            `;
-        },
-
-        // Fallback: คำนวณแบบ local (combined)
-        _calculateCombinedLocally: function(result, resultIndex, analysisData) {
-            console.log('🔄 DEBUG: Using local calculation (combined)');
-            const explainedContent = document.getElementById('explainedContent');
-            
-            const data = result.data || {};
-            const lifePathNum = data.life_path_number || data.lifePath;
-            const destinyNum = data.destiny_number || data.destiny;
-            const karmicNum = data.thirdAndFourth?.karmic || data.karmic;
-            const lifeLessonNum = data.thirdAndFourth?.lifeLesson || data.lifeLesson;
-            
-            // ดึงข้อมูล surrounding numbers
-            const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
-            
-            // สร้าง number string
-            let combinedNumberString = '';
-            
-            if (result.number_string) {
-                combinedNumberString += result.number_string;
-            } else {
-                if (data.birth_date) {
-                    const birthNumbers = data.birth_date.replace(/[\/: ]/g, '');
-                    combinedNumberString += birthNumbers;
-                }
-                if (data.id_card) {
-                    combinedNumberString += data.id_card.replace(/\D/g, '');
-                }
-                if (data.full_name) {
-                    const cleanName = data.full_name.replace(/\s/g, '');
-                    combinedNumberString += this.convertNameToNumberString(cleanName);
-                }
-            }
-            
-            // เพิ่มตัวเลขพิเศษ
-            const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
-            specialNumbers.forEach(num => {
-                if (num !== undefined && num !== null && num !== '') {
-                    const numStr = num.toString();
-                    for (let i = 0; i < numStr.length; i++) {
-                        const digit = numStr[i];
-                        if (digit >= '1' && digit <= '9') {
-                            combinedNumberString += digit;
-                        }
-                    }
-                }
-            });
-            
-            // เพิ่มเลขสิ่งแวดล้อม
-            if (surroundingNumbers) {
-                try {
-                    const numbersArray = JSON.parse(surroundingNumbers);
-                    if (Array.isArray(numbersArray)) {
-                        numbersArray.forEach(num => {
-                            if (num && num.toString) {
-                                const numStr = num.toString();
-                                for (let i = 0; i < numStr.length; i++) {
-                                    const digit = numStr[i];
-                                    if (digit >= '1' && digit <= '9') {
-                                        combinedNumberString += digit;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
-                }
-            }
-            
-            // คำนวณและแสดงผล
-            const pythagoreanHTML = this.calculatePythagoreanSquareHTML(combinedNumberString);
-            const mostInfluentialHTML = this.calculateMostInfluentialNumbers(combinedNumberString);
-            
-            explainedContent.innerHTML = `
-                <div class="pythagorean-square-container">
-                    <h2>Pythagorean Square (รวมเลขสิ่งแวดล้อม) - ${result.title || `Result ${resultIndex + 1}`}</h2>
-                    <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
-                        <p><strong>Local Calculation Fallback</strong> (Edge Function failed)</p>
-                        <p><strong>หมายเหตุ:</strong> ตารางนี้รวมสถิติจาก:</p>
-                        <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                            <li>ข้อมูลหลัก (วันเกิด/บัตรประชาชน/ชื่อ)</li>
-                            <li>ตัวเลขพิเศษ (Life Path, Destiny, Karmic, Life Lesson)</li>
-                            <li>เลขสิ่งแวดล้อม 20 รายการจาก Local Storage</li>
-                            <li>Total digits analyzed: ${combinedNumberString.length}</li>
-                        </ul>
-                    </div>
-                    ${pythagoreanHTML}
-                    ${mostInfluentialHTML}
-                </div>
-            `;
-        },
-
-        // ===== Local calculation functions (for fallback) =====
-        calculatePythagoreanSquareHTML: function(numberString) {
-            const counts = new Array(10).fill(0);
-            
-            for (let i = 0; i < numberString.length; i++) {
-                const digit = parseInt(numberString[i]);
-                if (digit >= 1 && digit <= 9) {
-                    counts[digit]++;
-                }
-            }
-            
-            const rowSums = [
-                counts[1] + counts[4] + counts[7],
-                counts[2] + counts[5] + counts[8],
-                counts[3] + counts[6] + counts[9]
-            ];
-            
-            const colSums = [
-                counts[1] + counts[2] + counts[3],
-                counts[4] + counts[5] + counts[6],
-                counts[7] + counts[8] + counts[9]
-            ];
-            
-            const diagonalLeft = counts[1] + counts[5] + counts[9];
-            const diagonalRight = counts[7] + counts[5] + counts[3];
-            
-            return `
-                <div class="pythagorean-square">
-                    <div class="square-cell number-1" style="grid-row: 1; grid-column: 1;">1<span>(${counts[1]})</span></div>
-                    <div class="square-cell number-4" style="grid-row: 1; grid-column: 2;">4<span>(${counts[4]})</span></div>
-                    <div class="square-cell number-7" style="grid-row: 1; grid-column: 3;">7<span>(${counts[7]})</span></div>
-                    
-                    <div class="square-cell number-2" style="grid-row: 2; grid-column: 1;">2<span>(${counts[2]})</span></div>
-                    <div class="square-cell number-5" style="grid-row: 2; grid-column: 2;">5<span>(${counts[5]})</span></div>
-                    <div class="square-cell number-8" style="grid-row: 2; grid-column: 3;">8<span>(${counts[8]})</span></div>
-                    
-                    <div class="square-cell number-3" style="grid-row: 3; grid-column: 1;">3<span>(${counts[3]})</span></div>
-                    <div class="square-cell number-6" style="grid-row: 3; grid-column: 2;">6<span>(${counts[6]})</span></div>
-                    <div class="square-cell number-9" style="grid-row: 3; grid-column: 3;">9<span>(${counts[9]})</span></div>
-                    
-                    <div class="square-cell sum" style="grid-row: 1; grid-column: 4;">${rowSums[0]}</div>
-                    <div class="square-cell sum" style="grid-row: 2; grid-column: 4;">${rowSums[1]}</div>
-                    <div class="square-cell sum" style="grid-row: 3; grid-column: 4;">${rowSums[2]}</div>
-                    
-                    <div class="square-cell sum" style="grid-row: 4; grid-column: 1;">${colSums[0]}</div>
-                    <div class="square-cell sum" style="grid-row: 4; grid-column: 2;">${colSums[1]}</div>
-                    <div class="square-cell sum" style="grid-row: 4; grid-column: 3;">${colSums[2]}</div>
-                    <div class="square-cell sum" style="grid-row: 4; grid-column: 4;">${diagonalLeft}/${diagonalRight}</div>
-                </div>
-            `;
-        },
-
-        convertNameToNumberString: function(name) {
-            const thaiToEnglishMap = {
-                'ก': 'K', 'ข': 'K', 'ค': 'K', 'ฆ': 'K', 'ง': 'N',
-                'จ': 'J', 'ฉ': 'C', 'ช': 'C', 'ซ': 'S', 'ฌ': 'J', 'ญ': 'Y',
-                'ฎ': 'D', 'ฏ': 'T', 'ฐ': 'T', 'ฑ': 'D', 'ฒ': 'T', 'ณ': 'N',
-                'ด': 'D', 'ต': 'T', 'ถ': 'T', 'ท': 'T', 'ธ': 'T', 'น': 'N',
-                'บ': 'B', 'ป': 'P', 'ผ': 'P', 'ฝ': 'F', 'พ': 'P', 'ฟ': 'F',
-                'ภ': 'P', 'ม': 'M', 'ย': 'Y', 'ร': 'R', 'ล': 'L', 'ว': 'W',
-                'ศ': 'S', 'ษ': 'S', 'ส': 'S', 'ห': 'H', 'ฬ': 'L', 'อ': 'O',
-                'ฮ': 'H',
-                'ะ': 'A', 'า': 'A', 'ำ': 'A', 'ิ': 'I', 'ี': 'I', 'ึ': 'U', 'ื': 'U',
-                'ุ': 'U', 'ู': 'U', 'เ': 'E', 'แ': 'A', 'โ': 'O', 'ใ': 'I', 'ไ': 'I'
-            };
-            
-            const letterToNumberMap = {
-                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
-                'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9,
-                'S': 1, 'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8,
-                '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
-            };
-            
-            function letterToNumber(letter) {
-                const upperLetter = letter.toUpperCase();
-                
-                if (thaiToEnglishMap[letter]) {
-                    return letterToNumberMap[thaiToEnglishMap[letter]] || 0;
-                }
-                
-                return letterToNumberMap[upperLetter] || 0;
-            }
-            
-            let numberString = '';
-            for (let i = 0; i < name.length; i++) {
-                const char = name[i];
-                const number = letterToNumber(char);
-                numberString += number.toString();
-            }
-            
-            return numberString;
-        },
-
-        calculateMostInfluentialNumbers: function(numberString) {
-            const counts = new Array(10).fill(0);
-            
-            for (let i = 0; i < numberString.length; i++) {
-                const digit = parseInt(numberString[i]);
-                if (digit >= 1 && digit <= 9) {
-                    counts[digit]++;
-                }
-            }
-            
-            const maxCount = Math.max(...counts.slice(1));
-            const influentialNumbers = [];
-            for (let i = 1; i <= 9; i++) {
-                if (counts[i] === maxCount) {
-                    influentialNumbers.push(i);
-                }
-            }
-            
-            const missingNumbers = [];
-            for (let i = 1; i <= 9; i++) {
-                if (counts[i] === 0) {
-                    missingNumbers.push(i);
-                }
-            }
-            
-            return `
-                <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                    <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง</h3>
-                    <p class="tw-text-gray-700">
-                        <strong>เลขที่มีอิทธิพลสูงสุด:</strong> 
-                        ${influentialNumbers.length > 0 ? influentialNumbers.join(', ') : 'ไม่พบ'}
-                        (ปรากฏ ${maxCount} ครั้ง)
-                    </p>
-                    <p class="tw-text-gray-700 tw-mt-2">
-                        <strong>เลขที่ขาดหายไป:</strong> 
-                        ${missingNumbers.length > 0 ? missingNumbers.join(', ') : 'ไม่มี'}
-                    </p>
-                </div>
-            `;
-        }
-    };
-
-    // Expose to global scope
-    window.pythagorean = pythagorean;
-
-    console.log('✅ DEBUG: pythagorean.js โหลดสำเร็จแล้ว');
-
-} catch (error) {
-    console.error('❌ ผิดพลาดร้ายแรงใน pythagorean.js:', error);
+// Tab switching function
+function switchTab(tabName, buttonElement) {
+    console.log('🔧 DEBUG: Switching to tab:', tabName);
     
-    // สร้าง object พื้นฐานเพื่อป้องกัน error
-    window.pythagorean = {
-        showPythagoreanSquare: function(resultIndex) {
-            console.error('pythagorean.js โหลดไม่สมบูรณ์');
-            const explainedContent = document.getElementById('explainedContent');
-            if (explainedContent) {
-                explainedContent.innerHTML = `
-                    <div class="tw-text-center tw-py-8 tw-text-red-500">
-                        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                        <p class="tw-font-bold">ฟังก์ชัน Pythagorean Square ไม่พร้อมใช้งาน</p>
-                        <p class="tw-text-sm">กรุณารีเฟรชหน้าเว็บใหม่ หรือตรวจสอบ Console (F12) สำหรับรายละเอียด</p>
-                        <div class="tw-mt-4 tw-text-left tw-text-xs tw-bg-gray-100 tw-p-3 tw-rounded">
-                            <p><strong>รายละเอียดข้อผิดพลาด:</strong></p>
-                            <p>${error.message || 'Unknown error'}</p>
-                        </div>
-                    </div>
-                `;
-            }
-        },
-        showCombinedPythagoreanSquare: function(resultIndex) {
-            this.showPythagoreanSquare(resultIndex);
-        }
-    };
+    // Hide all tab content
+    const tabContents = document.querySelectorAll('.tabcontent');
+    tabContents.forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Reset all tab buttons
+    const tabButtons = document.querySelectorAll('.tablink');
+    tabButtons.forEach(btn => {
+        btn.style.backgroundColor = "";
+        btn.style.color = "#aaa";
+    });
+    
+    // Show selected tab
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+        selectedTab.classList.add('active');
+    }
+    
+    // Style active button
+    if (buttonElement) {
+        buttonElement.style.backgroundColor = '#f1f2ff';
+        buttonElement.style.color = '#00f';
+    }
 }
 
-console.log('✅ DEBUG: pythagorean.js โหลดสมบูรณ์พร้อม fallback protection');
+// Toggle debug info
+function toggleDebugInfo() {
+    const debugInfo = document.getElementById('debugInfo');
+    if (debugInfo) {
+        debugInfo.classList.toggle('tw-hidden');
+    }
+}
+
+// ===== MAIN INITIALIZATION =====
+
+// Initialize page
+function initializePage() {
+    console.log('🌐 DEBUG: initializePage() called');
+    
+    // ตรวจสอบว่าไฟล์ pythagorean.js โหลดแล้วหรือไม่
+    if (!window.pythagorean) {
+        console.error('❌ CRITICAL: pythagorean.js not loaded!');
+        
+        // แสดง error message
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorSection && errorMessage) {
+            errorMessage.textContent = 'JavaScript files failed to load. Please refresh the page.';
+            errorSection.classList.remove('tw-hidden');
+        }
+        return;
+    }
+    
+    console.log('🌐 DEBUG: All JavaScript files loaded successfully');
+    
+    // Log all sessionStorage keys
+    console.log('🔍 DEBUG: sessionStorage keys:', Object.keys(sessionStorage));
+    
+    // Check for data
+    const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
+    console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
+    
+    if (psychomatrixResult) {
+        try {
+            window.analysisData = JSON.parse(psychomatrixResult);
+            console.log('✅ DEBUG: Parsed analysisData');
+        } catch (error) {
+            console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
+        }
+    }
+    
+    // Update loading details
+    const loadingDetails = document.getElementById('loadingDetails');
+    if (loadingDetails) {
+        loadingDetails.textContent = 'Initializing application...';
+    }
+    
+    // Open default tab
+    setTimeout(() => {
+        try {
+            const defaultTab = document.getElementById("defaultOpen");
+            if (defaultTab) {
+                defaultTab.click();
+                console.log('✅ DEBUG: Default tab opened');
+            } else {
+                console.error('❌ DEBUG: defaultOpen button not found');
+            }
+        } catch (error) {
+            console.error('❌ DEBUG: Error opening default tab:', error);
+        }
+        
+        // Load and display results
+        setTimeout(() => {
+            loadAndDisplayResults();
+        }, 100);
+    }, 50);
+}
+
+// ===== DATA LOADING FUNCTIONS =====
+
+// Load LifePathProperty.json
+async function loadLifePathProperties() {
+    console.log('🔄 DEBUG: loadLifePathProperties() called');
+    
+    // ลองหลายๆ path
+    const possiblePaths = [
+        // สำหรับ GitHub Pages
+        '/data/LifePathProperty.json',
+        './data/LifePathProperty.json',
+        '../data/LifePathProperty.json',
+        'data/LifePathProperty.json',
+        // สำหรับโครงสร้างอื่น
+        '../../data/LifePathProperty.json'
+    ];
+    
+    // เพิ่ม path จาก BASE_PATH ถ้ามี
+    if (window.BASE_PATH) {
+        possiblePaths.unshift(`${window.BASE_PATH}/../data/LifePathProperty.json`);
+    }
+    
+    // ลองโหลดจาก cache ก่อน
+    const cachedData = localStorage.getItem('lifePathPropertiesCache');
+    if (cachedData) {
+        try {
+            console.log('📦 DEBUG: Loading from localStorage cache');
+            const data = JSON.parse(cachedData);
+            window.lifePathProperties = data;
+            return data;
+        } catch (error) {
+            console.log('❌ DEBUG: Error parsing cache:', error);
+        }
+    }
+    
+    for (const lifePathUrl of possiblePaths) {
+        console.log(`📂 DEBUG: Trying to load from: "${lifePathUrl}"`);
+        
+        try {
+            const response = await fetch(lifePathUrl);
+            console.log(`📂 DEBUG: Response status: ${response.status}`);
+            
+            if (!response.ok) {
+                console.log(`❌ DEBUG: Failed (${response.status}), trying next...`);
+                continue;
+            }
+            
+            const data = await response.json();
+            console.log('✅ DEBUG: Loaded successfully from:', lifePathUrl);
+            
+            // บันทึกลง cache
+            localStorage.setItem('lifePathPropertiesCache', JSON.stringify(data));
+            
+            // ปรับโครงสร้างข้อมูล
+            window.lifePathProperties = normalizeLifePathData(data);
+            return window.lifePathProperties;
+            
+        } catch (error) {
+            console.log(`❌ DEBUG: Error loading "${lifePathUrl}":`, error.message);
+        }
+    }
+    
+    console.error('❌ DEBUG: Failed to load LifePathProperty.json from all paths');
+    return createFallbackLifePathData();
+}
+
+// ปรับโครงสร้างข้อมูล
+function normalizeLifePathData(data) {
+    if (!data) return null;
+    
+    // กรณี 1: data มีโครงสร้าง { LifePath: [...] } อยู่แล้ว
+    if (data.LifePath && Array.isArray(data.LifePath)) {
+        return data;
+    }
+    
+    // กรณี 2: data เป็น array โดยตรง
+    if (Array.isArray(data)) {
+        return { LifePath: data };
+    }
+    
+    // กรณี 3: data เป็น object ที่มี key เป็นตัวเลข
+    if (typeof data === 'object') {
+        const keys = Object.keys(data);
+        const numericKeys = keys.filter(key => !isNaN(parseInt(key)));
+        
+        if (numericKeys.length > 0) {
+            const lifePathArray = numericKeys.map(key => {
+                const item = data[key];
+                if (!item.ID) item.ID = key;
+                return item;
+            });
+            return { LifePath: lifePathArray };
+        }
+    }
+    
+    return data;
+}
+
+// สร้างข้อมูล fallback
+function createFallbackLifePathData() {
+    console.log('⚠️ DEBUG: Creating fallback LifePath data');
+    
+    const fallbackData = {
+        LifePath: [
+            { ID: "1", ShortDefinition: "ผู้นำ", MEANING: "ความเป็นผู้นำ", InherentDread: "..." },
+            { ID: "2", ShortDefinition: "ผู้ประสาน", MEANING: "การทำงานร่วมกัน", InherentDread: "..." },
+            { ID: "3", ShortDefinition: "ผู้สร้างสรรค์", MEANING: "ความคิดสร้างสรรค์", InherentDread: "..." },
+            { ID: "4", ShortDefinition: "ผู้สร้าง", MEANING: "ความมั่นคง", InherentDread: "..." },
+            { ID: "5", ShortDefinition: "ผู้เปลี่ยนแปลง", MEANING: "การเปลี่ยนแปลง", InherentDread: "..." },
+            { ID: "6", ShortDefinition: "ผู้ดูแล", MEANING: "ความรับผิดชอบ", InherentDread: "..." },
+            { ID: "7", ShortDefinition: "ผู้แสวงหา", MEANING: "ปัญญา", InherentDread: "..." },
+            { ID: "8", ShortDefinition: "ผู้บริหาร", MEANING: "ความสำเร็จ", InherentDread: "..." },
+            { ID: "9", ShortDefinition: "ผู้ให้", MEANING: "มนุษยธรรม", InherentDread: "..." }
+        ]
+    };
+    
+    localStorage.setItem('lifePathPropertiesCache', JSON.stringify(fallbackData));
+    window.lifePathProperties = fallbackData;
+    return fallbackData;
+}
+
+// Get life path details from JSON
+function getLifePathDetails(lifePathNumber) {
+    console.log("🔍 DEBUG: getLifePathDetails() called for number:", lifePathNumber);
+    
+    if (!window.lifePathProperties) {
+        console.log("❌ DEBUG: lifePathProperties not loaded");
+        return null;
+    }
+    
+    const targetId = lifePathNumber.toString();
+    
+    let lifePathArray = [];
+    if (window.lifePathProperties.LifePath && Array.isArray(window.lifePathProperties.LifePath)) {
+        lifePathArray = window.lifePathProperties.LifePath;
+    } else if (Array.isArray(window.lifePathProperties)) {
+        lifePathArray = window.lifePathProperties;
+    } else {
+        return null;
+    }
+    
+    const foundItem = lifePathArray.find(item => {
+        return item && item.ID && item.ID.toString() === targetId;
+    });
+    
+    return foundItem || null;
+}
+
+// Create HTML for life path details
+function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
+    if (!lifePathData) {
+        return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
+    }
+    
+    return `
+        <div class="life-path-details">
+            <h3>Life Path Number ${lifePathNumber} Details</h3>
+            <div class="life-path-detail-item">
+                <h4>Short Definition</h4>
+                <p>${lifePathData.ShortDefinition || 'No definition available'}</p>
+            </div>
+            <div class="life-path-detail-item">
+                <h4>Meaning</h4>
+                <p>${lifePathData.MEANING || 'No meaning available'}</p>
+            </div>
+            <div class="life-path-detail-item inherent-dread">
+                <h4>Inherent Dread</h4>
+                <p>${lifePathData.InherentDread || 'No inherent dread specified'}</p>
+            </div>
+        </div>
+    `;
+}
+
+// ===== MAIN RESULT LOADING =====
+
+// Load results from sessionStorage
+async function loadAndDisplayResults() {
+    console.log('🔄 DEBUG: loadAndDisplayResults() called');
+    
+    const loadingSection = document.getElementById('loadingSection');
+    const errorSection = document.getElementById('errorSection');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const loadingDetails = document.getElementById('loadingDetails');
+    
+    if (loadingDetails) {
+        loadingDetails.textContent = 'Checking sessionStorage for data...';
+    }
+    
+    // Read from sessionStorage
+    const resultData = sessionStorage.getItem('psychomatrixResult');
+    
+    if (!resultData) {
+        console.log('❌ DEBUG: No data in sessionStorage');
+        
+        setTimeout(() => {
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (errorSection) errorSection.classList.remove('tw-hidden');
+        }, 1000);
+        return;
+    }
+    
+    try {
+        console.log('📦 DEBUG: Parsing result data...');
+        if (loadingDetails) {
+            loadingDetails.textContent = 'Parsing JSON data...';
+        }
+        
+        const data = JSON.parse(resultData);
+        
+        if (!data.success) {
+            throw new Error(data.error || 'API returned error');
+        }
+        
+        window.analysisData = data;
+        
+        if (loadingDetails) {
+            loadingDetails.textContent = 'Loading Life Path properties...';
+        }
+        
+        // Load LifePathProperty.json
+        await loadLifePathProperties();
+        
+        if (loadingDetails) {
+            loadingDetails.textContent = 'Rendering results...';
+        }
+        
+        displayResults(data);
+        
+        setTimeout(() => {
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (resultsContainer) resultsContainer.classList.remove('tw-hidden');
+            console.log('✅ DEBUG: Results displayed successfully');
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ DEBUG: Error in loadAndDisplayResults:', error);
+        
+        if (loadingDetails) {
+            loadingDetails.textContent = `Error: ${error.message}`;
+        }
+        
+        setTimeout(() => {
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (errorSection) errorSection.classList.remove('tw-hidden');
+        }, 1000);
+    }
+}
+
+// Display results from API
+function displayResults(data) {
+    console.log('🎨 DEBUG: displayResults() called');
+    
+    const resultsContainer = document.getElementById('resultsContainer');
+    if (!resultsContainer) return;
+    
+    let html = '';
+    
+    if (data.results && Array.isArray(data.results)) {
+        console.log(`🎨 DEBUG: Found ${data.results.length} results`);
+        data.results.forEach((result, index) => {
+            html += createResultSection(result, index);
+        });
+    } else if (data.data) {
+        html += createSingleResultSection(data);
+    } else {
+        html += createFallbackDisplay(data);
+    }
+    
+    resultsContainer.innerHTML = html;
+    
+    // ตั้งค่า pinnacleData หากมีข้อมูล
+    if (data.results && data.results.length > 0 && data.results[0].data) {
+        const resultData = data.results[0].data;
+        if (resultData.birth_date) {
+            window.pinnacleData = {
+                lifePathNumber: resultData.life_path_number || resultData.destiny_number,
+                birth_date: resultData.birth_date,
+                UDate: resultData.birth_date.split('/')[0] || '',
+                UMonth: resultData.birth_date.split('/')[1] || '',
+                UYear: resultData.birth_date.split('/')[2] || ''
+            };
+        }
+    }
+}
+
+// ===== RESULT SECTION CREATION =====
+
+// Create result section for each result
+function createResultSection(result, index) {
+    const type = result.type || 'unknown';
+    const title = result.title || `Result ${index + 1}`;
+    const data = result.data || {};
+    
+    const destinyNum = data.destiny_number;
+    const lifePathNum = data.life_path_number;
+    const karmicNum = data.thirdAndFourth?.karmic;
+    const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+    
+    // Get life path details
+    const lifePathDetails = getLifePathDetails(lifePathNum);
+    const lifePathDetailsHTML = createLifePathDetailsHTML(lifePathNum, lifePathDetails);
+    
+    // ตรวจสอบว่ามีฟังก์ชัน pythagorean หรือไม่
+    const hasPythagorean = window.pythagorean && 
+                         typeof window.pythagorean.showPythagoreanSquare === 'function';
+    
+    return `
+        <div class="result-section">
+            <div class="section-header">
+                <i class="fas fa-chart-bar tw-mr-2"></i>${title}
+            </div>
+            <div class="section-content">
+                <!-- Number Grid -->
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="label">Life Path Number</div>
+                        ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
+                        <div class="description">Life path and purpose</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label">Destiny Number</div>
+                        ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
+                        <div class="description">${data.destiny_meaning || 'Personality and destiny'}</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label">Karmic Number</div>
+                        ${createNumberButton(karmicNum, 'Karmic', karmicNum)}
+                        <div class="description">Karmic debt</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="label">Life Lesson</div>
+                        ${createNumberButton(lifeLessonNum, 'LifeLesson', lifeLessonNum)}
+                        <div class="description">Life lessons</div>
+                    </div>
+                </div>
+                
+                <!-- Display Life Path Details from JSON -->
+                ${lifePathDetailsHTML}
+                
+                <!-- Buttons for additional content -->
+                <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
+                    ${hasPythagorean ? `
+                        <button onclick="window.pythagorean.showPythagoreanSquare(${index})" 
+                                class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                            Pythagorean Square
+                        </button>
+                        <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${index})" 
+                                class="tw-bg-purple-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-ml-4 tw-text-lg">
+                            Pythagorean Square (รวมเลขสิ่งแวดล้อม)
+                        </button>
+                    ` : `
+                        <button onclick="showPythagoreanSquare(${index})" 
+                                class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                            Pythagorean Square
+                        </button>
+                    `}
+                    <button onclick="loadPinnacle()" 
+                            class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4 tw-text-lg">
+                        Pinnacle Cycle
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Fallback function ถ้า pythagorean.js ไม่โหลด
+function showPythagoreanSquare(resultIndex) {
+    console.log(`📊 DEBUG: showPythagoreanSquare fallback called for index ${resultIndex}`);
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (explainedContent && explainedButton) {
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">Pythagorean Square function not available</p>
+                <p class="tw-text-sm">The pythagorean.js file failed to load. Please refresh the page.</p>
+            </div>
+        `;
+        switchTab('Explained', explainedButton);
+    }
+}
+
+// Create number button
+function createNumberButton(number, category, actualNumber) {
+    if (!number && number !== 0) return `<div class="text-gray">-</div>`;
+    
+    let filename;
+    switch(category) {
+        case 'Destiny': filename = `Destiny${number}.html`; break;
+        case 'LifePath': filename = `LifePathNumber${number}.html`; break;
+        case 'Karmic': filename = ``; break;
+        case 'LifeLesson': filename = `KarmicLesson${number}.html`; break;
+        default: filename = `${category}${number}.html`;
+    }
+    
+    let url = ``;
+    if (filename && window.BASE_PATH) {
+        url = `${window.BASE_PATH}/${filename}`;
+    }
+    
+    if (!filename) {
+        return `<div class="number-display">${number}</div>`;
+    }
+    
+    return `
+        <button class="number-button" 
+                onclick="loadExplainedContent('${url}', '${category}', ${number})">
+            ${number}
+        </button>
+    `;
+}
+
+// Create single result section
+function createSingleResultSection(data) {
+    return `
+        <div class="result-section">
+            <div class="section-header">
+                <i class="fas fa-chart-bar tw-mr-2"></i>Analysis Result
+            </div>
+            <div class="section-content">
+                <div class="tw-text-center tw-py-8">
+                    <p class="tw-text-gray-600">Single result mode - Data structure needs adjustment</p>
+                    <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data.data, null, 2)}</pre>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Create fallback display
+function createFallbackDisplay(data) {
+    return `
+        <div class="result-section">
+            <div class="section-header">
+                <i class="fas fa-exclamation-triangle tw-mr-2"></i>Raw Analysis Result
+            </div>
+            <div class="section-content">
+                <p class="tw-ml-4 tw-mt-2 tw-text-gray-600">The data structure is not in the expected format.</p>
+                <div class="tw-ml-4 tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-font-mono tw-text-sm">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== CONTENT LOADING FUNCTIONS =====
+
+// Load explained content
+function loadExplainedContent(url, category, number) {
+    console.log(`🔄 DEBUG: Loading ${category} ${number} from: ${url}`);
+    
+    if (!url) {
+        console.log('⚠️ DEBUG: No URL provided');
+        return;
+    }
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (!explainedContent || !explainedButton) {
+        console.error('❌ DEBUG: Explained content or button not found');
+        return;
+    }
+    
+    explainedContent.innerHTML = `
+        <div class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">Loading ${category} ${number}...</p>
+        </div>
+    `;
+    
+    switchTab('Explained', explainedButton);
+    
+    fetch(url, { 
+        method: 'GET',
+        cache: 'no-cache',
+        headers: { 'Accept': 'text/html' }
+    })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.text();
+        })
+        .then(html => {
+            const fixedHtml = fixRelativePaths(html);
+            explainedContent.innerHTML = `
+                <div class="external-content-body">
+                    ${fixedHtml}
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error(`❌ DEBUG: Error loading ${url}:`, error);
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8 tw-text-red-500">
+                    <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                    <p class="tw-font-bold">Cannot load content</p>
+                    <p class="tw-text-sm">${error.message}</p>
+                </div>
+            `;
+        });
+}
+
+// Load Pinnacle
+function loadPinnacle() {
+    console.log('📖 DEBUG: Loading Pinnacle Cycle');
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (!explainedContent || !explainedButton) {
+        console.error('❌ DEBUG: Explained content or button not found');
+        return;
+    }
+    
+    if (!window.pinnacleData || !window.pinnacleData.lifePathNumber) {
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">No birth date data available</p>
+                <p class="tw-text-sm">Please analyze birth date data first</p>
+            </div>
+        `;
+        switchTab('Explained', explainedButton);
+        return;
+    }
+    
+    const url = window.BASE_PATH ? `${window.BASE_PATH}/pinnacle.html` : 'pinnacle.html';
+    
+    explainedContent.innerHTML = `
+        <div class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">Loading Pinnacle Cycle...</p>
+        </div>
+    `;
+    
+    switchTab('Explained', explainedButton);
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.text();
+        })
+        .then(html => {
+            explainedContent.innerHTML = `
+                <div class="external-content-body">
+                    ${html}
+                </div>
+            `;
+        })
+        .catch(error => {
+            console.error(`❌ DEBUG: Error loading ${url}:`, error);
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8 tw-text-red-500">
+                    <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                    <p class="tw-font-bold">Cannot load Pinnacle Cycle</p>
+                    <p class="tw-text-sm">${error.message}</p>
+                </div>
+            `;
+        });
+}
+
+// Fix relative paths for GitHub Pages
+function fixRelativePaths(html) {
+    if (!window.BASE_PATH) return html;
+    
+    let fixedHtml = html;
+    
+    // Fix img src paths
+    fixedHtml = fixedHtml.replace(/src="([^"]*)"/g, function(match, path) {
+        if (path.startsWith('http') || path.startsWith('//') || path.startsWith('data:')) {
+            return match;
+        }
+        
+        let newPath;
+        if (path.startsWith('/')) {
+            newPath = `${window.BASE_PATH}${path}`;
+        } else if (path.startsWith('./')) {
+            newPath = `${window.BASE_PATH}/${path.substring(2)}`;
+        } else {
+            newPath = `${window.BASE_PATH}/${path}`;
+        }
+        
+        return `src="${newPath}"`;
+    });
+    
+    // Fix link href paths for CSS
+    fixedHtml = fixedHtml.replace(/href="([^"]*\.css)"/g, function(match, path) {
+        if (path.startsWith('http') || path.startsWith('//')) {
+            return match;
+        }
+        
+        let newPath;
+        if (path.startsWith('/')) {
+            newPath = `${window.BASE_PATH}${path}`;
+        } else if (path.startsWith('./')) {
+            newPath = `${window.BASE_PATH}/${path.substring(2)}`;
+        } else {
+            newPath = `${window.BASE_PATH}/${path}`;
+        }
+        
+        return `href="${newPath}"`;
+    });
+    
+    return fixedHtml;
+}
+
+// ===== EXPOSE FUNCTIONS TO GLOBAL SCOPE =====
+// ทำให้ฟังก์ชันเหล่านี้สามารถเรียกใช้จาก HTML ได้
+window.switchTab = switchTab;
+window.toggleDebugInfo = toggleDebugInfo;
+window.loadExplainedContent = loadExplainedContent;
+window.loadPinnacle = loadPinnacle;
+window.showPythagoreanSquare = showPythagoreanSquare;
+window.loadAndDisplayResults = loadAndDisplayResults;
+window.initializePage = initializePage;
+
+console.log('✅ DEBUG: result.js loaded completely');
