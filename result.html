@@ -18,7 +18,7 @@
     <!-- Psychomatrix Main CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     <link rel="stylesheet" href="css/result-style.css">
-
+    
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
@@ -32,31 +32,50 @@
     }
     </script>
     
-    <!-- ตรวจสอบ JavaScript ก่อนโหลด -->
+    <!-- Global Variables and Initialization -->
     <script>
-        console.log('🔧 DEBUG: Starting page load...');
+        // กำหนดตัวแปร global ก่อนโหลดไฟล์อื่น
+        window.analysisData = null;
+        window.pinnacleData = null;
+        window.lifePathProperties = null;
+        window.CONTENTS_DIR = 'PsychomatrixContents';
         
-        // ตรวจสอบว่าไฟล์ JavaScript โหลดสำเร็จหรือไม่
-        window.checkScriptsLoaded = function() {
-            console.log('🔍 DEBUG: Checking loaded scripts:');
-            console.log('  - window.switchTab:', typeof window.switchTab === 'function' ? '✅ Loaded' : '❌ Missing');
-            console.log('  - window.pythagorean:', window.pythagorean ? '✅ Loaded' : '❌ Missing');
-            console.log('  - window.pythagorean.showPythagoreanSquare:', 
-                window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function' ? '✅ Loaded' : '❌ Missing');
-            
-            return {
-                switchTab: typeof window.switchTab === 'function',
-                pythagorean: !!window.pythagorean,
-                showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
-            };
-        };
+        // ตรวจสอบว่าเป็น GitHub Pages หรือไม่
+        const currentPath = window.location.pathname;
+        const isGitHubPages = window.location.hostname.includes('github.io');
+        
+        if (isGitHubPages) {
+            // สำหรับ GitHub Pages
+            const pathParts = currentPath.split('/').filter(p => p);
+            const REPO_NAME = pathParts[0] || 'rainboworcakids';
+            window.BASE_PATH = `/${REPO_NAME}/${window.CONTENTS_DIR}`;
+            console.log('🌐 DEBUG: GitHub Pages mode, BASE_PATH:', window.BASE_PATH);
+        } else {
+            // สำหรับ Apache/localhost
+            const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            window.BASE_PATH = `${folderPath}/${window.CONTENTS_DIR}`;
+            console.log('🌐 DEBUG: Apache mode, BASE_PATH:', window.BASE_PATH);
+        }
+        
+        // ตรวจสอบการโหลดไฟล์
+        function checkScriptLoading() {
+            console.log('🔍 DEBUG: Checking script loading status...');
+            console.log('  - window.switchTab:', typeof window.switchTab);
+            console.log('  - window.pythagorean:', window.pythagorean);
+            console.log('  - window.analysisData:', window.analysisData);
+        }
+        
+        // เรียกตรวจสอบเมื่อโหลดหน้าเสร็จ
+        window.addEventListener('load', function() {
+            setTimeout(checkScriptLoading, 1000);
+        });
     </script>
 </head>
-<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
+<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v7.25-Complete-Integration
+        v7.3-Multi-File
     </div>
     
     <!-- Tab Buttons -->
@@ -105,11 +124,8 @@
         
         <!-- Debug Buttons -->
         <div class="tw-mt-8 tw-text-center tw-border-t tw-pt-4">
-            <button onclick="testPythagoreanButton()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
-                Test Pythagorean Button
-            </button>
-            <button onclick="checkScriptsLoaded()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm tw-ml-2">
-                Check Scripts
+            <button onclick="testFunctions()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
+                Test All Functions
             </button>
         </div>
         
@@ -123,59 +139,46 @@
         <div id="explainedContent" class="explained-content"></div>
     </div>
 
-    <!-- JavaScript Files - เปลี่ยนลำดับการโหลด -->
+    <!-- JavaScript Files - โหลดตามลำดับที่ถูกต้อง -->
     <script src="js/pythagorean.js"></script>
     <script src="js/result.js"></script>
-    <script src="js/debug-logger.js"></script>
 
-    <!-- ทดสอบการทำงานของปุ่ม -->
+    <!--  โหลด Debug Logger ก่อน -->
+    <script src="js/debug-logger.js"></script>
+      
+    
+    <!-- ตรวจสอบหลังโหลดเสร็จ -->
     <script>
-        // ฟังก์ชันทดสอบปุ่ม Pythagorean
-        function testPythagoreanButton() {
-            console.log('🧪 DEBUG: Testing Pythagorean button...');
+        function testFunctions() {
+            console.log('🧪 DEBUG: Testing all functions...');
             
-            // ตรวจสอบการโหลดสคริปต์
-            const scriptStatus = checkScriptsLoaded();
-            console.log('Script Status:', scriptStatus);
+            // ตรวจสอบฟังก์ชันจาก result.js
+            console.log('📋 result.js functions:');
+            console.log('  - switchTab:', typeof switchTab);
+            console.log('  - loadAndDisplayResults:', typeof loadAndDisplayResults);
+            console.log('  - loadExplainedContent:', typeof loadExplainedContent);
+            console.log('  - showPythagoreanSquare:', typeof showPythagoreanSquare);
             
-            // ตรวจสอบข้อมูล
-            console.log('Checking data...');
+            // ตรวจสอบฟังก์ชันจาก pythagorean.js
+            console.log('📋 pythagorean.js functions:');
+            console.log('  - window.pythagorean:', window.pythagorean);
+            if (window.pythagorean) {
+                console.log('    - showPythagoreanSquare:', typeof window.pythagorean.showPythagoreanSquare);
+                console.log('    - showCombinedPythagoreanSquare:', typeof window.pythagorean.showCombinedPythagoreanSquare);
+            }
+            
+            // ตรวจสอบตัวแปร global
+            console.log('📋 Global variables:');
             console.log('  - window.analysisData:', window.analysisData);
-            console.log('  - sessionStorage:', sessionStorage.getItem('psychomatrixResult') ? '✅ Has data' : '❌ No data');
+            console.log('  - window.BASE_PATH:', window.BASE_PATH);
+            console.log('  - window.CONTENTS_DIR:', window.CONTENTS_DIR);
             
-            // พยายามเรียกใช้ฟังก์ชันโดยตรง
-            if (window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function') {
-                console.log('✅ DEBUG: Calling pythagorean.showPythagoreanSquare(0)...');
-                try {
-                    window.pythagorean.showPythagoreanSquare(0);
-                } catch (error) {
-                    console.error('❌ DEBUG: Error calling function:', error);
-                }
+            // ทดสอบการทำงานของปุ่ม
+            const resultContainer = document.getElementById('resultsContainer');
+            if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
+                console.log('✅ Pythagorean buttons found in page');
             } else {
-                console.error('❌ DEBUG: pythagorean.showPythagoreanSquare is not available');
-                
-                // แสดง error ในหน้าจอ
-                const explainedContent = document.getElementById('explainedContent');
-                const explainedButton = document.querySelector('.tablink:nth-child(2)');
-                
-                if (explainedContent) {
-                    explainedContent.innerHTML = `
-                        <div class="tw-text-center tw-py-8 tw-text-red-500">
-                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                            <p class="tw-font-bold">JavaScript Function Error</p>
-                            <p class="tw-text-sm">pythagorean.showPythagoreanSquare is not a function</p>
-                            <div class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left">
-                                <p><strong>Possible causes:</strong></p>
-                                <ul class="tw-list-disc tw-list-inside tw-mt-2">
-                                    <li>pythagorean.js failed to load</li>
-                                    <li>JavaScript error in pythagorean.js</li>
-                                    <li>Function name mismatch</li>
-                                </ul>
-                            </div>
-                        </div>
-                    `;
-                    window.switchTab('Explained', explainedButton);
-                }
+                console.log('❌ No Pythagorean buttons found in page');
             }
         }
         
@@ -183,21 +186,32 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ DEBUG: DOM fully loaded');
             
-            // ตรวจสอบอีกครั้งหลังจากโหลดเสร็จ
-            setTimeout(() => {
-                console.log('🔍 DEBUG: Final script check:');
-                console.log('  - window.pythagorean:', window.pythagorean);
-                console.log('  - Type of showPythagoreanSquare:', 
-                    window.pythagorean ? typeof window.pythagorean.showPythagoreanSquare : 'N/A');
-                
-                // ตรวจสอบว่ามีปุ่มในหน้าไหม
-                const resultContainer = document.getElementById('resultsContainer');
-                if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
-                    console.log('✅ DEBUG: Pythagorean buttons found in HTML');
-                } else {
-                    console.log('❌ DEBUG: No Pythagorean buttons found in HTML');
+            // ตรวจสอบว่ามีข้อมูลใน sessionStorage หรือไม่
+            const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
+            if (psychomatrixResult) {
+                try {
+                    window.analysisData = JSON.parse(psychomatrixResult);
+                    console.log('✅ DEBUG: Loaded analysisData from sessionStorage');
+                } catch (error) {
+                    console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
                 }
-            }, 2000);
+            }
+            
+            // เรียกใช้ฟังก์ชันเริ่มต้นหลังจากโหลดไฟล์ JavaScript เสร็จ
+            setTimeout(() => {
+                // ตรวจสอบว่ามีฟังก์ชัน initializePage หรือไม่
+                if (typeof initializePage === 'function') {
+                    initializePage();
+                } else {
+                    console.error('❌ CRITICAL: initializePage function not found!');
+                    // ลองเปิด default tab โดยตรง
+                    try {
+                        document.getElementById("defaultOpen").click();
+                    } catch (error) {
+                        console.error('❌ Error opening default tab:', error);
+                    }
+                }
+            }, 100);
         });
     </script>
 
