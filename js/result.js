@@ -111,18 +111,19 @@ function initializePage() {
 // Load LifePathProperty.json
 async function loadLifePathProperties() {
     console.log('🔄 DEBUG: loadLifePathProperties() called');
+
+
+    // ในฟังก์ชัน loadLifePathProperties()
+const possiblePaths = [
+    // สำหรับ GitHub Pages
+    '/rainboworcakids/data/LifePathProperty.json',
+    '/rainboworcakids/PsychomatrixContents/data/LifePathProperty.json',
+    // สำหรับ local
+    '../data/LifePathProperty.json',
+    '../../data/LifePathProperty.json'
+];
     
-    // ลองหลายๆ path
-    const possiblePaths = [
-        // สำหรับ GitHub Pages
-        '/data/LifePathProperty.json',
-        './data/LifePathProperty.json',
-        '../data/LifePathProperty.json',
-        'data/LifePathProperty.json',
-        // สำหรับโครงสร้างอื่น
-        '../../data/LifePathProperty.json'
-    ];
-    
+        
     // เพิ่ม path จาก BASE_PATH ถ้ามี
     if (window.BASE_PATH) {
         possiblePaths.unshift(`${window.BASE_PATH}/../data/LifePathProperty.json`);
