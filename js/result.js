@@ -1,26 +1,7 @@
 // result.js - Main result handling functions
+console.log('🚀 DEBUG: result.js loaded');
 
-// Version Info
-const VERSION = 'v7.0-Complete-Integration';
-
-// Configuration for GitHub Pages
-const currentPath = window.location.pathname;
-const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
-const CONTENTS_DIR = 'PsychomatrixContents';
-const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
-
-console.log('🚀 DEBUG: result.js loaded -', VERSION);
-console.log('📍 DEBUG: currentPath:', currentPath);
-console.log('📍 DEBUG: folderPath:', folderPath);
-console.log('📍 DEBUG: BASE_PATH:', BASE_PATH);
-console.log('📍 DEBUG: CONTENTS_DIR:', CONTENTS_DIR);
-
-// Store analysis data
-let analysisData = null;
-let pinnacleData = null;
-
-// Store LifePathProperty.json data
-let lifePathProperties = null;
+// ===== GLOBAL FUNCTIONS =====
 
 // Tab switching function
 function switchTab(tabName, buttonElement) {
@@ -55,47 +36,68 @@ function switchTab(tabName, buttonElement) {
 // Toggle debug info
 function toggleDebugInfo() {
     const debugInfo = document.getElementById('debugInfo');
-    debugInfo.classList.toggle('tw-hidden');
+    if (debugInfo) {
+        debugInfo.classList.toggle('tw-hidden');
+    }
 }
+
+// ===== MAIN INITIALIZATION =====
 
 // Initialize page
 function initializePage() {
-    console.log('🌐 DEBUG: DOM Content Loaded');
-    console.log('🌐 DEBUG: Psychomatrix Results Loaded');
-    console.log('🌐 DEBUG: Timestamp:', new Date().toISOString());
+    console.log('🌐 DEBUG: initializePage() called');
+    
+    // ตรวจสอบว่าไฟล์ pythagorean.js โหลดแล้วหรือไม่
+    if (!window.pythagorean) {
+        console.error('❌ CRITICAL: pythagorean.js not loaded!');
+        
+        // แสดง error message
+        const errorSection = document.getElementById('errorSection');
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorSection && errorMessage) {
+            errorMessage.textContent = 'JavaScript files failed to load. Please refresh the page.';
+            errorSection.classList.remove('tw-hidden');
+        }
+        return;
+    }
+    
+    console.log('🌐 DEBUG: All JavaScript files loaded successfully');
     
     // Log all sessionStorage keys
     console.log('🔍 DEBUG: sessionStorage keys:', Object.keys(sessionStorage));
     
-    // Log specific keys we're looking for
+    // Check for data
     const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
     console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
     
     if (psychomatrixResult) {
-        console.log('🔍 DEBUG: psychomatrixResult length:', psychomatrixResult.length);
-        console.log('🔍 DEBUG: psychomatrixResult preview (first 500 chars):', psychomatrixResult.substring(0, 500));
+        try {
+            window.analysisData = JSON.parse(psychomatrixResult);
+            console.log('✅ DEBUG: Parsed analysisData');
+        } catch (error) {
+            console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
+        }
     }
-    
-    // Check for other possible storage locations
-    const localStorageData = localStorage.getItem('psychomatrixFormData');
-    console.log('🔍 DEBUG: localStorage psychomatrixFormData exists:', !!localStorageData);
-    
-    const lastData = localStorage.getItem('lastPsychomatrixData');
-    console.log('🔍 DEBUG: localStorage lastPsychomatrixData exists:', !!lastData);
-    
-    // Check URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    console.log('🔍 DEBUG: URL Parameters:', urlParams.toString());
     
     // Update loading details
     const loadingDetails = document.getElementById('loadingDetails');
     if (loadingDetails) {
-        loadingDetails.textContent = `Checking data sources...`;
+        loadingDetails.textContent = 'Initializing application...';
     }
     
     // Open default tab
     setTimeout(() => {
-        document.getElementById("defaultOpen").click();
+        try {
+            const defaultTab = document.getElementById("defaultOpen");
+            if (defaultTab) {
+                defaultTab.click();
+                console.log('✅ DEBUG: Default tab opened');
+            } else {
+                console.error('❌ DEBUG: defaultOpen button not found');
+            }
+        } catch (error) {
+            console.error('❌ DEBUG: Error opening default tab:', error);
+        }
         
         // Load and display results
         setTimeout(() => {
@@ -104,145 +106,171 @@ function initializePage() {
     }, 50);
 }
 
+// ===== DATA LOADING FUNCTIONS =====
+
 // Load LifePathProperty.json
 async function loadLifePathProperties() {
     console.log('🔄 DEBUG: loadLifePathProperties() called');
     
-    // ลองหลายๆ path ที่เป็นไปได้
+    // ลองหลายๆ path
     const possiblePaths = [
-        `${folderPath}/data/LifePathProperty.json`,
-        `./data/LifePathProperty.json`,
-        `../data/LifePathProperty.json`,
-        `${window.location.origin}${folderPath}/data/LifePathProperty.json`
+        // สำหรับ GitHub Pages
+        '/data/LifePathProperty.json',
+        './data/LifePathProperty.json',
+        '../data/LifePathProperty.json',
+        'data/LifePathProperty.json',
+        // สำหรับโครงสร้างอื่น
+        '../../data/LifePathProperty.json'
     ];
     
+    // เพิ่ม path จาก BASE_PATH ถ้ามี
+    if (window.BASE_PATH) {
+        possiblePaths.unshift(`${window.BASE_PATH}/../data/LifePathProperty.json`);
+    }
+    
+    // ลองโหลดจาก cache ก่อน
+    const cachedData = localStorage.getItem('lifePathPropertiesCache');
+    if (cachedData) {
+        try {
+            console.log('📦 DEBUG: Loading from localStorage cache');
+            const data = JSON.parse(cachedData);
+            window.lifePathProperties = data;
+            return data;
+        } catch (error) {
+            console.log('❌ DEBUG: Error parsing cache:', error);
+        }
+    }
+    
     for (const lifePathUrl of possiblePaths) {
-        console.log(`📂 DEBUG: Trying to load LifePathProperty.json from:`, lifePathUrl);
+        console.log(`📂 DEBUG: Trying to load from: "${lifePathUrl}"`);
         
         try {
             const response = await fetch(lifePathUrl);
-            console.log(`📂 DEBUG: Fetch response for ${lifePathUrl}:`, response.status, response.statusText);
+            console.log(`📂 DEBUG: Response status: ${response.status}`);
             
             if (!response.ok) {
-                console.log(`❌ DEBUG: Failed to load from ${lifePathUrl}, trying next...`);
+                console.log(`❌ DEBUG: Failed (${response.status}), trying next...`);
                 continue;
             }
             
             const data = await response.json();
-            console.log('✅ DEBUG: Loaded LifePathProperty.json successfully from:', lifePathUrl);
-            console.log('✅ DEBUG: Raw data type:', typeof data);
-            console.log('✅ DEBUG: Data structure:', data);
+            console.log('✅ DEBUG: Loaded successfully from:', lifePathUrl);
             
-            // Handle different data structures
-            if (Array.isArray(data)) {
-                console.log('✅ DEBUG: Data is an array, length:', data.length);
-                lifePathProperties = data;
-            } else if (typeof data === 'object' && data !== null) {
-                console.log('✅ DEBUG: Data is an object, keys:', Object.keys(data));
-                
-                // Try to convert object to array
-                // Method 1: Check if it has numeric keys (like {"1": {...}, "2": {...}})
-                const numericKeys = Object.keys(data).filter(key => !isNaN(key));
-                if (numericKeys.length > 0) {
-                    console.log('✅ DEBUG: Object has numeric keys, converting to array');
-                    lifePathProperties = Object.values(data).map((item, index) => {
-                        // Ensure each item has LifePathNumber
-                        if (!item.LifePathNumber && numericKeys[index]) {
-                            item.LifePathNumber = parseInt(numericKeys[index]);
-                        }
-                        return item;
-                    });
-                } 
-                // Method 2: Try to access by LifePathNumber property
-                else if (Object.values(data).some(item => item.LifePathNumber)) {
-                    console.log('✅ DEBUG: Object values have LifePathNumber property');
-                    lifePathProperties = Object.values(data);
-                } else {
-                    console.log('⚠️ DEBUG: Object structure not recognized, using as-is');
-                    lifePathProperties = data; // Keep as object
-                }
-            } else {
-                console.error('❌ DEBUG: Unknown data format:', typeof data);
-                lifePathProperties = null;
-            }
+            // บันทึกลง cache
+            localStorage.setItem('lifePathPropertiesCache', JSON.stringify(data));
             
-            console.log('✅ DEBUG: Final lifePathProperties:', lifePathProperties);
-            return lifePathProperties;
+            // ปรับโครงสร้างข้อมูล
+            window.lifePathProperties = normalizeLifePathData(data);
+            return window.lifePathProperties;
             
         } catch (error) {
-            console.log(`❌ DEBUG: Error loading from ${lifePathUrl}:`, error.message);
-            continue;
+            console.log(`❌ DEBUG: Error loading "${lifePathUrl}":`, error.message);
         }
     }
     
     console.error('❌ DEBUG: Failed to load LifePathProperty.json from all paths');
-    lifePathProperties = null;
-    return null;
+    return createFallbackLifePathData();
+}
+
+// ปรับโครงสร้างข้อมูล
+function normalizeLifePathData(data) {
+    if (!data) return null;
+    
+    // กรณี 1: data มีโครงสร้าง { LifePath: [...] } อยู่แล้ว
+    if (data.LifePath && Array.isArray(data.LifePath)) {
+        return data;
+    }
+    
+    // กรณี 2: data เป็น array โดยตรง
+    if (Array.isArray(data)) {
+        return { LifePath: data };
+    }
+    
+    // กรณี 3: data เป็น object ที่มี key เป็นตัวเลข
+    if (typeof data === 'object') {
+        const keys = Object.keys(data);
+        const numericKeys = keys.filter(key => !isNaN(parseInt(key)));
+        
+        if (numericKeys.length > 0) {
+            const lifePathArray = numericKeys.map(key => {
+                const item = data[key];
+                if (!item.ID) item.ID = key;
+                return item;
+            });
+            return { LifePath: lifePathArray };
+        }
+    }
+    
+    return data;
+}
+
+// สร้างข้อมูล fallback
+function createFallbackLifePathData() {
+    console.log('⚠️ DEBUG: Creating fallback LifePath data');
+    
+    const fallbackData = {
+        LifePath: [
+            { ID: "1", ShortDefinition: "ผู้นำ", MEANING: "ความเป็นผู้นำ", InherentDread: "..." },
+            { ID: "2", ShortDefinition: "ผู้ประสาน", MEANING: "การทำงานร่วมกัน", InherentDread: "..." },
+            { ID: "3", ShortDefinition: "ผู้สร้างสรรค์", MEANING: "ความคิดสร้างสรรค์", InherentDread: "..." },
+            { ID: "4", ShortDefinition: "ผู้สร้าง", MEANING: "ความมั่นคง", InherentDread: "..." },
+            { ID: "5", ShortDefinition: "ผู้เปลี่ยนแปลง", MEANING: "การเปลี่ยนแปลง", InherentDread: "..." },
+            { ID: "6", ShortDefinition: "ผู้ดูแล", MEANING: "ความรับผิดชอบ", InherentDread: "..." },
+            { ID: "7", ShortDefinition: "ผู้แสวงหา", MEANING: "ปัญญา", InherentDread: "..." },
+            { ID: "8", ShortDefinition: "ผู้บริหาร", MEANING: "ความสำเร็จ", InherentDread: "..." },
+            { ID: "9", ShortDefinition: "ผู้ให้", MEANING: "มนุษยธรรม", InherentDread: "..." }
+        ]
+    };
+    
+    localStorage.setItem('lifePathPropertiesCache', JSON.stringify(fallbackData));
+    window.lifePathProperties = fallbackData;
+    return fallbackData;
 }
 
 // Get life path details from JSON
 function getLifePathDetails(lifePathNumber) {
     console.log("🔍 DEBUG: getLifePathDetails() called for number:", lifePathNumber);
     
-    // ตรวจสอบว่า lifePathProperties มีข้อมูลและมีโครงสร้างถูกต้อง
-    if (!lifePathProperties || !lifePathProperties.LifePath || !Array.isArray(lifePathProperties.LifePath)) {
-        console.log("❌ DEBUG: lifePathProperties not loaded properly or wrong structure");
+    if (!window.lifePathProperties) {
+        console.log("❌ DEBUG: lifePathProperties not loaded");
         return null;
     }
     
-    // แปลงตัวเลขเป็น string เพื่อค้นหา (เพราะใน JSON เก็บ ID เป็น string)
     const targetId = lifePathNumber.toString();
     
-    console.log("🔍 DEBUG: Searching for ID:", targetId);
-    console.log("🔍 DEBUG: LifePath array length:", lifePathProperties.LifePath.length);
-    
-    // ค้นหาใน array LifePath
-    const foundItem = lifePathProperties.LifePath.find(item => {
-        if (item && item.ID) {
-            const match = item.ID === targetId;
-            if (match) {
-                console.log("✅ DEBUG: Found matching item:", item);
-            }
-            return match;
-        }
-        return false;
-    });
-    
-    if (foundItem) {
-        console.log("✅ DEBUG: Successfully found life path details for number:", lifePathNumber);
-        return foundItem;
+    let lifePathArray = [];
+    if (window.lifePathProperties.LifePath && Array.isArray(window.lifePathProperties.LifePath)) {
+        lifePathArray = window.lifePathProperties.LifePath;
+    } else if (Array.isArray(window.lifePathProperties)) {
+        lifePathArray = window.lifePathProperties;
     } else {
-        console.log("❌ DEBUG: No life path found for number:", lifePathNumber);
-        console.log("❌ DEBUG: Available IDs:", lifePathProperties.LifePath.map(item => item.ID));
         return null;
     }
+    
+    const foundItem = lifePathArray.find(item => {
+        return item && item.ID && item.ID.toString() === targetId;
+    });
+    
+    return foundItem || null;
 }
 
 // Create HTML for life path details
 function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
-    console.log('🖼️ DEBUG: createLifePathDetailsHTML() called');
-    console.log('🖼️ DEBUG: lifePathNumber:', lifePathNumber);
-    console.log('🖼️ DEBUG: lifePathData:', lifePathData);
-    
     if (!lifePathData) {
-        console.log('⚠️ DEBUG: No lifePathData for number:', lifePathNumber);
         return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
     }
     
     return `
         <div class="life-path-details">
             <h3>Life Path Number ${lifePathNumber} Details</h3>
-            
             <div class="life-path-detail-item">
                 <h4>Short Definition</h4>
                 <p>${lifePathData.ShortDefinition || 'No definition available'}</p>
             </div>
-            
             <div class="life-path-detail-item">
                 <h4>Meaning</h4>
                 <p>${lifePathData.MEANING || 'No meaning available'}</p>
             </div>
-            
             <div class="life-path-detail-item inherent-dread">
                 <h4>Inherent Dread</h4>
                 <p>${lifePathData.InherentDread || 'No inherent dread specified'}</p>
@@ -251,9 +279,11 @@ function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
     `;
 }
 
+// ===== MAIN RESULT LOADING =====
+
 // Load results from sessionStorage
 async function loadAndDisplayResults() {
-    console.log('🔄 DEBUG: Starting loadAndDisplayResults()');
+    console.log('🔄 DEBUG: loadAndDisplayResults() called');
     
     const loadingSection = document.getElementById('loadingSection');
     const errorSection = document.getElementById('errorSection');
@@ -261,46 +291,18 @@ async function loadAndDisplayResults() {
     const loadingDetails = document.getElementById('loadingDetails');
     
     if (loadingDetails) {
-        loadingDetails.textContent = `Checking sessionStorage for data...`;
+        loadingDetails.textContent = 'Checking sessionStorage for data...';
     }
     
     // Read from sessionStorage
     const resultData = sessionStorage.getItem('psychomatrixResult');
     
-    console.log('🔍 DEBUG: Checking sessionStorage for psychomatrixResult:', resultData ? '✅ Data found' : '❌ No data');
-    
     if (!resultData) {
-        console.log('❌ DEBUG: No data in sessionStorage. Checking other sources...');
-        
-        // Check localStorage as fallback
-        const localStorageData = localStorage.getItem('psychomatrixFormData');
-        const lastData = localStorage.getItem('lastPsychomatrixData');
-        
-        if (loadingDetails) {
-            loadingDetails.textContent = `No sessionStorage data. Checking localStorage...`;
-        }
-        
-        // Update debug info
-        const debugSessionStorage = document.getElementById('debugSessionStorage');
-        const debugLocalStorage = document.getElementById('debugLocalStorage');
-        const debugURLParams = document.getElementById('debugURLParams');
-        
-        if (debugSessionStorage) {
-            debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData ? 'Exists (' + resultData.length + ' chars)' : 'NOT FOUND'}`;
-        }
-        
-        if (debugLocalStorage) {
-            debugLocalStorage.textContent = `localStorage.psychomatrixFormData: ${localStorageData ? 'Exists' : 'NOT FOUND'} | localStorage.lastPsychomatrixData: ${lastData ? 'Exists' : 'NOT FOUND'}`;
-        }
-        
-        if (debugURLParams) {
-            const urlParams = new URLSearchParams(window.location.search);
-            debugURLParams.textContent = `URL Parameters: ${urlParams.toString() || 'None'}`;
-        }
+        console.log('❌ DEBUG: No data in sessionStorage');
         
         setTimeout(() => {
-            loadingSection.classList.add('tw-hidden');
-            errorSection.classList.remove('tw-hidden');
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (errorSection) errorSection.classList.remove('tw-hidden');
         }, 1000);
         return;
     }
@@ -308,125 +310,88 @@ async function loadAndDisplayResults() {
     try {
         console.log('📦 DEBUG: Parsing result data...');
         if (loadingDetails) {
-            loadingDetails.textContent = `Parsing JSON data (${resultData.length} characters)...`;
+            loadingDetails.textContent = 'Parsing JSON data...';
         }
         
         const data = JSON.parse(resultData);
-        console.log('📦 DEBUG: Parsed data structure:', data);
+        
+        if (!data.success) {
+            throw new Error(data.error || 'API returned error');
+        }
+        
+        window.analysisData = data;
         
         if (loadingDetails) {
-            loadingDetails.textContent = `Loading Life Path properties...`;
+            loadingDetails.textContent = 'Loading Life Path properties...';
         }
         
         // Load LifePathProperty.json
-        console.log('📦 DEBUG: Calling loadLifePathProperties()...');
         await loadLifePathProperties();
-        console.log('📦 DEBUG: loadLifePathProperties() completed');
-        console.log('📦 DEBUG: lifePathProperties after load:', lifePathProperties);
         
         if (loadingDetails) {
-            loadingDetails.textContent = `Checking data validity...`;
-        }
-        
-        if (!data.success) {
-            const errorMsg = data.error || 'API returned error';
-            console.error('❌ DEBUG: API error:', errorMsg);
-            throw new Error(errorMsg);
-        }
-        
-        console.log('✅ DEBUG: Data valid. Displaying results...');
-        if (loadingDetails) {
-            loadingDetails.textContent = `Rendering results...`;
+            loadingDetails.textContent = 'Rendering results...';
         }
         
         displayResults(data);
         
         setTimeout(() => {
-            loadingSection.classList.add('tw-hidden');
-            resultsContainer.classList.remove('tw-hidden');
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (resultsContainer) resultsContainer.classList.remove('tw-hidden');
             console.log('✅ DEBUG: Results displayed successfully');
         }, 500);
         
     } catch (error) {
         console.error('❌ DEBUG: Error in loadAndDisplayResults:', error);
-        console.error('❌ DEBUG: Error stack:', error.stack);
         
         if (loadingDetails) {
             loadingDetails.textContent = `Error: ${error.message}`;
         }
         
-        // Update error message
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.textContent = `Error: ${error.message}`;
-        }
-        
-        // Show debug info
-        const debugSessionStorage = document.getElementById('debugSessionStorage');
-        if (debugSessionStorage && resultData) {
-            debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData.substring(0, 200)}...`;
-        }
-        
         setTimeout(() => {
-            loadingSection.classList.add('tw-hidden');
-            errorSection.classList.remove('tw-hidden');
+            if (loadingSection) loadingSection.classList.add('tw-hidden');
+            if (errorSection) errorSection.classList.remove('tw-hidden');
         }, 1000);
     }
 }
 
 // Display results from API
 function displayResults(data) {
-    console.log('🎨 DEBUG: Starting displayResults()');
-    console.log('🎨 DEBUG: Data received:', data);
+    console.log('🎨 DEBUG: displayResults() called');
     
     const resultsContainer = document.getElementById('resultsContainer');
+    if (!resultsContainer) return;
+    
     let html = '';
     
-    console.log('🎨 DEBUG: Checking results structure...');
-    console.log('🎨 DEBUG: data.results:', data.results);
-    console.log('🎨 DEBUG: data.data:', data.data);
-    
-    // เก็บข้อมูล analysis ไว้ใช้สำหรับ Pythagorean Square
-    analysisData = data;
-    
-    // ตั้งค่าใน global scope สำหรับไฟล์อื่นๆ ที่อาจเรียกใช้
-    window.analysisData = data;
-    console.log('✅ DEBUG: Set window.analysisData:', window.analysisData !== null);
-    
     if (data.results && Array.isArray(data.results)) {
-        console.log(`🎨 DEBUG: Found ${data.results.length} results in array`);
+        console.log(`🎨 DEBUG: Found ${data.results.length} results`);
         data.results.forEach((result, index) => {
-            console.log(`🎨 DEBUG: Result ${index}:`, result);
             html += createResultSection(result, index);
         });
     } else if (data.data) {
-        console.log('🎨 DEBUG: Using single result mode with data.data');
         html += createSingleResultSection(data);
     } else {
-        console.log('🎨 DEBUG: No standard structure found, creating fallback display');
         html += createFallbackDisplay(data);
     }
     
     resultsContainer.innerHTML = html;
-    console.log('✅ DEBUG: HTML content set, length:', html.length);
+    
+    // ตั้งค่า pinnacleData หากมีข้อมูล
+    if (data.results && data.results.length > 0 && data.results[0].data) {
+        const resultData = data.results[0].data;
+        if (resultData.birth_date) {
+            window.pinnacleData = {
+                lifePathNumber: resultData.life_path_number || resultData.destiny_number,
+                birth_date: resultData.birth_date,
+                UDate: resultData.birth_date.split('/')[0] || '',
+                UMonth: resultData.birth_date.split('/')[1] || '',
+                UYear: resultData.birth_date.split('/')[2] || ''
+            };
+        }
+    }
 }
 
-// Create single result section
-function createSingleResultSection(data) {
-    return `
-        <div class="result-section">
-            <div class="section-header">
-                <i class="fas fa-chart-bar tw-mr-2"></i>Analysis Result
-            </div>
-            <div class="section-content">
-                <div class="tw-text-center tw-py-8">
-                    <p class="tw-text-gray-600">Single result mode - Data structure needs adjustment</p>
-                    <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data.data, null, 2)}</pre>
-                </div>
-            </div>
-        </div>
-    `;
-}
+// ===== RESULT SECTION CREATION =====
 
 // Create result section for each result
 function createResultSection(result, index) {
@@ -439,27 +404,13 @@ function createResultSection(result, index) {
     const karmicNum = data.thirdAndFourth?.karmic;
     const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
     
-    console.log('🎨 DEBUG: Creating result section:', { 
-        type, title, destinyNum, lifePathNum, karmicNum, lifeLessonNum 
-    });
-    
-    // Extract pinnacle data if available
-    if (data.birth_date && destinyNum) {
-        pinnacleData = {
-            lifePathNumber: lifePathNum || destinyNum,
-            birth_date: data.birth_date,
-            UDate: data.birth_date ? data.birth_date.split('/')[0] : '',
-            UMonth: data.birth_date ? data.birth_date.split('/')[1] : '',
-            UYear: data.birth_date ? data.birth_date.split('/')[2] : ''
-        };
-        console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
-    }
-    
-    // Get life path details from JSON
-    console.log('🎨 DEBUG: Getting life path details for number:', lifePathNum);
+    // Get life path details
     const lifePathDetails = getLifePathDetails(lifePathNum);
-    console.log('🎨 DEBUG: Life path details found:', lifePathDetails);
     const lifePathDetailsHTML = createLifePathDetailsHTML(lifePathNum, lifePathDetails);
+    
+    // ตรวจสอบว่ามีฟังก์ชัน pythagorean หรือไม่
+    const hasPythagorean = window.pythagorean && 
+                         typeof window.pythagorean.showPythagoreanSquare === 'function';
     
     return `
         <div class="result-section">
@@ -467,14 +418,13 @@ function createResultSection(result, index) {
                 <i class="fas fa-chart-bar tw-mr-2"></i>${title}
             </div>
             <div class="section-content">
-                
                 <!-- Number Grid -->
                 <div class="data-grid">
                     <div class="data-item">
                         <div class="label">Life Path Number</div>
                         ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
                         <div class="description">Life path and purpose</div>
-                    </div>                        
+                    </div>
                     <div class="data-item">
                         <div class="label">Destiny Number</div>
                         ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
@@ -497,17 +447,24 @@ function createResultSection(result, index) {
                 
                 <!-- Buttons for additional content -->
                 <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
-                    <button onclick="pythagorean.showPythagoreanSquare(${index})" 
-                            class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
-                        Pythagorean Square
-                    </button>
+                    ${hasPythagorean ? `
+                        <button onclick="window.pythagorean.showPythagoreanSquare(${index})" 
+                                class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                            Pythagorean Square
+                        </button>
+                        <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${index})" 
+                                class="tw-bg-purple-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-ml-4 tw-text-lg">
+                            Pythagorean Square (รวมเลขสิ่งแวดล้อม)
+                        </button>
+                    ` : `
+                        <button onclick="showPythagoreanSquare(${index})" 
+                                class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                            Pythagorean Square
+                        </button>
+                    `}
                     <button onclick="loadPinnacle()" 
                             class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4 tw-text-lg">
                         Pinnacle Cycle
-                    </button>
-                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${index})" 
-                            class="tw-bg-purple-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-mt-4 tw-text-lg">
-                        Pythagorean Square (รวมเลขสิ่งแวดล้อม)
                     </button>
                 </div>
             </div>
@@ -515,32 +472,45 @@ function createResultSection(result, index) {
     `;
 }
 
+// Fallback function ถ้า pythagorean.js ไม่โหลด
+function showPythagoreanSquare(resultIndex) {
+    console.log(`📊 DEBUG: showPythagoreanSquare fallback called for index ${resultIndex}`);
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (explainedContent && explainedButton) {
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">Pythagorean Square function not available</p>
+                <p class="tw-text-sm">The pythagorean.js file failed to load. Please refresh the page.</p>
+            </div>
+        `;
+        switchTab('Explained', explainedButton);
+    }
+}
+
 // Create number button
 function createNumberButton(number, category, actualNumber) {
     if (!number && number !== 0) return `<div class="text-gray">-</div>`;
     
-    // Filename mapping
     let filename;
     switch(category) {
-        case 'Destiny':
-            filename = `Destiny${number}.html`;
-            break;
-        case 'LifePath':
-            filename = `LifePathNumber${number}.html`;
-            break;
-        case 'Karmic':
-            filename = ``;
-            break;
-        case 'LifeLesson':
-            filename = `KarmicLesson${number}.html`;
-            break;
-        default:
-            filename = `${category}${number}.html`;
+        case 'Destiny': filename = `Destiny${number}.html`; break;
+        case 'LifePath': filename = `LifePathNumber${number}.html`; break;
+        case 'Karmic': filename = ``; break;
+        case 'LifeLesson': filename = `KarmicLesson${number}.html`; break;
+        default: filename = `${category}${number}.html`;
     }
     
-    let url = `${BASE_PATH}/${filename}`;
-    if ( filename === ``) {
-        url = ``;
+    let url = ``;
+    if (filename && window.BASE_PATH) {
+        url = `${window.BASE_PATH}/${filename}`;
+    }
+    
+    if (!filename) {
+        return `<div class="number-display">${number}</div>`;
     }
     
     return `
@@ -551,53 +521,63 @@ function createNumberButton(number, category, actualNumber) {
     `;
 }
 
-// Create fallback display
-function createFallbackDisplay(data) {
-    console.log('🎨 DEBUG: Creating fallback display for data:', data);
-    
+// Create single result section
+function createSingleResultSection(data) {
     return `
         <div class="result-section">
             <div class="section-header">
-                <i class="fas fa-exclamation-triangle tw-mr-2"></i>Raw Analysis Result
+                <i class="fas fa-chart-bar tw-mr-2"></i>Analysis Result
             </div>
             <div class="section-content">
-                <p class="tw-ml-4 tw-mt-2 tw-text-gray-600">The data structure is not in the expected format. Here's what was received:</p>
-                <div class="tw-ml-4 tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-font-mono tw-text-sm">
-                    <pre>${JSON.stringify(data, null, 2)}</pre>
-                </div>
-                
-                <!-- Buttons for additional content -->
-                <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
-                    <button onclick="pythagorean.showPythagoreanSquare(0)" 
-                            class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block">
-                        Pythagorean Square
-                    </button>
-                    <button onclick="loadPinnacle()" 
-                            class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4">
-                        Pinnacle Cycle
-                    </button>
+                <div class="tw-text-center tw-py-8">
+                    <p class="tw-text-gray-600">Single result mode - Data structure needs adjustment</p>
+                    <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data.data, null, 2)}</pre>
                 </div>
             </div>
         </div>
     `;
 }
 
-// Load explained content (สำหรับปุ่มตัวเลข)
+// Create fallback display
+function createFallbackDisplay(data) {
+    return `
+        <div class="result-section">
+            <div class="section-header">
+                <i class="fas fa-exclamation-triangle tw-mr-2"></i>Raw Analysis Result
+            </div>
+            <div class="section-content">
+                <p class="tw-ml-4 tw-mt-2 tw-text-gray-600">The data structure is not in the expected format.</p>
+                <div class="tw-ml-4 tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-font-mono tw-text-sm">
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ===== CONTENT LOADING FUNCTIONS =====
+
+// Load explained content
 function loadExplainedContent(url, category, number) {
     console.log(`🔄 DEBUG: Loading ${category} ${number} from: ${url}`);
     
-    if ( url === ``) {
-        return ``;
+    if (!url) {
+        console.log('⚠️ DEBUG: No URL provided');
+        return;
     }
-
+    
     const explainedContent = document.getElementById('explainedContent');
     const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (!explainedContent || !explainedButton) {
+        console.error('❌ DEBUG: Explained content or button not found');
+        return;
+    }
     
     explainedContent.innerHTML = `
         <div class="tw-text-center tw-py-8">
             <div class="spinner"></div>
             <p class="tw-mt-4 tw-text-gray-600">Loading ${category} ${number}...</p>
-            <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
         </div>
     `;
     
@@ -609,28 +589,16 @@ function loadExplainedContent(url, category, number) {
         headers: { 'Accept': 'text/html' }
     })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.text();
         })
         .then(html => {
-            console.log(`✅ DEBUG: Success loading ${url} (${html.length} bytes)`);
-            
-            // Fix relative paths
             const fixedHtml = fixRelativePaths(html);
-            
             explainedContent.innerHTML = `
                 <div class="external-content-body">
                     ${fixedHtml}
                 </div>
             `;
-            
-            // เรียกฟังก์ชันปรับปรุง layout หลังจากโหลดเนื้อหาเสร็จ
-            setTimeout(() => {
-                adjustExplainedLayout();
-            }, 100);
-            
         })
         .catch(error => {
             console.error(`❌ DEBUG: Error loading ${url}:`, error);
@@ -639,7 +607,6 @@ function loadExplainedContent(url, category, number) {
                     <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
                     <p class="tw-font-bold">Cannot load content</p>
                     <p class="tw-text-sm">${error.message}</p>
-                    <p class="tw-text-sm tw-text-gray-500 tw-mt-2">URL: ${url}</p>
                 </div>
             `;
         });
@@ -652,26 +619,29 @@ function loadPinnacle() {
     const explainedContent = document.getElementById('explainedContent');
     const explainedButton = document.querySelector('.tablink:nth-child(2)');
     
-    if (!pinnacleData || !pinnacleData.lifePathNumber) {
+    if (!explainedContent || !explainedButton) {
+        console.error('❌ DEBUG: Explained content or button not found');
+        return;
+    }
+    
+    if (!window.pinnacleData || !window.pinnacleData.lifePathNumber) {
         explainedContent.innerHTML = `
             <div class="tw-text-center tw-py-8 tw-text-red-500">
                 <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
                 <p class="tw-font-bold">No birth date data available</p>
-                <p class="tw-text-sm">Please analyze birth date data first to view Pinnacle Cycle</p>
+                <p class="tw-text-sm">Please analyze birth date data first</p>
             </div>
         `;
         switchTab('Explained', explainedButton);
         return;
     }
     
-    const url = `${BASE_PATH}/pinnacle.html`;
-    console.log('📖 DEBUG: Pinnacle URL:', url);
+    const url = window.BASE_PATH ? `${window.BASE_PATH}/pinnacle.html` : 'pinnacle.html';
     
     explainedContent.innerHTML = `
         <div class="tw-text-center tw-py-8">
             <div class="spinner"></div>
             <p class="tw-mt-4 tw-text-gray-600">Loading Pinnacle Cycle...</p>
-            <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
         </div>
     `;
     
@@ -679,9 +649,7 @@ function loadPinnacle() {
     
     fetch(url)
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             return response.text();
         })
         .then(html => {
@@ -703,46 +671,9 @@ function loadPinnacle() {
         });
 }
 
-// ปรับปรุง layout ของเนื้อหาใน Explained Tab
-function adjustExplainedLayout() {
-    const explainedContent = document.getElementById('explainedContent');
-    if (!explainedContent) return;
-    
-    // หา header ในเนื้อหาที่โหลดมา
-    const pageHeader = explainedContent.querySelector('.page-header');
-    if (pageHeader) {
-        // ตรวจสอบว่ามี modern-number-overlay หรือไม่
-        const modernNumberOverlay = pageHeader.querySelector('.modern-number-overlay');
-        if (modernNumberOverlay) {
-            // ถ้ามีให้ปรับแต่งเพิ่มเติม
-            const numbers = modernNumberOverlay.querySelectorAll('.modern-number');
-            if (numbers.length >= 2) {
-                numbers[0].style.left = '0';
-                numbers[0].style.top = '0';
-                numbers[0].style.width = '120px';
-                numbers[0].style.height = '120px';
-                
-                numbers[1].style.left = '20px';
-                numbers[1].style.top = '20px';
-                numbers[1].style.width = '120px';
-                numbers[1].style.height = '120px';
-                numbers[1].style.opacity = '0.6';
-            }
-        }
-    }
-    
-    // ปรับปรุงหัวข้อ h1 ให้มีระยะห่างที่เหมาะสม
-    const h1 = explainedContent.querySelector('h1');
-    if (h1) {
-        h1.style.marginLeft = '20px';
-        h1.style.paddingTop = '10px';
-        h1.style.maxWidth = 'calc(100% - 160px)';
-    }
-}
-
 // Fix relative paths for GitHub Pages
 function fixRelativePaths(html) {
-    console.log('🔧 DEBUG: Fixing relative paths in HTML');
+    if (!window.BASE_PATH) return html;
     
     let fixedHtml = html;
     
@@ -754,14 +685,13 @@ function fixRelativePaths(html) {
         
         let newPath;
         if (path.startsWith('/')) {
-            newPath = `${BASE_PATH}${path}`;
+            newPath = `${window.BASE_PATH}${path}`;
         } else if (path.startsWith('./')) {
-            newPath = `${BASE_PATH}/${path.substring(2)}`;
+            newPath = `${window.BASE_PATH}/${path.substring(2)}`;
         } else {
-            newPath = `${BASE_PATH}/${path}`;
+            newPath = `${window.BASE_PATH}/${path}`;
         }
         
-        console.log(`🔧 DEBUG: Fixed img path: ${path} -> ${newPath}`);
         return `src="${newPath}"`;
     });
     
@@ -773,39 +703,27 @@ function fixRelativePaths(html) {
         
         let newPath;
         if (path.startsWith('/')) {
-            newPath = `${BASE_PATH}${path}`;
+            newPath = `${window.BASE_PATH}${path}`;
         } else if (path.startsWith('./')) {
-            newPath = `${BASE_PATH}/${path.substring(2)}`;
+            newPath = `${window.BASE_PATH}/${path.substring(2)}`;
         } else {
-            newPath = `${BASE_PATH}/${path}`;
+            newPath = `${window.BASE_PATH}/${path}`;
         }
         
-        console.log(`🔧 DEBUG: Fixed CSS path: ${path} -> ${newPath}`);
         return `href="${newPath}"`;
     });
     
     return fixedHtml;
 }
 
-// ตรวจสอบว่า pythagorean ถูกโหลดแล้วหรือไม่
-function checkPythagoreanLoaded() {
-    if (!window.pythagorean || !window.pythagorean.showPythagoreanSquare) {
-        console.error('❌ DEBUG: pythagorean.js not loaded properly');
-        return false;
-    }
-    console.log('✅ DEBUG: pythagorean.js loaded successfully');
-    return true;
-}
-
-// Expose functions to global scope
+// ===== EXPOSE FUNCTIONS TO GLOBAL SCOPE =====
+// ทำให้ฟังก์ชันเหล่านี้สามารถเรียกใช้จาก HTML ได้
 window.switchTab = switchTab;
 window.toggleDebugInfo = toggleDebugInfo;
 window.loadExplainedContent = loadExplainedContent;
 window.loadPinnacle = loadPinnacle;
-window.analysisData = analysisData;
-window.pinnacleData = pinnacleData;
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', initializePage);
+window.showPythagoreanSquare = showPythagoreanSquare;
+window.loadAndDisplayResults = loadAndDisplayResults;
+window.initializePage = initializePage;
 
 console.log('✅ DEBUG: result.js loaded completely');
