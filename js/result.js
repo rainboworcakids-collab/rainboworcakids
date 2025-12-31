@@ -1,5 +1,5 @@
 // result.js - Main result handling functions
-console.log('🚀 DEBUG: result.js loaded');
+console.log('🚀 DEBUG: result.js loaded - Version 7.5');
 
 // ===== GLOBAL FUNCTIONS =====
 
