@@ -1,29 +1,31 @@
-// pythagorean.js - Pythagorean Square calculations using Edge Function
+// pythagorean.js - Pythagorean Square calculations
+console.log('🚀 DEBUG: pythagorean.js loaded');
 
-// ===== Edge Function Configuration =====
-// เปลี่ยน URL นี้เป็น URL ของ Edge Function ของคุณ
-const EDGE_FUNCTION_URL = 'https://oibubvhuiuurkxhnefsw.supabase.co/functions/v1/psychomatrix-pythagorean';
-
-// Create global namespace for pythagorean functions
+// Create global namespace
 const pythagorean = {
     // Show Pythagorean Square
     showPythagoreanSquare: async function(resultIndex) {
-        console.log(`📊 DEBUG: Showing Pythagorean Square for result ${resultIndex}`);
+        console.log(`📊 DEBUG: showPythagoreanSquare called for index ${resultIndex}`);
         await this._calculatePythagoreanSquare(resultIndex, 'basic');
     },
 
     // Show Combined Pythagorean Square
     showCombinedPythagoreanSquare: async function(resultIndex) {
-        console.log(`📊 DEBUG: Showing Combined Pythagorean Square for result ${resultIndex}`);
+        console.log(`📊 DEBUG: showCombinedPythagoreanSquare called for index ${resultIndex}`);
         await this._calculatePythagoreanSquare(resultIndex, 'combined');
     },
 
-    // Main calculation function using Edge Function
+    // Main calculation function
     _calculatePythagoreanSquare: async function(resultIndex, calculationType) {
         const explainedContent = document.getElementById('explainedContent');
         const explainedButton = document.querySelector('.tablink:nth-child(2)');
         
-        // ตรวจสอบว่ามีข้อมูลหรือไม่ (ใช้ฟังก์ชันตรวจสอบใหม่)
+        if (!explainedContent || !explainedButton) {
+            console.error('❌ DEBUG: Explained content or button not found');
+            return;
+        }
+        
+        // ตรวจสอบข้อมูล
         const analysisData = this._getAnalysisData();
         
         if (!analysisData) {
@@ -31,11 +33,6 @@ const pythagorean = {
                 <div class="tw-text-center tw-py-8 tw-text-red-500">
                     <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
                     <p class="tw-font-bold">No analysis data available</p>
-                    <p class="tw-text-sm">Please analyze your data first on the Psychomatrix page</p>
-                    <button onclick="window.location.href='Psychomatrix.html'" 
-                            class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
-                        Go to Input Form
-                    </button>
                 </div>
             `;
             window.switchTab('Explained', explainedButton);
@@ -55,20 +52,13 @@ const pythagorean = {
                 title = result.title || title;
                 resultIndex = 0;
             }
-        } else if (analysisData.data) {
-            result = {
-                data: analysisData.data,
-                title: 'Analysis Result',
-                type: 'full-name'
-            };
-            title = 'Analysis Result';
         }
         
         if (!result) {
             explainedContent.innerHTML = `
                 <div class="tw-text-center tw-py-8 tw-text-red-500">
                     <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                    <p class="tw-font-bold">No Pythagorean Square data available</p>
+                    <p class="tw-font-bold">No data available</p>
                 </div>
             `;
             window.switchTab('Explained', explainedButton);
@@ -80,79 +70,39 @@ const pythagorean = {
             <div class="tw-text-center tw-py-8">
                 <div class="spinner"></div>
                 <p class="tw-mt-4 tw-text-gray-600">Calculating Pythagorean Square...</p>
-                <p class="tw-text-sm tw-text-gray-500">Using Edge Function: ${calculationType} calculation</p>
             </div>
         `;
         window.switchTab('Explained', explainedButton);
         
         try {
-            // สร้าง request body สำหรับ Edge Function
-            const requestBody = {
-                result_data: {
-                    type: result.type || 'full-name',
-                    data: result.data
-                },
-                calculation_type: calculationType
-            };
+            // ให้เวลาสำหรับการแสดง loading
+            await new Promise(resolve => setTimeout(resolve, 100));
             
-            // ถ้าเป็น combined type ให้ดึงข้อมูล surrounding numbers
-            if (calculationType === 'combined') {
-                const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
-                if (surroundingNumbers) {
-                    try {
-                        requestBody.surrounding_data = JSON.parse(surroundingNumbers);
-                        console.log('✅ DEBUG: Added surrounding data to request');
-                    } catch (error) {
-                        console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
-                    }
-                }
-            }
-            
-            console.log('📤 DEBUG: Sending request to Edge Function:', requestBody);
-            
-            // เรียก Edge Function
-            const response = await fetch(EDGE_FUNCTION_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Edge Function returned ${response.status}: ${response.statusText}`);
-            }
-            
-            const edgeResult = await response.json();
-            console.log('📥 DEBUG: Edge Function response:', edgeResult);
-            
-            if (!edgeResult.success) {
-                throw new Error(edgeResult.error || 'Unknown error from Edge Function');
-            }
-            
-            // แสดงผลลัพธ์
-            this._displayEdgeFunctionResult(explainedContent, edgeResult, title, calculationType, resultIndex);
-            
-        } catch (error) {
-            console.error('❌ DEBUG: Error calling Edge Function:', error);
-            
-            // Fallback to local calculation
-            console.log('🔄 DEBUG: Falling back to local calculation');
+            // คำนวณและแสดงผล
             if (calculationType === 'basic') {
                 this._calculateLocally(result, resultIndex, analysisData);
             } else {
                 this._calculateCombinedLocally(result, resultIndex, analysisData);
             }
+            
+        } catch (error) {
+            console.error('❌ DEBUG: Error in calculation:', error);
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8 tw-text-red-500">
+                    <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                    <p class="tw-font-bold">Calculation error</p>
+                    <p class="tw-text-sm">${error.message}</p>
+                </div>
+            `;
         }
     },
 
-    // ฟังก์ชันตรวจสอบข้อมูลจากหลายแหล่ง
+    // ฟังก์ชันตรวจสอบข้อมูล
     _getAnalysisData: function() {
-        console.log('🔍 DEBUG: Checking analysis data from all sources...');
+        console.log('🔍 DEBUG: Getting analysis data');
         
         // 1. ตรวจสอบ window.analysisData
         if (window.analysisData) {
-            console.log('✅ DEBUG: Found data in window.analysisData');
             return window.analysisData;
         }
         
@@ -160,129 +110,23 @@ const pythagorean = {
         const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
         if (psychomatrixResult) {
             try {
-                console.log('✅ DEBUG: Found data in sessionStorage');
                 const data = JSON.parse(psychomatrixResult);
-                window.analysisData = data; // ตั้งค่าใน global scope
+                window.analysisData = data;
                 return data;
             } catch (error) {
                 console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
             }
         }
         
-        // 3. ตรวจสอบ localStorage
-        const localStorageData = localStorage.getItem('psychomatrixFormData') || 
-                                localStorage.getItem('lastPsychomatrixData');
-        if (localStorageData) {
-            try {
-                console.log('✅ DEBUG: Found data in localStorage');
-                const parsedData = JSON.parse(localStorageData);
-                const data = {
-                    success: true,
-                    results: [
-                        {
-                            title: 'Analysis from Local Storage',
-                            type: 'full-name',
-                            data: parsedData
-                        }
-                    ]
-                };
-                window.analysisData = data;
-                return data;
-            } catch (error) {
-                console.error('❌ DEBUG: Error parsing localStorage data:', error);
-            }
-        }
-        
-        console.log('❌ DEBUG: No analysis data found in any source');
         return null;
     },
 
-    // แสดงผลลัพธ์จาก Edge Function
-    _displayEdgeFunctionResult: function(container, edgeResult, title, calculationType, resultIndex) {
-        let html = `
-            <div class="pythagorean-square-container">
-                <h2>Pythagorean Square${calculationType === 'combined' ? ' (รวมเลขสิ่งแวดล้อม)' : ''} - ${title}</h2>
-        `;
-        
-        // Summary box
-        if (calculationType === 'combined') {
-            html += `
-                <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
-                    <p><strong>หมายเหตุ:</strong> ตารางนี้รวมสถิติจาก:</p>
-                    <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                        <li>ข้อมูลหลัก (วันเกิด/บัตรประชาชน/ชื่อ)</li>
-                        <li>ตัวเลขพิเศษ (Life Path, Destiny, Karmic, Life Lesson)</li>
-                        <li>เลขสิ่งแวดล้อม 20 รายการจาก Local Storage</li>
-                    </ul>
-                </div>
-            `;
-        } else {
-            html += `
-                <div class="tw-mb-4 tw-p-3 tw-bg-blue-50 tw-rounded tw-text-sm">
-                    <p><strong>Data Summary:</strong></p>
-                    <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                        <li>Total digits analyzed: ${edgeResult.combined_number_string?.length || 0}</li>
-                        <li>Calculation type: ${edgeResult.calculation_type}</li>
-                        <li>Generated by: Edge Function</li>
-                    </ul>
-                </div>
-            `;
-        }
-        
-        // Pythagorean Square HTML จาก Edge Function
-        if (edgeResult.pythagorean_html) {
-            html += edgeResult.pythagorean_html;
-        } else {
-            html += '<p class="tw-text-red-500">No Pythagorean Square data available from Edge Function.</p>';
-        }
-        
-        // Influential numbers
-        if (edgeResult.influential_numbers && edgeResult.influential_numbers.length > 0) {
-            html += `
-                <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                    <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง</h3>
-                    <p class="tw-text-gray-700">
-                        <strong>เลขที่มีอิทธิพลสูงสุด:</strong> 
-                        ${edgeResult.influential_numbers.join(', ')}
-                        (ปรากฏ ${edgeResult.max_count} ครั้ง)
-                    </p>
-                    <p class="tw-text-gray-700 tw-mt-2">
-                        <strong>เลขที่ขาดหายไป:</strong> 
-                        ${edgeResult.missing_numbers?.length > 0 ? edgeResult.missing_numbers.join(', ') : 'ไม่มี'}
-                    </p>
-                </div>
-            `;
-        }
-        
-        // Description
-        html += `
-            <div class="tw-mt-8 tw-text-sm tw-text-gray-600">
-                <p><strong>คำอธิบาย:</strong> ตาราง Pythagorean Square แสดงความถี่ของตัวเลข 1-9 จากข้อมูลของคุณ</p>
-                <p class="tw-mt-2">ตัวเลขในวงเล็บแสดงจำนวนครั้งที่ปรากฏ ส่วนผลรวมแถว/คอลัมน์/แนวทแยงแสดงอิทธิพลของตัวเลขในแต่ละด้าน</p>
-            </div>
-        `;
-        
-        // Button for combined view (if currently basic)
-        if (calculationType === 'basic') {
-            html += `
-                <div class="tw-mt-8 tw-text-center">
-                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
-                            class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
-                        Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
-                    </button>
-                </div>
-            `;
-        }
-        
-        html += `</div>`;
-        
-        container.innerHTML = html;
-    },
-
-    // Fallback: คำนวณแบบ local (basic)
+    // คำนวณแบบ local (basic)
     _calculateLocally: function(result, resultIndex, analysisData) {
-        console.log('🔄 DEBUG: Using local calculation (basic)');
+        console.log('🔄 DEBUG: Local calculation (basic)');
         const explainedContent = document.getElementById('explainedContent');
+        
+        if (!explainedContent) return;
         
         const data = result.data || {};
         const lifePathNum = data.life_path_number || data.lifePath;
@@ -331,19 +175,17 @@ const pythagorean = {
             <div class="pythagorean-square-container">
                 <h2>Pythagorean Square - ${result.title || `Result ${resultIndex + 1}`}</h2>
                 <div class="tw-mb-4 tw-p-3 tw-bg-blue-50 tw-rounded tw-text-sm">
-                    <p><strong>Local Calculation Fallback</strong> (Edge Function failed)</p>
+                    <p><strong>Basic Calculation</strong></p>
                     <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                        <li>Total digits analyzed: ${numberString.length}</li>
+                        <li>Total digits: ${numberString.length}</li>
                         <li>Life Path: ${lifePathNum || 'N/A'}</li>
                         <li>Destiny: ${destinyNum || 'N/A'}</li>
-                        <li>Karmic: ${karmicNum || 'N/A'}</li>
-                        <li>Life Lesson: ${lifeLessonNum || 'N/A'}</li>
                     </ul>
                 </div>
                 ${pythagoreanHTML}
                 ${mostInfluentialHTML}
                 <div class="tw-mt-8 tw-text-center">
-                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
+                    <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
                             class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
                         Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
                     </button>
@@ -352,10 +194,12 @@ const pythagorean = {
         `;
     },
 
-    // Fallback: คำนวณแบบ local (combined)
+    // คำนวณแบบ local (combined)
     _calculateCombinedLocally: function(result, resultIndex, analysisData) {
-        console.log('🔄 DEBUG: Using local calculation (combined)');
+        console.log('🔄 DEBUG: Local calculation (combined)');
         const explainedContent = document.getElementById('explainedContent');
+        
+        if (!explainedContent) return;
         
         const data = result.data || {};
         const lifePathNum = data.life_path_number || data.lifePath;
@@ -388,7 +232,7 @@ const pythagorean = {
         // เพิ่มตัวเลขพิเศษ
         const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
         specialNumbers.forEach(num => {
-            if (num !== undefined && num !== null && num !== '') {
+            if (num !== undefined && num !== null) {
                 const numStr = num.toString();
                 for (let i = 0; i < numStr.length; i++) {
                     const digit = numStr[i];
@@ -429,13 +273,10 @@ const pythagorean = {
             <div class="pythagorean-square-container">
                 <h2>Pythagorean Square (รวมเลขสิ่งแวดล้อม) - ${result.title || `Result ${resultIndex + 1}`}</h2>
                 <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
-                    <p><strong>Local Calculation Fallback</strong> (Edge Function failed)</p>
-                    <p><strong>หมายเหตุ:</strong> ตารางนี้รวมสถิติจาก:</p>
+                    <p><strong>Combined Calculation</strong></p>
                     <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                        <li>ข้อมูลหลัก (วันเกิด/บัตรประชาชน/ชื่อ)</li>
-                        <li>ตัวเลขพิเศษ (Life Path, Destiny, Karmic, Life Lesson)</li>
-                        <li>เลขสิ่งแวดล้อม 20 รายการจาก Local Storage</li>
-                        <li>Total digits analyzed: ${combinedNumberString.length}</li>
+                        <li>Total digits: ${combinedNumberString.length}</li>
+                        <li>Including 20 surrounding numbers</li>
                     </ul>
                 </div>
                 ${pythagoreanHTML}
@@ -444,7 +285,7 @@ const pythagorean = {
         `;
     },
 
-    // ===== Local calculation functions (for fallback) =====
+    // ===== UTILITY FUNCTIONS =====
     calculatePythagoreanSquareHTML: function(numberString) {
         const counts = new Array(10).fill(0);
         
@@ -472,26 +313,26 @@ const pythagorean = {
         
         return `
             <div class="pythagorean-square">
-                <div class="square-cell number-1" style="grid-row: 1; grid-column: 1;">1<span>(${counts[1]})</span></div>
-                <div class="square-cell number-4" style="grid-row: 1; grid-column: 2;">4<span>(${counts[4]})</span></div>
-                <div class="square-cell number-7" style="grid-row: 1; grid-column: 3;">7<span>(${counts[7]})</span></div>
+                <div class="square-cell number-1">1<span>(${counts[1]})</span></div>
+                <div class="square-cell number-4">4<span>(${counts[4]})</span></div>
+                <div class="square-cell number-7">7<span>(${counts[7]})</span></div>
                 
-                <div class="square-cell number-2" style="grid-row: 2; grid-column: 1;">2<span>(${counts[2]})</span></div>
-                <div class="square-cell number-5" style="grid-row: 2; grid-column: 2;">5<span>(${counts[5]})</span></div>
-                <div class="square-cell number-8" style="grid-row: 2; grid-column: 3;">8<span>(${counts[8]})</span></div>
+                <div class="square-cell number-2">2<span>(${counts[2]})</span></div>
+                <div class="square-cell number-5">5<span>(${counts[5]})</span></div>
+                <div class="square-cell number-8">8<span>(${counts[8]})</span></div>
                 
-                <div class="square-cell number-3" style="grid-row: 3; grid-column: 1;">3<span>(${counts[3]})</span></div>
-                <div class="square-cell number-6" style="grid-row: 3; grid-column: 2;">6<span>(${counts[6]})</span></div>
-                <div class="square-cell number-9" style="grid-row: 3; grid-column: 3;">9<span>(${counts[9]})</span></div>
+                <div class="square-cell number-3">3<span>(${counts[3]})</span></div>
+                <div class="square-cell number-6">6<span>(${counts[6]})</span></div>
+                <div class="square-cell number-9">9<span>(${counts[9]})</span></div>
                 
-                <div class="square-cell sum" style="grid-row: 1; grid-column: 4;">${rowSums[0]}</div>
-                <div class="square-cell sum" style="grid-row: 2; grid-column: 4;">${rowSums[1]}</div>
-                <div class="square-cell sum" style="grid-row: 3; grid-column: 4;">${rowSums[2]}</div>
+                <div class="square-cell sum">${rowSums[0]}</div>
+                <div class="square-cell sum">${rowSums[1]}</div>
+                <div class="square-cell sum">${rowSums[2]}</div>
                 
-                <div class="square-cell sum" style="grid-row: 4; grid-column: 1;">${colSums[0]}</div>
-                <div class="square-cell sum" style="grid-row: 4; grid-column: 2;">${colSums[1]}</div>
-                <div class="square-cell sum" style="grid-row: 4; grid-column: 3;">${colSums[2]}</div>
-                <div class="square-cell sum" style="grid-row: 4; grid-column: 4;">${diagonalLeft}/${diagonalRight}</div>
+                <div class="square-cell sum">${colSums[0]}</div>
+                <div class="square-cell sum">${colSums[1]}</div>
+                <div class="square-cell sum">${colSums[2]}</div>
+                <div class="square-cell sum">${diagonalLeft}/${diagonalRight}</div>
             </div>
         `;
     },
@@ -582,5 +423,5 @@ const pythagorean = {
 // Expose to global scope
 window.pythagorean = pythagorean;
 
-console.log('✅ DEBUG: pythagorean.js loaded (Edge Function version)');
-console.log('⚠️  IMPORTANT: Please set the EDGE_FUNCTION_URL at the top of this file!');
+console.log('✅ DEBUG: pythagorean.js loaded successfully');
+console.log('📋 DEBUG: Available functions:', Object.keys(pythagorean));
