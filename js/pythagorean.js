@@ -1,5 +1,5 @@
 // pythagorean.js - Pythagorean Square calculations
-console.log('🚀 DEBUG: pythagorean.js loaded');
+console.log('🚀 DEBUG: pythagorean.js loaded - Version 7.5');
 
 // Create global namespace
 const pythagorean = {
