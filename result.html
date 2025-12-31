@@ -47,30 +47,52 @@
         window.BASE_PATH = `/${repoName}/PsychomatrixContents`;
         console.log('🌐 DEBUG: โหมด GitHub Pages, BASE_PATH:', window.BASE_PATH);
         
-        // แก้ไข path ของไฟล์ JavaScript
+        // ตั้งค่าตัวแปรเวอร์ชันสำหรับการตรวจสอบ
+        window.SCRIPT_VERSIONS = {
+            resultJs: '7.4',
+            pythagoreanJs: '7.4',
+            debugLoggerJs: '7.4'
+        };
+        
+        // แก้ไข path ของไฟล์ JavaScript พร้อมเพิ่มเวอร์ชันใน URL เพื่อป้องกัน cache
         document.addEventListener('DOMContentLoaded', function() {
-            // รอให้ DOM โหลดก่อน แล้วค่อยแก้ไข path
-            setTimeout(function() {
-                const scripts = document.querySelectorAll('script[src^="js/"]');
-                scripts.forEach(script => {
-                    const oldSrc = script.getAttribute('src');
-                    const newSrc = `/${repoName}/${oldSrc}`;
-                    console.log(`🔄 เปลี่ยน path: ${oldSrc} -> ${newSrc}`);
-                    
-                    // สร้าง script ใหม่
-                    const newScript = document.createElement('script');
-                    newScript.src = newSrc;
-                    newScript.onload = function() {
-                        console.log(`✅ โหลดสำเร็จ: ${newSrc}`);
-                    };
-                    newScript.onerror = function() {
-                        console.error(`❌ โหลดล้มเหลว: ${newSrc}`);
-                    };
-                    
-                    // แทนที่ script เดิม
-                    script.parentNode.replaceChild(newScript, script);
-                });
-            }, 100);
+            const timestamp = Date.now();
+            const scripts = document.querySelectorAll('script[src^="js/"]');
+            
+            scripts.forEach(script => {
+                const oldSrc = script.getAttribute('src');
+                const baseSrc = oldSrc.replace(/\?.*$/, ''); // ลบ query string เก่าออก
+                const newSrc = `/${repoName}/${baseSrc}?v=${window.SCRIPT_VERSIONS[baseSrc.replace('js/', '').replace('.js', '')] || timestamp}`;
+                console.log(`🔄 เปลี่ยน path: ${oldSrc} -> ${newSrc}`);
+                
+                // สร้าง script ใหม่
+                const newScript = document.createElement('script');
+                newScript.src = newSrc;
+                newScript.onload = function() {
+                    console.log(`✅ โหลดสำเร็จ: ${newSrc}`);
+                    // ตรวจสอบว่าไฟล์โหลดและพร้อมใช้งาน
+                    if (newSrc.includes('result.js') && typeof initializePage === 'function') {
+                        console.log('✅ result.js โหลดสมบูรณ์ พร้อมใช้งาน');
+                    }
+                    if (newSrc.includes('pythagorean.js') && window.pythagorean) {
+                        console.log('✅ pythagorean.js โหลดสมบูรณ์ พร้อมใช้งาน');
+                    }
+                };
+                newScript.onerror = function() {
+                    console.error(`❌ โหลดล้มเหลว: ${newSrc}`);
+                    // แสดงข้อความ error บนหน้าเว็บ
+                    const errorSection = document.getElementById('errorSection');
+                    const errorMessage = document.getElementById('errorMessage');
+                    if (errorSection && errorMessage) {
+                        errorMessage.textContent = `Failed to load ${newSrc}. Please refresh the page.`;
+                        errorSection.classList.remove('tw-hidden');
+                        document.getElementById('loadingSection').classList.add('tw-hidden');
+                    }
+                };
+                
+                // แทนที่ script เดิม
+                script.parentNode.replaceChild(newScript, script);
+            });
         });
         
     } else {
@@ -78,6 +100,13 @@
         const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
         window.BASE_PATH = `${folderPath}/PsychomatrixContents`;
         console.log('🌐 DEBUG: โหมด Apache, BASE_PATH:', window.BASE_PATH);
+        
+        // ตั้งค่าตัวแปรเวอร์ชัน
+        window.SCRIPT_VERSIONS = {
+            resultJs: '7.5',
+            pythagoreanJs: '7.5',
+            debugLoggerJs: '7.5'
+        };
     }
 </script>
     
@@ -86,7 +115,7 @@
 
     <!-- Version Badge -->
     <div class="version-badge">
-        v7.4
+        v7.5
     </div>
     
     <!-- Tab Buttons -->
@@ -102,11 +131,25 @@
             Psychomatrix Analysis
         </h1>
         
+        <!-- Debug Info Display -->
+        <div id="scriptStatus" class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-border tw-border-yellow-200 tw-rounded tw-text-sm tw-hidden">
+            <h4 class="tw-font-bold tw-text-yellow-700">Script Status</h4>
+            <div class="tw-grid tw-grid-cols-2 tw-gap-2 tw-mt-2">
+                <div id="resultJsStatus" class="tw-p-2 tw-bg-white tw-rounded">result.js: <span class="tw-text-gray-500">Loading...</span></div>
+                <div id="pythagoreanJsStatus" class="tw-p-2 tw-bg-white tw-rounded">pythagorean.js: <span class="tw-text-gray-500">Loading...</span></div>
+                <div id="debugLoggerStatus" class="tw-p-2 tw-bg-white tw-rounded">debug-logger.js: <span class="tw-text-gray-500">Loading...</span></div>
+                <div id="dataStatus" class="tw-p-2 tw-bg-white tw-rounded">Data: <span class="tw-text-gray-500">Checking...</span></div>
+            </div>
+        </div>
+        
         <!-- Loading State -->
         <div id="loadingSection" class="tw-text-center tw-py-8">
             <div class="spinner"></div>
             <p class="tw-mt-4 tw-text-gray-600">Loading analysis results...</p>
             <p id="loadingDetails" class="tw-mt-2 tw-text-sm tw-text-gray-500"></p>
+            <div id="loadingProgress" class="tw-mt-4 tw-w-full tw-bg-gray-200 tw-rounded-full tw-h-2.5">
+                <div id="loadingBar" class="tw-bg-blue-600 tw-h-2.5 tw-rounded-full" style="width: 0%"></div>
+            </div>
         </div>
         
         <!-- Error State -->
@@ -138,6 +181,9 @@
             <button onclick="testFunctions()" class="tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
                 Test All Functions
             </button>
+            <button onclick="forceReloadScripts()" class="tw-bg-red-500 hover:tw-bg-red-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm tw-ml-2">
+                Force Reload Scripts
+            </button>
         </div>
         
         <div class="tw-mt-4 tw-text-right">
@@ -150,26 +196,82 @@
         <div id="explainedContent" class="explained-content"></div>
     </div>
 
-
-    <!-- ในส่วนท้ายของหน้า เพิ่มปุ่มนี้ -->
-<div class="tw-mt-4 tw-text-center">
-    <button onclick="checkAllScripts()" class="tw-bg-yellow-500 hover:tw-bg-yellow-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
-        ตรวจสอบสคริปต์ทั้งหมด
-    </button>
-</div>
-
+    <!-- ตรวจสอบสคริปต์ทั้งหมด -->
+    <div class="tw-mt-4 tw-text-center">
+        <button onclick="checkAllScripts()" class="tw-bg-yellow-500 hover:tw-bg-yellow-600 tw-text-white tw-font-bold tw-py-2 tw-px-4 tw-rounded tw-text-sm">
+            ตรวจสอบสคริปต์ทั้งหมด
+        </button>
+    </div>
     
-    <!--  โหลด Debug Logger ก่อน -->
+    <!-- โหลด Debug Logger ก่อน -->
     <script src="js/debug-logger.js"></script>
 
     <!-- JavaScript Files - โหลดตามลำดับที่ถูกต้อง -->
     <script src="js/pythagorean.js"></script>
     <script src="js/result.js"></script>
 
-      
-    
     <!-- ตรวจสอบหลังโหลดเสร็จ -->
     <script>
+        // ฟังก์ชันอัปเดตสถานะ loading
+        function updateLoading(percent, message) {
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingDetails = document.getElementById('loadingDetails');
+            
+            if (loadingBar) {
+                loadingBar.style.width = percent + '%';
+            }
+            if (loadingDetails) {
+                loadingDetails.textContent = message;
+            }
+        }
+        
+        // ฟังก์ชันอัปเดตสถานะสคริปต์
+        function updateScriptStatus(scriptName, status, version = '') {
+            const statusElement = document.getElementById(scriptName + 'Status');
+            const scriptStatusDiv = document.getElementById('scriptStatus');
+            
+            if (statusElement) {
+                let statusClass = 'tw-text-gray-500';
+                let statusText = status;
+                
+                if (status === 'Loaded') {
+                    statusClass = 'tw-text-green-600';
+                    statusText = 'Loaded' + (version ? ` (v${version})` : '');
+                } else if (status === 'Failed') {
+                    statusClass = 'tw-text-red-600';
+                } else if (status === 'Initialized') {
+                    statusClass = 'tw-text-blue-600';
+                }
+                
+                statusElement.innerHTML = `${scriptName}: <span class="${statusClass}">${statusText}</span>`;
+            }
+            
+            // แสดง script status div
+            if (scriptStatusDiv) {
+                scriptStatusDiv.classList.remove('tw-hidden');
+            }
+        }
+        
+        // ฟังก์ชันตรวจสอบสถานะข้อมูล
+        function checkDataStatus() {
+            const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
+            const dataStatusElement = document.getElementById('dataStatus');
+            
+            if (dataStatusElement) {
+                if (psychomatrixResult) {
+                    try {
+                        const data = JSON.parse(psychomatrixResult);
+                        const resultsCount = data.results ? data.results.length : 1;
+                        dataStatusElement.innerHTML = `Data: <span class="tw-text-green-600">Loaded (${resultsCount} results)</span>`;
+                    } catch (e) {
+                        dataStatusElement.innerHTML = `Data: <span class="tw-text-red-600">Invalid JSON</span>`;
+                    }
+                } else {
+                    dataStatusElement.innerHTML = `Data: <span class="tw-text-red-600">No data found</span>`;
+                }
+            }
+        }
+        
         function testFunctions() {
             console.log('🧪 DEBUG: Testing all functions...');
             
@@ -179,6 +281,7 @@
             console.log('  - loadAndDisplayResults:', typeof loadAndDisplayResults);
             console.log('  - loadExplainedContent:', typeof loadExplainedContent);
             console.log('  - showPythagoreanSquare:', typeof showPythagoreanSquare);
+            console.log('  - initializePage:', typeof initializePage);
             
             // ตรวจสอบฟังก์ชันจาก pythagorean.js
             console.log('📋 pythagorean.js functions:');
@@ -186,26 +289,78 @@
             if (window.pythagorean) {
                 console.log('    - showPythagoreanSquare:', typeof window.pythagorean.showPythagoreanSquare);
                 console.log('    - showCombinedPythagoreanSquare:', typeof window.pythagorean.showCombinedPythagoreanSquare);
+                console.log('    - _calculatePythagoreanSquare:', typeof window.pythagorean._calculatePythagoreanSquare);
             }
             
             // ตรวจสอบตัวแปร global
             console.log('📋 Global variables:');
-            console.log('  - window.analysisData:', window.analysisData);
-            console.log('  - window.BASE_PATH:', window.BASE_PATH);
-            console.log('  - window.CONTENTS_DIR:', window.CONTENTS_DIR);
+            console.log('  - window.analysisData:', window.analysisData ? '✓ Available' : '✗ Missing');
+            console.log('  - window.BASE_PATH:', window.BASE_PATH || 'Not set');
+            console.log('  - window.SCRIPT_VERSIONS:', window.SCRIPT_VERSIONS || 'Not set');
+            console.log('  - window.lifePathProperties:', window.lifePathProperties ? '✓ Loaded' : '✗ Not loaded');
             
             // ทดสอบการทำงานของปุ่ม
             const resultContainer = document.getElementById('resultsContainer');
-            if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
-                console.log('✅ Pythagorean buttons found in page');
+            if (resultContainer) {
+                console.log('✅ resultsContainer found');
             } else {
-                console.log('❌ No Pythagorean buttons found in page');
+                console.log('❌ resultsContainer not found');
             }
+            
+            // ตรวจสอบสถานะปัจจุบัน
+            checkDataStatus();
+        }
+        
+        function checkAllScripts() {
+            console.log('🔧 ตรวจสอบสถานะสคริปต์ทั้งหมด:');
+            console.log('1. window.pythagorean:', window.pythagorean);
+            console.log('2. typeof showPythagoreanSquare:', typeof showPythagoreanSquare);
+            console.log('3. typeof switchTab:', typeof switchTab);
+            console.log('4. window.BASE_PATH:', window.BASE_PATH);
+            console.log('5. window.analysisData:', window.analysisData ? 'มีข้อมูล' : 'ไม่มีข้อมูล');
+            console.log('6. window.SCRIPT_VERSIONS:', window.SCRIPT_VERSIONS);
+            
+            // ตรวจสอบฟังก์ชันใน pythagorean object
+            if (window.pythagorean) {
+                console.log('7. pythagorean.showPythagoreanSquare:', typeof window.pythagorean.showPythagoreanSquare);
+                console.log('8. pythagorean.showCombinedPythagoreanSquare:', typeof window.pythagorean.showCombinedPythagoreanSquare);
+            }
+            
+            // แสดงสถานะบนหน้าเว็บ
+            const scriptStatusDiv = document.getElementById('scriptStatus');
+            if (scriptStatusDiv) {
+                scriptStatusDiv.classList.remove('tw-hidden');
+            }
+            
+            checkDataStatus();
+            
+            alert('ตรวจสอบเสร็จสิ้น ดูผลใน Console (F12)');
+        }
+        
+        function forceReloadScripts() {
+            console.log('🔄 Force reloading scripts...');
+            
+            // ลบ cache ของ localStorage
+            localStorage.removeItem('lifePathPropertiesCache');
+            
+            // ลบตัวแปร global
+            delete window.analysisData;
+            delete window.lifePathProperties;
+            delete window.pythagorean;
+            
+            // รีโหลดหน้าเว็บ
+            window.location.reload(true);
         }
         
         // ตรวจสอบเมื่อโหลดหน้าเสร็จ
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ DEBUG: DOM fully loaded');
+            
+            // อัปเดตสถานะ loading
+            updateLoading(10, 'Initializing...');
+            updateScriptStatus('resultJs', 'Checking...');
+            updateScriptStatus('pythagoreanJs', 'Checking...');
+            updateScriptStatus('debugLoggerJs', 'Checking...');
             
             // ตรวจสอบว่ามีข้อมูลใน sessionStorage หรือไม่
             const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
@@ -213,46 +368,64 @@
                 try {
                     window.analysisData = JSON.parse(psychomatrixResult);
                     console.log('✅ DEBUG: Loaded analysisData from sessionStorage');
+                    updateLoading(30, 'Data loaded from sessionStorage');
                 } catch (error) {
                     console.error('❌ DEBUG: Error parsing sessionStorage data:', error);
+                    updateLoading(30, 'Error parsing data');
                 }
             }
             
             // เรียกใช้ฟังก์ชันเริ่มต้นหลังจากโหลดไฟล์ JavaScript เสร็จ
             setTimeout(() => {
-                // ตรวจสอบว่ามีฟังก์ชัน initializePage หรือไม่
+                updateLoading(50, 'Checking JavaScript files...');
+                
+                // ตรวจสอบว่าไฟล์โหลดสำเร็จ
                 if (typeof initializePage === 'function') {
-                    initializePage();
+                    updateScriptStatus('resultJs', 'Loaded', window.SCRIPT_VERSIONS?.resultJs || '7.4');
+                    console.log('✅ result.js loaded successfully');
+                } else {
+                    updateScriptStatus('resultJs', 'Failed');
+                    console.error('❌ result.js not loaded properly');
+                }
+                
+                if (window.pythagorean) {
+                    updateScriptStatus('pythagoreanJs', 'Loaded', window.SCRIPT_VERSIONS?.pythagoreanJs || '7.4');
+                    console.log('✅ pythagorean.js loaded successfully');
+                } else {
+                    updateScriptStatus('pythagoreanJs', 'Failed');
+                    console.error('❌ pythagorean.js not loaded properly');
+                }
+                
+                // ตรวจสอบ debug logger
+                if (typeof window.debugLogger !== 'undefined') {
+                    updateScriptStatus('debugLoggerJs', 'Loaded', window.SCRIPT_VERSIONS?.debugLoggerJs || '7.4');
+                } else {
+                    updateScriptStatus('debugLoggerJs', 'Loaded (basic)');
+                }
+                
+                updateLoading(70, 'Initializing application...');
+                
+                // เรียก initializePage
+                if (typeof initializePage === 'function') {
+                    setTimeout(() => {
+                        initializePage();
+                        updateLoading(90, 'Displaying results...');
+                        updateScriptStatus('resultJs', 'Initialized');
+                    }, 100);
                 } else {
                     console.error('❌ CRITICAL: initializePage function not found!');
+                    
                     // ลองเปิด default tab โดยตรง
                     try {
                         document.getElementById("defaultOpen").click();
+                        updateLoading(100, 'Fallback initialization');
                     } catch (error) {
                         console.error('❌ Error opening default tab:', error);
+                        updateLoading(100, 'Initialization failed');
                     }
                 }
             }, 100);
         });
-
-        function checkAllScripts() {
-    console.log('🔧 ตรวจสอบสถานะสคริปต์ทั้งหมด:');
-    console.log('1. window.pythagorean:', window.pythagorean);
-    console.log('2. typeof showPythagoreanSquare:', typeof showPythagoreanSquare);
-    console.log('3. typeof switchTab:', typeof switchTab);
-    console.log('4. window.BASE_PATH:', window.BASE_PATH);
-    console.log('5. window.analysisData:', window.analysisData ? 'มีข้อมูล' : 'ไม่มีข้อมูล');
-    
-    // ตรวจสอบฟังก์ชันใน pythagorean object
-    if (window.pythagorean) {
-        console.log('6. pythagorean.showPythagoreanSquare:', typeof window.pythagorean.showPythagoreanSquare);
-        console.log('7. pythagorean.showCombinedPythagoreanSquare:', typeof window.pythagorean.showCombinedPythagoreanSquare);
-    }
-    
-    alert('ตรวจสอบเสร็จสิ้น ดูผลใน Console (F12)');
-}
-
     </script>
-
 </body>
 </html>
