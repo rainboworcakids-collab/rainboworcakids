@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychomatrix Analysis Results</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
+    
+    <!-- Psychomatrix Main CSS -->
+    <link rel="stylesheet" href="css/PsychomatrixStyle.css">
+    <link rel="stylesheet" href="css/result-style.css">
+
+    
+    <!-- Favicon -->
+    <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
+    
+    <!-- Tailwind config -->
+    <script>
+    tailwind.config = {
+        prefix: 'tw-',
+        corePlugins: {
+            preflight: false
+        }
+    }
+    </script>
+</head>
+<body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1">
+
+    <!-- Version Badge -->
+    <div class="version-badge">
+        v7.21-Complete-Integration
+    </div>
+    
+    <!-- Tab Buttons -->
+    <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
+        <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
+        <button class="tablink" onclick="switchTab('Explained', this)">Explained</button>
+    </div>
+    
+    <!-- Main Tab -->
+    <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
+        <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
+            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
+            Psychomatrix Analysis
+        </h1>
+        
+        <!-- Loading State -->
+        <div id="loadingSection" class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">Loading analysis results...</p>
+            <p id="loadingDetails" class="tw-mt-2 tw-text-sm tw-text-gray-500"></p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorSection" class="tw-hidden tw-text-center tw-py-8">
+            <div class="tw-text-red-500 tw-text-4xl tw-mb-4">⚠️</div>
+            <h3 class="tw-text-xl tw-font-semibold tw-text-red-600">No analysis data found</h3>
+            <p id="errorMessage" class="tw-text-gray-600 tw-mt-2">Please fill in the data on Psychomatrix.html first</p>
+            <div id="debugInfo" class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-left tw-text-sm tw-font-mono tw-hidden">
+                <p><strong>Debug Information:</strong></p>
+                <p id="debugSessionStorage"></p>
+                <p id="debugURLParams"></p>
+                <p id="debugLocalStorage"></p>
+            </div>
+            <button onclick="window.location.href='Psychomatrix.html'" class="tw-mt-4 tw-bg-blue-500 hover:tw-bg-blue-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Return to Input Form
+            </button>
+            <button onclick="toggleDebugInfo()" class="tw-mt-2 tw-bg-gray-500 hover:tw-bg-gray-600 tw-text-white tw-font-bold tw-py-2 tw-px-6 tw-rounded">
+                Show Debug Info
+            </button>
+        </div>
+        
+        <!-- Results Container -->
+        <div id="resultsContainer" class="tw-hidden">
+            <!-- Results will be inserted here -->
+        </div>
+        
+        <div class="tw-mt-4 tw-text-right">
+            <span onclick="window.location.href='Psychomatrix.html'" class="tw-text-blue-500 hover:tw-underline tw-cursor-pointer">Return to Input Form</span>
+        </div>
+    </div>
+    
+    <!-- Explained Tab -->
+    <div id="Explained" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh]">
+        <div id="explainedContent" class="explained-content"></div>
+    </div>
+
+    <script>
+        // Version Info
+        const VERSION = 'v7.0-Complete-Integration';
+        
+        // Configuration for GitHub Pages
+        const currentPath = window.location.pathname;
+        const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        const CONTENTS_DIR = 'PsychomatrixContents';
+        const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
+        
+        console.log('🚀 DEBUG: result.html loaded -', VERSION);
+        console.log('📍 DEBUG: currentPath:', currentPath);
+        console.log('📍 DEBUG: folderPath:', folderPath);
+        console.log('📍 DEBUG: BASE_PATH:', BASE_PATH);
+        console.log('📍 DEBUG: CONTENTS_DIR:', CONTENTS_DIR);
+        
+        // Store analysis data
+        let analysisData = null;
+        let pinnacleData = null;
+        
+        // Store LifePathProperty.json data
+        let lifePathProperties = null;
+        
+        // Tab switching function
+        function switchTab(tabName, buttonElement) {
+            console.log('🔧 DEBUG: Switching to tab:', tabName);
+            
+            // Hide all tab content
+            const tabContents = document.querySelectorAll('.tabcontent');
+            tabContents.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Reset all tab buttons
+            const tabButtons = document.querySelectorAll('.tablink');
+            tabButtons.forEach(btn => {
+                btn.style.backgroundColor = "";
+                btn.style.color = "#aaa";
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Style active button
+            if (buttonElement) {
+                buttonElement.style.backgroundColor = '#f1f2ff';
+                buttonElement.style.color = '#00f';
+            }
+        }
+        
+        // Toggle debug info
+        function toggleDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.classList.toggle('tw-hidden');
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌐 DEBUG: DOM Content Loaded');
+            console.log('🌐 DEBUG: Psychomatrix Results Loaded');
+            console.log('🌐 DEBUG: Timestamp:', new Date().toISOString());
+            
+            // Log all sessionStorage keys
+            console.log('🔍 DEBUG: sessionStorage keys:', Object.keys(sessionStorage));
+            
+            // Log specific keys we're looking for
+            const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
+            console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
+            
+            if (psychomatrixResult) {
+                console.log('🔍 DEBUG: psychomatrixResult length:', psychomatrixResult.length);
+                console.log('🔍 DEBUG: psychomatrixResult preview (first 500 chars):', psychomatrixResult.substring(0, 500));
+            }
+            
+            // Check for other possible storage locations
+            const localStorageData = localStorage.getItem('psychomatrixFormData');
+            console.log('🔍 DEBUG: localStorage psychomatrixFormData exists:', !!localStorageData);
+            
+            const lastData = localStorage.getItem('lastPsychomatrixData');
+            console.log('🔍 DEBUG: localStorage lastPsychomatrixData exists:', !!lastData);
+            
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            console.log('🔍 DEBUG: URL Parameters:', urlParams.toString());
+            
+            // Update loading details
+            const loadingDetails = document.getElementById('loadingDetails');
+            if (loadingDetails) {
+                loadingDetails.textContent = `Checking data sources...`;
+            }
+            
+            // Open default tab
+            setTimeout(() => {
+                document.getElementById("defaultOpen").click();
+                
+                // Load and display results
+                setTimeout(() => {
+                    loadAndDisplayResults();
+                }, 100);
+            }, 50);
+        });
+        
+        // Load LifePathProperty.json
+        async function loadLifePathProperties() {
+            console.log('🔄 DEBUG: loadLifePathProperties() called');
+            
+            // ลองหลายๆ path ที่เป็นไปได้
+            const possiblePaths = [
+                `${folderPath}/data/LifePathProperty.json`,
+                `./data/LifePathProperty.json`,
+                `../data/LifePathProperty.json`,
+                `${window.location.origin}${folderPath}/data/LifePathProperty.json`
+            ];
+            
+            for (const lifePathUrl of possiblePaths) {
+                console.log(`📂 DEBUG: Trying to load LifePathProperty.json from:`, lifePathUrl);
+                
+                try {
+                    const response = await fetch(lifePathUrl);
+                    console.log(`📂 DEBUG: Fetch response for ${lifePathUrl}:`, response.status, response.statusText);
+                    
+                    if (!response.ok) {
+                        console.log(`❌ DEBUG: Failed to load from ${lifePathUrl}, trying next...`);
+                        continue;
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ DEBUG: Loaded LifePathProperty.json successfully from:', lifePathUrl);
+                    console.log('✅ DEBUG: Raw data type:', typeof data);
+                    console.log('✅ DEBUG: Data structure:', data);
+                    
+                    // Handle different data structures
+                    if (Array.isArray(data)) {
+                        console.log('✅ DEBUG: Data is an array, length:', data.length);
+                        lifePathProperties = data;
+                    } else if (typeof data === 'object' && data !== null) {
+                        console.log('✅ DEBUG: Data is an object, keys:', Object.keys(data));
+                        
+                        // Try to convert object to array
+                        // Method 1: Check if it has numeric keys (like {"1": {...}, "2": {...}})
+                        const numericKeys = Object.keys(data).filter(key => !isNaN(key));
+                        if (numericKeys.length > 0) {
+                            console.log('✅ DEBUG: Object has numeric keys, converting to array');
+                            lifePathProperties = Object.values(data).map((item, index) => {
+                                // Ensure each item has LifePathNumber
+                                if (!item.LifePathNumber && numericKeys[index]) {
+                                    item.LifePathNumber = parseInt(numericKeys[index]);
+                                }
+                                return item;
+                            });
+                        } 
+                        // Method 2: Try to access by LifePathNumber property
+                        else if (Object.values(data).some(item => item.LifePathNumber)) {
+                            console.log('✅ DEBUG: Object values have LifePathNumber property');
+                            lifePathProperties = Object.values(data);
+                        } else {
+                            console.log('⚠️ DEBUG: Object structure not recognized, using as-is');
+                            lifePathProperties = data; // Keep as object
+                        }
+                    } else {
+                        console.error('❌ DEBUG: Unknown data format:', typeof data);
+                        lifePathProperties = null;
+                    }
+                    
+                    console.log('✅ DEBUG: Final lifePathProperties:', lifePathProperties);
+                    return lifePathProperties;
+                    
+                } catch (error) {
+                    console.log(`❌ DEBUG: Error loading from ${lifePathUrl}:`, error.message);
+                    continue;
+                }
+            }
+            
+            console.error('❌ DEBUG: Failed to load LifePathProperty.json from all paths');
+            lifePathProperties = null;
+            return null;
+        }
+        
+        // Get life path details from JSON
+        function getLifePathDetails(lifePathNumber) {
+            console.log("🔍 DEBUG: getLifePathDetails() called for number:", lifePathNumber);
+            
+            // ตรวจสอบว่า lifePathProperties มีข้อมูลและมีโครงสร้างถูกต้อง
+            if (!lifePathProperties || !lifePathProperties.LifePath || !Array.isArray(lifePathProperties.LifePath)) {
+                console.log("❌ DEBUG: lifePathProperties not loaded properly or wrong structure");
+                return null;
+            }
+            
+            // แปลงตัวเลขเป็น string เพื่อค้นหา (เพราะใน JSON เก็บ ID เป็น string)
+            const targetId = lifePathNumber.toString();
+            
+            console.log("🔍 DEBUG: Searching for ID:", targetId);
+            console.log("🔍 DEBUG: LifePath array length:", lifePathProperties.LifePath.length);
+            
+            // ค้นหาใน array LifePath
+            const foundItem = lifePathProperties.LifePath.find(item => {
+                if (item && item.ID) {
+                    const match = item.ID === targetId;
+                    if (match) {
+                        console.log("✅ DEBUG: Found matching item:", item);
+                    }
+                    return match;
+                }
+                return false;
+            });
+            
+            if (foundItem) {
+                console.log("✅ DEBUG: Successfully found life path details for number:", lifePathNumber);
+                return foundItem;
+            } else {
+                console.log("❌ DEBUG: No life path found for number:", lifePathNumber);
+                console.log("❌ DEBUG: Available IDs:", lifePathProperties.LifePath.map(item => item.ID));
+                return null;
+            }
+        }
+        
+        // Create HTML for life path details
+        function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
+            console.log('🖼️ DEBUG: createLifePathDetailsHTML() called');
+            console.log('🖼️ DEBUG: lifePathNumber:', lifePathNumber);
+            console.log('🖼️ DEBUG: lifePathData:', lifePathData);
+            
+            if (!lifePathData) {
+                console.log('⚠️ DEBUG: No lifePathData for number:', lifePathNumber);
+                return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
+            }
+            
+            return `
+                <div class="life-path-details">
+                    <h3>Life Path Number ${lifePathNumber} Details</h3>
+                    
+                    <div class="life-path-detail-item">
+                        <h4>Short Definition</h4>
+                        <p>${lifePathData.ShortDefinition || 'No definition available'}</p>
+                    </div>
+                    
+                    <div class="life-path-detail-item">
+                        <h4>Meaning</h4>
+                        <p>${lifePathData.MEANING || 'No meaning available'}</p>
+                    </div>
+                    
+                    <div class="life-path-detail-item inherent-dread">
+                        <h4>Inherent Dread</h4>
+                        <p>${lifePathData.InherentDread || 'No inherent dread specified'}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load results from sessionStorage
+        async function loadAndDisplayResults() {
+            console.log('🔄 DEBUG: Starting loadAndDisplayResults()');
+            
+            const loadingSection = document.getElementById('loadingSection');
+            const errorSection = document.getElementById('errorSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const loadingDetails = document.getElementById('loadingDetails');
+            
+            if (loadingDetails) {
+                loadingDetails.textContent = `Checking sessionStorage for data...`;
+            }
+            
+            // Read from sessionStorage
+            const resultData = sessionStorage.getItem('psychomatrixResult');
+            
+            console.log('🔍 DEBUG: Checking sessionStorage for psychomatrixResult:', resultData ? '✅ Data found' : '❌ No data');
+            
+            if (!resultData) {
+                console.log('❌ DEBUG: No data in sessionStorage. Checking other sources...');
+                
+                // Check localStorage as fallback
+                const localStorageData = localStorage.getItem('psychomatrixFormData');
+                const lastData = localStorage.getItem('lastPsychomatrixData');
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `No sessionStorage data. Checking localStorage...`;
+                }
+                
+                // Update debug info
+                const debugSessionStorage = document.getElementById('debugSessionStorage');
+                const debugLocalStorage = document.getElementById('debugLocalStorage');
+                const debugURLParams = document.getElementById('debugURLParams');
+                
+                if (debugSessionStorage) {
+                    debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData ? 'Exists (' + resultData.length + ' chars)' : 'NOT FOUND'}`;
+                }
+                
+                if (debugLocalStorage) {
+                    debugLocalStorage.textContent = `localStorage.psychomatrixFormData: ${localStorageData ? 'Exists' : 'NOT FOUND'} | localStorage.lastPsychomatrixData: ${lastData ? 'Exists' : 'NOT FOUND'}`;
+                }
+                
+                if (debugURLParams) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    debugURLParams.textContent = `URL Parameters: ${urlParams.toString() || 'None'}`;
+                }
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    errorSection.classList.remove('tw-hidden');
+                }, 1000);
+                return;
+            }
+            
+            try {
+                console.log('📦 DEBUG: Parsing result data...');
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Parsing JSON data (${resultData.length} characters)...`;
+                }
+                
+                const data = JSON.parse(resultData);
+                console.log('📦 DEBUG: Parsed data structure:', data);
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Loading Life Path properties...`;
+                }
+                
+                // Load LifePathProperty.json
+                console.log('📦 DEBUG: Calling loadLifePathProperties()...');
+                await loadLifePathProperties();
+                console.log('📦 DEBUG: loadLifePathProperties() completed');
+                console.log('📦 DEBUG: lifePathProperties after load:', lifePathProperties);
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Checking data validity...`;
+                }
+                
+                if (!data.success) {
+                    const errorMsg = data.error || 'API returned error';
+                    console.error('❌ DEBUG: API error:', errorMsg);
+                    throw new Error(errorMsg);
+                }
+                
+                console.log('✅ DEBUG: Data valid. Displaying results...');
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Rendering results...`;
+                }
+                
+                displayResults(data);
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    resultsContainer.classList.remove('tw-hidden');
+                    console.log('✅ DEBUG: Results displayed successfully');
+                }, 500);
+                
+            } catch (error) {
+                console.error('❌ DEBUG: Error in loadAndDisplayResults:', error);
+                console.error('❌ DEBUG: Error stack:', error.stack);
+                
+                if (loadingDetails) {
+                    loadingDetails.textContent = `Error: ${error.message}`;
+                }
+                
+                // Update error message
+                const errorMessage = document.getElementById('errorMessage');
+                if (errorMessage) {
+                    errorMessage.textContent = `Error: ${error.message}`;
+                }
+                
+                // Show debug info
+                const debugSessionStorage = document.getElementById('debugSessionStorage');
+                if (debugSessionStorage && resultData) {
+                    debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData.substring(0, 200)}...`;
+                }
+                
+                setTimeout(() => {
+                    loadingSection.classList.add('tw-hidden');
+                    errorSection.classList.remove('tw-hidden');
+                }, 1000);
+            }
+        }
+        
+        // Display results from API
+        function displayResults(data) {
+            console.log('🎨 DEBUG: Starting displayResults()');
+            console.log('🎨 DEBUG: Data received:', data);
+            
+            const resultsContainer = document.getElementById('resultsContainer');
+            let html = '';
+            
+            console.log('🎨 DEBUG: Checking results structure...');
+            console.log('🎨 DEBUG: data.results:', data.results);
+            console.log('🎨 DEBUG: data.data:', data.data);
+            
+            // เก็บข้อมูล analysis ไว้ใช้สำหรับ Pythagorean Square
+            analysisData = data;
+            
+            if (data.results && Array.isArray(data.results)) {
+                console.log(`🎨 DEBUG: Found ${data.results.length} results in array`);
+                data.results.forEach((result, index) => {
+                    console.log(`🎨 DEBUG: Result ${index}:`, result);
+                    html += createResultSection(result, index);
+                });
+            } else if (data.data) {
+                console.log('🎨 DEBUG: Using single result mode with data.data');
+                html += createSingleResultSection(data);
+            } else {
+                console.log('🎨 DEBUG: No standard structure found, creating fallback display');
+                html += createFallbackDisplay(data);
+            }
+            
+            resultsContainer.innerHTML = html;
+            console.log('✅ DEBUG: HTML content set, length:', html.length);
+        }
+        
+        // Create single result section
+        function createSingleResultSection(data) {
+            return `
+                <div class="result-section">
+                    <div class="section-header">
+                        <i class="fas fa-chart-bar tw-mr-2"></i>Analysis Result
+                    </div>
+                    <div class="section-content">
+                        <div class="tw-text-center tw-py-8">
+                            <p class="tw-text-gray-600">Single result mode - Data structure needs adjustment</p>
+                            <pre class="tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-text-sm">${JSON.stringify(data.data, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Create result section for each result
+        function createResultSection(result, index) {
+            const type = result.type || 'unknown';
+            const title = result.title || `Result ${index + 1}`;
+            const data = result.data || {};
+            
+            const destinyNum = data.destiny_number;
+            const lifePathNum = data.life_path_number;
+            const karmicNum = data.thirdAndFourth?.karmic;
+            const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+            
+            console.log('🎨 DEBUG: Creating result section:', { 
+                type, title, destinyNum, lifePathNum, karmicNum, lifeLessonNum 
+            });
+            
+            // Extract pinnacle data if available
+            if (data.birth_date && destinyNum) {
+                pinnacleData = {
+                    lifePathNumber: lifePathNum || destinyNum,
+                    birth_date: data.birth_date,
+                    UDate: data.birth_date ? data.birth_date.split('/')[0] : '',
+                    UMonth: data.birth_date ? data.birth_date.split('/')[1] : '',
+                    UYear: data.birth_date ? data.birth_date.split('/')[2] : ''
+                };
+                console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
+            }
+            
+            // Get life path details from JSON
+            console.log('🎨 DEBUG: Getting life path details for number:', lifePathNum);
+            const lifePathDetails = getLifePathDetails(lifePathNum);
+            console.log('🎨 DEBUG: Life path details found:', lifePathDetails);
+            const lifePathDetailsHTML = createLifePathDetailsHTML(lifePathNum, lifePathDetails);
+            
+            return `
+                <div class="result-section">
+                    <div class="section-header">
+                        <i class="fas fa-chart-bar tw-mr-2"></i>${title}
+                    </div>
+                    <div class="section-content">
+                        
+                        <!-- Number Grid -->
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="label">Life Path Number</div>
+                                ${createNumberButton(lifePathNum, 'LifePath', lifePathNum)}
+                                <div class="description">Life path and purpose</div>
+                            </div>                        
+                            <div class="data-item">
+                                <div class="label">Destiny Number</div>
+                                ${createNumberButton(destinyNum, 'Destiny', destinyNum)}
+                                <div class="description">${data.destiny_meaning || 'Personality and destiny'}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="label">Karmic Number</div>
+                                ${createNumberButton(karmicNum, 'Karmic', karmicNum)}
+                                <div class="description">Karmic debt</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="label">Life Lesson</div>
+                                ${createNumberButton(lifeLessonNum, 'LifeLesson', lifeLessonNum)}
+                                <div class="description">Life lessons</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Display Life Path Details from JSON -->
+                        ${lifePathDetailsHTML}
+                        
+                        <!-- Buttons for additional content -->
+                        <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
+                            <button onclick="showPythagoreanSquare(${index})" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
+                                Pythagorean Square
+                            </button>
+                            <button onclick="loadPinnacle()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4 tw-text-lg">
+                                Pinnacle Cycle
+                            </button>
+                                          <!-- เพิ่มปุ่มใหม่สำหรับ Pythagorean Square รวมเลขสิ่งแวดล้อม -->
+                <button onclick="showCombinedPythagoreanSquare(${index})" 
+                        class="tw-bg-purple-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-mt-4 tw-text-lg">
+                    Pythagorean Square (รวมเลขสิ่งแวดล้อม)
+                </button>
+
+
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Create number button
+        function createNumberButton(number, category, actualNumber) {
+            if (!number && number !== 0) return `<div class="text-gray">-</div>`;
+            
+            // Filename mapping
+            let filename;
+            switch(category) {
+                case 'Destiny':
+                    filename = `Destiny${number}.html`;
+                    break;
+                case 'LifePath':
+                    filename = `LifePathNumber${number}.html`;
+                    break;
+                case 'Karmic':
+                    filename = ``;
+                    break;
+                case 'LifeLesson':
+                    filename = `KarmicLesson${number}.html`;
+                    break;
+                default:
+                    filename = `${category}${number}.html`;
+            }
+            
+            let url = `${BASE_PATH}/${filename}`;
+            if ( filename === ``) {
+                url = ``;
+            }
+            
+            return `
+                <button class="number-button" 
+                        onclick="loadExplainedContent('${url}', '${category}', ${number})">
+                    ${number}
+                </button>
+            `;
+            
+        }
+        
+        // Create fallback display
+        function createFallbackDisplay(data) {
+            console.log('🎨 DEBUG: Creating fallback display for data:', data);
+            
+            return `
+                <div class="result-section">
+                    <div class="section-header">
+                        <i class="fas fa-exclamation-triangle tw-mr-2"></i>Raw Analysis Result
+                    </div>
+                    <div class="section-content">
+                        <p class="tw-ml-4 tw-mt-2 tw-text-gray-600">The data structure is not in the expected format. Here's what was received:</p>
+                        <div class="tw-ml-4 tw-mt-4 tw-p-4 tw-bg-gray-100 tw-rounded tw-font-mono tw-text-sm">
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                        
+                        <!-- Buttons for additional content -->
+                        <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
+                            <button onclick="loadPythagoreanSquare()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block">
+                                Pythagorean Square
+                            </button>
+                            <button onclick="loadPinnacle()" 
+                                    class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4">
+                                Pinnacle Cycle
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show Pythagorean Square
+        // Show Pythagorean Square - แก้ไขให้รวมตัวเลขพิเศษ
+function showPythagoreanSquare(resultIndex) {
+    console.log(`📊 DEBUG: Showing Pythagorean Square for result ${resultIndex}`);
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    // ตรวจสอบว่ามีข้อมูลหรือไม่
+    if (!analysisData || !analysisData.results || !analysisData.results[resultIndex]) {
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">No Pythagorean Square data available</p>
+                <p class="tw-text-sm">The Edge Function needs to calculate Pythagorean Square data</p>
+            </div>
+        `;
+        switchTab('Explained', explainedButton);
+        return;
+    }
+    
+    const result = analysisData.results[resultIndex];
+    const title = result.title || `Result ${resultIndex + 1}`;
+    
+    // ดึงข้อมูลตัวเลขพิเศษ
+    const lifePathNum = result.data?.life_path_number || result.data?.lifePath;
+    const destinyNum = result.data?.destiny_number || result.data?.destiny;
+    const karmicNum = result.data?.thirdAndFourth?.karmic || result.data?.karmic;
+    const lifeLessonNum = result.data?.thirdAndFourth?.lifeLesson || result.data?.lifeLesson;
+    
+    console.log('🔢 DEBUG: Special numbers:', { lifePathNum, destinyNum, karmicNum, lifeLessonNum });
+    
+    // สร้าง Pythagorean Square
+    let pythagoreanHTML = '';
+    let mostInfluentialHTML = '';
+    
+    if (result.number_string) {
+        // รวมตัวเลขพิเศษเข้าไปใน number string
+        let combinedNumberString = result.number_string;
+        
+        // เพิ่มตัวเลขพิเศษ (แยกแต่ละหลัก)
+        const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
+        specialNumbers.forEach(num => {
+            if (num !== undefined && num !== null) {
+                // แยกเลขหลายหลักออกเป็นหลักเดียว
+                const numStr = num.toString();
+                for (let i = 0; i < numStr.length; i++) {
+                    const digit = numStr[i];
+                    if (digit >= '1' && digit <= '9') {
+                        combinedNumberString += digit;
+                    }
+                }
+            }
+        });
+        
+        console.log('🔢 DEBUG: Combined number string:', combinedNumberString);
+        pythagoreanHTML = calculatePythagoreanSquareHTML(combinedNumberString);
+        mostInfluentialHTML = calculateMostInfluentialNumbers(combinedNumberString);
+    } else if (result.data && (result.data.birth_date || result.data.id_card || result.data.full_name)) {
+        // สร้าง number string จากข้อมูลหลัก
+        let numberString = '';
+        
+        if (result.data.birth_date) {
+            const birthNumbers = result.data.birth_date.replace(/[\/: ]/g, '');
+            numberString += birthNumbers;
+        }
+        
+        if (result.data.id_card) {
+            numberString += result.data.id_card.replace(/\D/g, '');
+        }
+        
+        if (result.data.full_name) {
+            const cleanName = result.data.full_name.replace(/\s/g, '');
+            numberString += convertNameToNumberString(cleanName);
+        }
+        
+        // รวมตัวเลขพิเศษ
+        const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
+        specialNumbers.forEach(num => {
+            if (num !== undefined && num !== null) {
+                const numStr = num.toString();
+                for (let i = 0; i < numStr.length; i++) {
+                    const digit = numStr[i];
+                    if (digit >= '1' && digit <= '9') {
+                        numberString += digit;
+                    }
+                }
+            }
+        });
+        
+        console.log('🔢 DEBUG: Generated number string:', numberString);
+        pythagoreanHTML = calculatePythagoreanSquareHTML(numberString);
+        mostInfluentialHTML = calculateMostInfluentialNumbers(numberString);
+    }
+    
+    // ถ้ายังไม่มี HTML ให้แสดงข้อความว่าไม่สามารถคำนวณได้
+    if (!pythagoreanHTML) {
+        pythagoreanHTML = `
+            <div class="tw-text-center tw-py-8">
+                <p class="tw-text-gray-600">Unable to calculate Pythagorean Square</p>
+                <p class="tw-text-sm tw-text-gray-500 tw-mt-2">Insufficient data for calculation</p>
+            </div>
+        `;
+    }
+    
+    explainedContent.innerHTML = `
+        <div class="pythagorean-square-container">
+            <h2>Pythagorean Square - ${title}</h2>
+            ${pythagoreanHTML}
+            ${mostInfluentialHTML}
+            <div class="tw-mt-8 tw-text-sm tw-text-gray-600">
+                <p><strong>คำอธิบาย:</strong> ตาราง Pythagorean Square แสดงความถี่ของตัวเลข 1-9 จากข้อมูลของคุณ</p>
+                <p class="tw-mt-2">ตัวเลขในวงเล็บแสดงจำนวนครั้งที่ปรากฏ ส่วนผลรวมแถว/คอลัมน์/แนวทแยงแสดงอิทธิพลของตัวเลขในแต่ละด้าน</p>
+                <p class="tw-mt-2"><strong>หมายเหตุ:</strong> รวมสถิติจาก Life Path, Destiny, Karmic, และ Life Lesson แล้ว</p>
+            </div>
+            
+            <!-- ปุ่มสำหรับ Pythagorean Square รวมเลขสิ่งแวดล้อม -->
+            <div class="tw-mt-8 tw-text-center">
+                <button onclick="showCombinedPythagoreanSquare(${resultIndex})" 
+                        class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
+                    Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
+                </button>
+            </div>
+        </div>
+    `;
+    
+    switchTab('Explained', explainedButton);
+}
+        
+        
+        // คำนวณ Pythagorean Square HTML จาก number string
+        function calculatePythagoreanSquareHTML(numberString) {
+            console.log('🧮 DEBUG: Calculating Pythagorean Square for:', numberString);
+            
+            // สร้าง array สำหรับนับเลข 1-9
+            const counts = new Array(10).fill(0);
+            
+            // นับความถี่ของตัวเลข 1-9
+            for (let i = 0; i < numberString.length; i++) {
+                const digit = parseInt(numberString[i]);
+                if (digit >= 1 && digit <= 9) {
+                    counts[digit]++;
+                }
+            }
+            
+            // คำนวณผลรวมแถวและคอลัมน์
+            const rowSums = [
+                counts[1] + counts[4] + counts[7],
+                counts[2] + counts[5] + counts[8],
+                counts[3] + counts[6] + counts[9]
+            ];
+            
+            const colSums = [
+                counts[1] + counts[2] + counts[3],
+                counts[4] + counts[5] + counts[6],
+                counts[7] + counts[8] + counts[9]
+            ];
+            
+            const diagonalLeft = counts[1] + counts[5] + counts[9];
+            const diagonalRight = counts[7] + counts[5] + counts[3];
+            
+            // สร้าง HTML สำหรับ Pythagorean Square
+            return `
+                <div class="pythagorean-square">
+                    <div class="square-cell number-1" style="grid-row: 1; grid-column: 1;">1<span>(${counts[1]})</span></div>
+                    <div class="square-cell number-4" style="grid-row: 1; grid-column: 2;">4<span>(${counts[4]})</span></div>
+                    <div class="square-cell number-7" style="grid-row: 1; grid-column: 3;">7<span>(${counts[7]})</span></div>
+                    
+                    <div class="square-cell number-2" style="grid-row: 2; grid-column: 1;">2<span>(${counts[2]})</span></div>
+                    <div class="square-cell number-5" style="grid-row: 2; grid-column: 2;">5<span>(${counts[5]})</span></div>
+                    <div class="square-cell number-8" style="grid-row: 2; grid-column: 3;">8<span>(${counts[8]})</span></div>
+                    
+                    <div class="square-cell number-3" style="grid-row: 3; grid-column: 1;">3<span>(${counts[3]})</span></div>
+                    <div class="square-cell number-6" style="grid-row: 3; grid-column: 2;">6<span>(${counts[6]})</span></div>
+                    <div class="square-cell number-9" style="grid-row: 3; grid-column: 3;">9<span>(${counts[9]})</span></div>
+                    
+                    <div class="square-cell sum" style="grid-row: 1; grid-column: 4;">${rowSums[0]}</div>
+                    <div class="square-cell sum" style="grid-row: 2; grid-column: 4;">${rowSums[1]}</div>
+                    <div class="square-cell sum" style="grid-row: 3; grid-column: 4;">${rowSums[2]}</div>
+                    
+                    <div class="square-cell sum" style="grid-row: 4; grid-column: 1;">${colSums[0]}</div>
+                    <div class="square-cell sum" style="grid-row: 4; grid-column: 2;">${colSums[1]}</div>
+                    <div class="square-cell sum" style="grid-row: 4; grid-column: 3;">${colSums[2]}</div>
+                    <div class="square-cell sum" style="grid-row: 4; grid-column: 4;">${diagonalLeft}/${diagonalRight}</div>
+                </div>
+            `;
+        }
+        
+        // แปลงชื่อเป็นสตริงตัวเลข (เหมือนใน Edge Function)
+        function convertNameToNumberString(name) {
+            console.log('🔤 DEBUG: Converting name to number string:', name);
+            
+            const thaiToEnglishMap = {
+                'ก': 'K', 'ข': 'K', 'ค': 'K', 'ฆ': 'K', 'ง': 'N',
+                'จ': 'J', 'ฉ': 'C', 'ช': 'C', 'ซ': 'S', 'ฌ': 'J', 'ญ': 'Y',
+                'ฎ': 'D', 'ฏ': 'T', 'ฐ': 'T', 'ฑ': 'D', 'ฒ': 'T', 'ณ': 'N',
+                'ด': 'D', 'ต': 'T', 'ถ': 'T', 'ท': 'T', 'ธ': 'T', 'น': 'N',
+                'บ': 'B', 'ป': 'P', 'ผ': 'P', 'ฝ': 'F', 'พ': 'P', 'ฟ': 'F',
+                'ภ': 'P', 'ม': 'M', 'ย': 'Y', 'ร': 'R', 'ล': 'L', 'ว': 'W',
+                'ศ': 'S', 'ษ': 'S', 'ส': 'S', 'ห': 'H', 'ฬ': 'L', 'อ': 'O',
+                'ฮ': 'H',
+                'ะ': 'A', 'า': 'A', 'ำ': 'A', 'ิ': 'I', 'ี': 'I', 'ึ': 'U', 'ื': 'U',
+                'ุ': 'U', 'ู': 'U', 'เ': 'E', 'แ': 'A', 'โ': 'O', 'ใ': 'I', 'ไ': 'I'
+            };
+            
+            const letterToNumberMap = {
+                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
+                'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9,
+                'S': 1, 'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8,
+                '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
+            };
+            
+            function letterToNumber(letter) {
+                const upperLetter = letter.toUpperCase();
+                
+                if (thaiToEnglishMap[letter]) {
+                    return letterToNumberMap[thaiToEnglishMap[letter]] || 0;
+                }
+                
+                return letterToNumberMap[upperLetter] || 0;
+            }
+            
+            let numberString = '';
+            for (let i = 0; i < name.length; i++) {
+                const char = name[i];
+                const number = letterToNumber(char);
+                numberString += number.toString();
+            }
+            
+            console.log('🔢 DEBUG: Converted number string:', numberString);
+            return numberString;
+        }
+        
+        // Load explained content (สำหรับปุ่มตัวเลข)
+        function loadExplainedContent(url, category, number) {
+            console.log(`🔄 DEBUG: Loading ${category} ${number} from: ${url}`);
+            
+            if ( url === ``) {
+              return ``;
+            }
+ 
+            const explainedContent = document.getElementById('explainedContent');
+            const explainedButton = document.querySelector('.tablink:nth-child(2)');
+            
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8">
+                    <div class="spinner"></div>
+                    <p class="tw-mt-4 tw-text-gray-600">Loading ${category} ${number}...</p>
+                    <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
+                </div>
+            `;
+            
+            switchTab('Explained', explainedButton);
+            
+            fetch(url, { 
+                method: 'GET',
+                cache: 'no-cache',
+                headers: { 'Accept': 'text/html' }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log(`✅ DEBUG: Success loading ${url} (${html.length} bytes)`);
+                    
+                    // Fix relative paths
+                    const fixedHtml = fixRelativePaths(html);
+                    
+                    explainedContent.innerHTML = `
+                        <div class="external-content-body">
+                            ${fixedHtml}
+                        </div>
+                    `;
+                    
+                    // เรียกฟังก์ชันปรับปรุง layout หลังจากโหลดเนื้อหาเสร็จ
+                    setTimeout(() => {
+                        adjustExplainedLayout();
+                    }, 100);
+                    
+                })
+                .catch(error => {
+                    console.error(`❌ DEBUG: Error loading ${url}:`, error);
+                    explainedContent.innerHTML = `
+                        <div class="tw-text-center tw-py-8 tw-text-red-500">
+                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                            <p class="tw-font-bold">Cannot load content</p>
+                            <p class="tw-text-sm">${error.message}</p>
+                            <p class="tw-text-sm tw-text-gray-500 tw-mt-2">URL: ${url}</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // คำนวณเลขที่มีอิทธิพลสูงสุด
+function calculateMostInfluentialNumbers(numberString) {
+    console.log('📊 DEBUG: Calculating most influential numbers for:', numberString);
+    
+    // สร้าง array สำหรับนับเลข 1-9
+    const counts = new Array(10).fill(0);
+    
+    // นับความถี่ของตัวเลข 1-9
+    for (let i = 0; i < numberString.length; i++) {
+        const digit = parseInt(numberString[i]);
+        if (digit >= 1 && digit <= 9) {
+            counts[digit]++;
+        }
+    }
+    
+    // หาค่าสูงสุด
+    const maxCount = Math.max(...counts.slice(1));
+    
+    // หาตัวเลขทั้งหมดที่มีค่าสูงสุด
+    const influentialNumbers = [];
+    for (let i = 1; i <= 9; i++) {
+        if (counts[i] === maxCount) {
+            influentialNumbers.push(i);
+        }
+    }
+    
+    // หาตัวเลขที่ขาดหายไป (count = 0)
+    const missingNumbers = [];
+    for (let i = 1; i <= 9; i++) {
+        if (counts[i] === 0) {
+            missingNumbers.push(i);
+        }
+    }
+    
+    return `
+        <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
+            <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง</h3>
+            <p class="tw-text-gray-700">
+                <strong>เลขที่มีอิทธิพลสูงสุด:</strong> 
+                ${influentialNumbers.length > 0 ? influentialNumbers.join(', ') : 'ไม่พบ'}
+                (ปรากฏ ${maxCount} ครั้ง)
+            </p>
+            <p class="tw-text-gray-700 tw-mt-2">
+                <strong>เลขที่ขาดหายไป:</strong> 
+                ${missingNumbers.length > 0 ? missingNumbers.join(', ') : 'ไม่มี'}
+            </p>
+        </div>
+    `;
+}
+
+// แสดง Pythagorean Square รวมเลขสิ่งแวดล้อมจาก localStorage
+function showCombinedPythagoreanSquare(resultIndex) {
+    console.log(`📊 DEBUG: Showing Combined Pythagorean Square for result ${resultIndex}`);
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    // ตรวจสอบว่ามีข้อมูลหรือไม่
+    if (!analysisData || !analysisData.results || !analysisData.results[resultIndex]) {
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">No data available</p>
+            </div>
+        `;
+        switchTab('Explained', explainedButton);
+        return;
+    }
+    
+    const result = analysisData.results[resultIndex];
+    const title = result.title || `Result ${resultIndex + 1}`;
+    
+    // ดึงข้อมูลตัวเลขพิเศษ
+    const lifePathNum = result.data?.life_path_number || result.data?.lifePath;
+    const destinyNum = result.data?.destiny_number || result.data?.destiny;
+    const karmicNum = result.data?.thirdAndFourth?.karmic || result.data?.karmic;
+    const lifeLessonNum = result.data?.thirdAndFourth?.lifeLesson || result.data?.lifeLesson;
+    
+    // ดึงข้อมูลเลขสิ่งแวดล้อมจาก localStorage
+    const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
+    console.log('📊 DEBUG: Surrounding numbers from localStorage:', surroundingNumbers);
+    
+    // สร้าง number string รวม
+    let combinedNumberString = '';
+    
+    // เพิ่มข้อมูลหลัก
+    if (result.number_string) {
+        combinedNumberString += result.number_string;
+    } else if (result.data) {
+        if (result.data.birth_date) {
+            const birthNumbers = result.data.birth_date.replace(/[\/: ]/g, '');
+            combinedNumberString += birthNumbers;
+        }
+        if (result.data.id_card) {
+            combinedNumberString += result.data.id_card.replace(/\D/g, '');
+        }
+        if (result.data.full_name) {
+            const cleanName = result.data.full_name.replace(/\s/g, '');
+            combinedNumberString += convertNameToNumberString(cleanName);
+        }
+    }
+    
+    // เพิ่มตัวเลขพิเศษ
+    const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
+    specialNumbers.forEach(num => {
+        if (num !== undefined && num !== null) {
+            const numStr = num.toString();
+            for (let i = 0; i < numStr.length; i++) {
+                const digit = numStr[i];
+                if (digit >= '1' && digit <= '9') {
+                    combinedNumberString += digit;
+                }
+            }
+        }
+    });
+    
+    // เพิ่มเลขสิ่งแวดล้อม 20 รายการ
+    if (surroundingNumbers) {
+        try {
+            const numbersArray = JSON.parse(surroundingNumbers);
+            if (Array.isArray(numbersArray)) {
+                numbersArray.forEach(num => {
+                    if (num && num.toString) {
+                        const numStr = num.toString();
+                        for (let i = 0; i < numStr.length; i++) {
+                            const digit = numStr[i];
+                            if (digit >= '1' && digit <= '9') {
+                                combinedNumberString += digit;
+                            }
+                        }
+                    }
+                });
+                console.log('✅ DEBUG: Added surrounding numbers to calculation');
+            }
+        } catch (error) {
+            console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
+        }
+    }
+    
+    console.log('🔢 DEBUG: Final combined number string:', combinedNumberString);
+    
+    // คำนวณและแสดงผล
+    const pythagoreanHTML = calculatePythagoreanSquareHTML(combinedNumberString);
+    const mostInfluentialHTML = calculateMostInfluentialNumbers(combinedNumberString);
+    
+    explainedContent.innerHTML = `
+        <div class="pythagorean-square-container">
+            <h2>Pythagorean Square (รวมเลขสิ่งแวดล้อม) - ${title}</h2>
+            <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
+                <p><strong>หมายเหตุ:</strong> ตารางนี้รวมสถิติจาก:</p>
+                <ul class="tw-list-disc tw-list-inside tw-mt-1">
+                    <li>ข้อมูลหลัก (วันเกิด/บัตรประชาชน/ชื่อ)</li>
+                    <li>ตัวเลขพิเศษ (Life Path, Destiny, Karmic, Life Lesson)</li>
+                    <li>เลขสิ่งแวดล้อม 20 รายการจาก Local Storage</li>
+                </ul>
+            </div>
+            ${pythagoreanHTML}
+            ${mostInfluentialHTML}
+        </div>
+    `;
+    
+    switchTab('Explained', explainedButton);
+}
+
+
+
+
+        
+        
+        
+        
+        // Load Pinnacle
+        function loadPinnacle() {
+            console.log('📖 DEBUG: Loading Pinnacle Cycle');
+            
+            const explainedContent = document.getElementById('explainedContent');
+            const explainedButton = document.querySelector('.tablink:nth-child(2)');
+            
+            if (!pinnacleData || !pinnacleData.lifePathNumber) {
+                explainedContent.innerHTML = `
+                    <div class="tw-text-center tw-py-8 tw-text-red-500">
+                        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                        <p class="tw-font-bold">No birth date data available</p>
+                        <p class="tw-text-sm">Please analyze birth date data first to view Pinnacle Cycle</p>
+                    </div>
+                `;
+                switchTab('Explained', explainedButton);
+                return;
+            }
+            
+            const url = `${BASE_PATH}/pinnacle.html`;
+            console.log('📖 DEBUG: Pinnacle URL:', url);
+            
+            explainedContent.innerHTML = `
+                <div class="tw-text-center tw-py-8">
+                    <div class="spinner"></div>
+                    <p class="tw-mt-4 tw-text-gray-600">Loading Pinnacle Cycle...</p>
+                    <p class="tw-text-sm tw-text-gray-500">URL: ${url}</p>
+                </div>
+            `;
+            
+            switchTab('Explained', explainedButton);
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    explainedContent.innerHTML = `
+                        <div class="external-content-body">
+                            ${html}
+                        </div>
+                    `;
+                })
+                .catch(error => {
+                    console.error(`❌ DEBUG: Error loading ${url}:`, error);
+                    explainedContent.innerHTML = `
+                        <div class="tw-text-center tw-py-8 tw-text-red-500">
+                            <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                            <p class="tw-font-bold">Cannot load Pinnacle Cycle</p>
+                            <p class="tw-text-sm">${error.message}</p>
+                        </div>
+                    `;
+                });
+        }
+        
+        // ปรับปรุง layout ของเนื้อหาใน Explained Tab
+        function adjustExplainedLayout() {
+            const explainedContent = document.getElementById('explainedContent');
+            if (!explainedContent) return;
+            
+            // หา header ในเนื้อหาที่โหลดมา
+            const pageHeader = explainedContent.querySelector('.page-header');
+            if (pageHeader) {
+                // ตรวจสอบว่ามี modern-number-overlay หรือไม่
+                const modernNumberOverlay = pageHeader.querySelector('.modern-number-overlay');
+                if (modernNumberOverlay) {
+                    // ถ้ามีให้ปรับแต่งเพิ่มเติม
+                    const numbers = modernNumberOverlay.querySelectorAll('.modern-number');
+                    if (numbers.length >= 2) {
+                        numbers[0].style.left = '0';
+                        numbers[0].style.top = '0';
+                        numbers[0].style.width = '120px';
+                        numbers[0].style.height = '120px';
+                        
+                        numbers[1].style.left = '20px';
+                        numbers[1].style.top = '20px';
+                        numbers[1].style.width = '120px';
+                        numbers[1].style.height = '120px';
+                        numbers[1].style.opacity = '0.6';
+                    }
+                }
+            }
+            
+            // ปรับปรุงหัวข้อ h1 ให้มีระยะห่างที่เหมาะสม
+            const h1 = explainedContent.querySelector('h1');
+            if (h1) {
+                h1.style.marginLeft = '20px';
+                h1.style.paddingTop = '10px';
+                h1.style.maxWidth = 'calc(100% - 160px)';
+            }
+        }
+        
+        // Fix relative paths for GitHub Pages
+        function fixRelativePaths(html) {
+            console.log('🔧 DEBUG: Fixing relative paths in HTML');
+            
+            let fixedHtml = html;
+            
+            // Fix img src paths
+            fixedHtml = fixedHtml.replace(/src="([^"]*)"/g, function(match, path) {
+                if (path.startsWith('http') || path.startsWith('//') || path.startsWith('data:')) {
+                    return match;
+                }
+                
+                let newPath;
+                if (path.startsWith('/')) {
+                    newPath = `${BASE_PATH}${path}`;
+                } else if (path.startsWith('./')) {
+                    newPath = `${BASE_PATH}/${path.substring(2)}`;
+                } else {
+                    newPath = `${BASE_PATH}/${path}`;
+                }
+                
+                console.log(`🔧 DEBUG: Fixed img path: ${path} -> ${newPath}`);
+                return `src="${newPath}"`;
+            });
+            
+            // Fix link href paths for CSS
+            fixedHtml = fixedHtml.replace(/href="([^"]*\.css)"/g, function(match, path) {
+                if (path.startsWith('http') || path.startsWith('//')) {
+                    return match;
+                }
+                
+                let newPath;
+                if (path.startsWith('/')) {
+                    newPath = `${BASE_PATH}${path}`;
+                } else if (path.startsWith('./')) {
+                    newPath = `${BASE_PATH}/${path.substring(2)}`;
+                } else {
+                    newPath = `${BASE_PATH}/${path}`;
+                }
+                
+                console.log(`🔧 DEBUG: Fixed CSS path: ${path} -> ${newPath}`);
+                return `href="${newPath}"`;
+            });
+            
+            return fixedHtml;
+        }
+        
+        console.log('✅ DEBUG: result.html script loaded completely');
+    </script>
+</body>
+</html>
