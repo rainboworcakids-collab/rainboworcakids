@@ -1,22 +1,18 @@
-// pythagorean.js - Pythagorean Square calculations
-console.log('🚀 DEBUG: pythagorean.js loaded 8.4');
+// pythagorean.js - Pythagorean Square calculations (แก้ไขแสดงข้อมูล PHP)
+console.log('🚀 DEBUG: pythagorean.js loaded v8.8 - PHP Data Display Fix');
 
-// Create global namespace
 const pythagorean = {
-    // Show Pythagorean Square
-    showPythagoreanSquare: async function(resultIndex) {
+    showPythagoreanSquare: async function(resultIndex, phpCombinedInfluence = '') {
         console.log(`📊 DEBUG: showPythagoreanSquare called for index ${resultIndex}`);
-        await this._calculatePythagoreanSquare(resultIndex, 'basic');
+        await this._calculatePythagoreanSquare(resultIndex, 'basic', phpCombinedInfluence);
     },
 
-    // Show Combined Pythagorean Square
-    showCombinedPythagoreanSquare: async function(resultIndex) {
+    showCombinedPythagoreanSquare: async function(resultIndex, phpCombinedInfluence = '') {
         console.log(`📊 DEBUG: showCombinedPythagoreanSquare called for index ${resultIndex}`);
-        await this._calculatePythagoreanSquare(resultIndex, 'combined');
+        await this._calculatePythagoreanSquare(resultIndex, 'combined', phpCombinedInfluence);
     },
 
-    // Main calculation function
-    _calculatePythagoreanSquare: async function(resultIndex, calculationType) {
+    _calculatePythagoreanSquare: async function(resultIndex, calculationType, phpCombinedInfluence = '') {
         const explainedContent = document.getElementById('explainedContent');
         const explainedButton = document.querySelector('.tablink:nth-child(2)');
         
@@ -25,7 +21,6 @@ const pythagorean = {
             return;
         }
         
-        // ตรวจสอบข้อมูล
         const analysisData = this._getAnalysisData();
         
         if (!analysisData) {
@@ -39,7 +34,6 @@ const pythagorean = {
             return;
         }
         
-        // ดึงข้อมูลผลลัพธ์
         let result = null;
         let title = `Result ${resultIndex + 1}`;
         
@@ -65,7 +59,6 @@ const pythagorean = {
             return;
         }
         
-        // แสดง loading
         explainedContent.innerHTML = `
             <div class="tw-text-center tw-py-8">
                 <div class="spinner"></div>
@@ -75,14 +68,12 @@ const pythagorean = {
         window.switchTab('Explained', explainedButton);
         
         try {
-            // ให้เวลาสำหรับการแสดง loading
             await new Promise(resolve => setTimeout(resolve, 100));
             
-            // คำนวณและแสดงผล
             if (calculationType === 'basic') {
-                this._calculateLocally(result, resultIndex, analysisData);
+                this._displayWithPHPData(result, resultIndex, phpCombinedInfluence, 'basic');
             } else {
-                this._calculateCombinedLocally(result, resultIndex, analysisData);
+                this._displayWithPHPData(result, resultIndex, phpCombinedInfluence, 'combined');
             }
             
         } catch (error) {
@@ -97,16 +88,11 @@ const pythagorean = {
         }
     },
 
-    // ฟังก์ชันตรวจสอบข้อมูล
     _getAnalysisData: function() {
-        console.log('🔍 DEBUG: Getting analysis data');
-        
-        // 1. ตรวจสอบ window.analysisData
         if (window.analysisData) {
             return window.analysisData;
         }
         
-        // 2. ตรวจสอบ sessionStorage
         const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
         if (psychomatrixResult) {
             try {
@@ -121,43 +107,47 @@ const pythagorean = {
         return null;
     },
 
-    // คำนวณแบบ local (basic)
-    _calculateLocally: function(result, resultIndex, analysisData) {
-        console.log('🔄 DEBUG: Local calculation (basic)');
+    _displayWithPHPData: function(result, resultIndex, phpCombinedInfluence, calculationType) {
         const explainedContent = document.getElementById('explainedContent');
-        
         if (!explainedContent) return;
         
         const data = result.data || {};
-        const lifePathNum = data.life_path_number || data.lifePath;
-        const destinyNum = data.destiny_number || data.destiny;
-        const karmicNum = data.thirdAndFourth?.karmic || data.karmic;
-        const lifeLessonNum = data.thirdAndFourth?.lifeLesson || data.lifeLesson;
         
-        // สร้าง number string
+        // ดึงข้อมูลจาก data ที่ PHP ส่งมา
+        const lifePathNum = data.life_path_number || 
+                           (data['เลขเส้นทางชีวิต-Life Path Number'] ? 
+                            data['เลขเส้นทางชีวิต-Life Path Number'].split(' - ')[0] : null);
+        
+        const destinyNum = data.destiny_number || 
+                          (data['เลขภาระกิจ-Destiny Number'] ? 
+                           data['เลขภาระกิจ-Destiny Number'].split(' - ')[0] : null);
+        
+        // สร้าง number string จากข้อมูลที่มี
         let numberString = '';
         
-        if (result.number_string) {
-            numberString = result.number_string;
-        } else {
-            if (data.birth_date) {
-                const birthNumbers = data.birth_date.replace(/[\/: ]/g, '');
-                numberString += birthNumbers;
-            }
-            if (data.id_card) {
-                numberString += data.id_card.replace(/\D/g, '');
-            }
-            if (data.full_name) {
-                const cleanName = data.full_name.replace(/\s/g, '');
-                numberString += this.convertNameToNumberString(cleanName);
-            }
+        // 1. จาก birth date
+        if (data.birth_date) {
+            const birthNumbers = data.birth_date.replace(/[\/: ]/g, '');
+            numberString += birthNumbers;
         }
         
-        // เพิ่มตัวเลขพิเศษ
-        const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
-        specialNumbers.forEach(num => {
-            if (num !== undefined && num !== null && num !== '') {
-                const numStr = num.toString();
+        // 2. จาก ID card
+        if (data.id_card) {
+            numberString += data.id_card.replace(/\D/g, '');
+        }
+        
+        // 3. จาก full name - ถ้ามี numberString ใน data
+        if (data.number_string) {
+            numberString += data.number_string;
+        } else if (data.full_name) {
+            const cleanName = data.full_name.replace(/\s/g, '');
+            numberString += this.convertNameToNumberString(cleanName);
+        }
+        
+        // 4. เพิ่มตัวเลขพิเศษ
+        [lifePathNum, destinyNum].forEach(num => {
+            if (num && !isNaN(num)) {
+                const numStr = Math.abs(parseInt(num)).toString();
                 for (let i = 0; i < numStr.length; i++) {
                     const digit = numStr[i];
                     if (digit >= '1' && digit <= '9') {
@@ -167,125 +157,207 @@ const pythagorean = {
             }
         });
         
-        // คำนวณและแสดงผล
+        // สำหรับ combined type ให้เพิ่ม surrounding numbers
+        if (calculationType === 'combined') {
+            const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
+            if (surroundingNumbers) {
+                try {
+                    const numbersArray = JSON.parse(surroundingNumbers);
+                    if (Array.isArray(numbersArray)) {
+                        numbersArray.forEach(num => {
+                            if (num && num.toString) {
+                                const numStr = num.toString();
+                                for (let i = 0; i < numStr.length; i++) {
+                                    const digit = numStr[i];
+                                    if (digit >= '1' && digit <= '9') {
+                                        numberString += digit;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
+                }
+            }
+        }
+        
+        // สร้าง Pythagorean Square จาก numberString
         const pythagoreanHTML = this.calculatePythagoreanSquareHTML(numberString);
-        const mostInfluentialHTML = this.calculateMostInfluentialNumbers(numberString);
+        
+        // สร้าง HTML สำหรับสรุปผลเลขแวดล้อม
+        // ใช้ข้อมูลจาก RootNumber.json แทนข้อมูลจาก PHP
+        let influenceHTML = '';
+        if (phpCombinedInfluence) {
+            influenceHTML = this._createInfluenceHTML(numberString, calculationType, phpCombinedInfluence);
+        } else {
+            influenceHTML = this._createInfluenceHTML(numberString, calculationType);
+        }
+        
+        const titleSuffix = calculationType === 'combined' ? '(รวมเลขสิ่งแวดล้อม)' : '';
         
         explainedContent.innerHTML = `
-            <div class="pythagorean-square-container">
-                <h2>Pythagorean Square - ${result.title || `Result ${resultIndex + 1}`}</h2>
-                <div class="tw-mb-4 tw-p-3 tw-bg-blue-50 tw-rounded tw-text-sm">
-                    <p><strong>Basic Calculation</strong></p>
+            <div class="pythagorean-square-page">
+                <h2 class="tw-text-xl tw-font-semibold tw-mt-4">Pythagorean Square ${titleSuffix} - ${result.title || `Result ${resultIndex + 1}`}</h2>
+                
+                ${calculationType === 'combined' ? `
+                <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
+                    <p><strong>Combined Calculation</strong></p>
                     <ul class="tw-list-disc tw-list-inside tw-mt-1">
                         <li>Total digits: ${numberString.length}</li>
-                        <li>Life Path: ${lifePathNum || 'N/A'}</li>
-                        <li>Destiny: ${destinyNum || 'N/A'}</li>
+                        <li>รวมตัวเลขพิเศษ: Life Path, Destiny, Karmic, Life Lesson</li>
+                        <li>รวมเลขสิ่งแวดล้อม 20 รายการ</li>
                     </ul>
                 </div>
+                ` : ''}
+                
                 ${pythagoreanHTML}
-                ${mostInfluentialHTML}
-                <div class="tw-mt-8 tw-text-center">
-                    <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${resultIndex})" 
+                ${influenceHTML}
+                
+                ${calculationType === 'basic' ? `
+                <div class="tw-mt-8 tw-mb-4 tw-text-center">
+                    <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${resultIndex}, '${phpCombinedInfluence ? phpCombinedInfluence.replace(/'/g, "\\'") : ''}')" 
                             class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block">
                         Pythagorean Square (รวมเลขสิ่งแวดล้อม 20 รายการ)
                     </button>
                 </div>
+                ` : ''}
             </div>
         `;
     },
 
-    // คำนวณแบบ local (combined)
-    _calculateCombinedLocally: function(result, resultIndex, analysisData) {
-        console.log('🔄 DEBUG: Local calculation (combined)');
-        const explainedContent = document.getElementById('explainedContent');
+    // สร้าง HTML สำหรับสรุปผลเลขแวดล้อมจาก RootNumber.json
+    _createInfluenceHTML: function(numberString, calculationType, phpCombinedInfluence = '') {
+        console.log('📊 DEBUG: Creating influence HTML from RootNumber.json');
         
-        if (!explainedContent) return;
+        const counts = new Array(10).fill(0);
         
-        const data = result.data || {};
-        const lifePathNum = data.life_path_number || data.lifePath;
-        const destinyNum = data.destiny_number || data.destiny;
-        const karmicNum = data.thirdAndFourth?.karmic || data.karmic;
-        const lifeLessonNum = data.thirdAndFourth?.lifeLesson || data.lifeLesson;
-        
-        // ดึงข้อมูล surrounding numbers
-        const surroundingNumbers = localStorage.getItem('lifePathSurroundingNumbers');
-        
-        // สร้าง number string
-        let combinedNumberString = '';
-        
-        if (result.number_string) {
-            combinedNumberString += result.number_string;
-        } else {
-            if (data.birth_date) {
-                const birthNumbers = data.birth_date.replace(/[\/: ]/g, '');
-                combinedNumberString += birthNumbers;
-            }
-            if (data.id_card) {
-                combinedNumberString += data.id_card.replace(/\D/g, '');
-            }
-            if (data.full_name) {
-                const cleanName = data.full_name.replace(/\s/g, '');
-                combinedNumberString += this.convertNameToNumberString(cleanName);
+        for (let i = 0; i < numberString.length; i++) {
+            const digit = parseInt(numberString[i]);
+            if (digit >= 1 && digit <= 9) {
+                counts[digit]++;
             }
         }
         
-        // เพิ่มตัวเลขพิเศษ
-        const specialNumbers = [lifePathNum, destinyNum, karmicNum, lifeLessonNum];
-        specialNumbers.forEach(num => {
-            if (num !== undefined && num !== null) {
-                const numStr = num.toString();
-                for (let i = 0; i < numStr.length; i++) {
-                    const digit = numStr[i];
-                    if (digit >= '1' && digit <= '9') {
-                        combinedNumberString += digit;
-                    }
+        let maxCount = 0;
+        let influentialNumbers = [];
+        
+        for (let i = 1; i <= 9; i++) {
+            if (counts[i] > maxCount) {
+                maxCount = counts[i];
+                influentialNumbers = [i];
+            } else if (counts[i] === maxCount && counts[i] > 0) {
+                influentialNumbers.push(i);
+            }
+        }
+        
+        let missingNumbers = [];
+        for (let i = 1; i <= 9; i++) {
+            if (counts[i] === 0) {
+                missingNumbers.push(i);
+            }
+        }
+        
+        // ดึงข้อมูลความหมายจาก RootNumber.json
+        let influentialNumbersHTML = '';
+        if (influentialNumbers.length > 0) {
+            influentialNumbers.forEach(num => {
+                const meaning = this._getNumberMeaningFromRootNumber(num);
+                influentialNumbersHTML += `
+                    <div class="tw-mt-3 tw-p-3 tw-bg-gray-50 tw-rounded">
+                        <div class="tw-font-bold tw-text-lg tw-text-blue-700">เลข ${num} (ปรากฏ ${counts[num]} ครั้ง)</div>
+                        <div class="tw-mt-1 tw-text-gray-700">${meaning}</div>
+                    </div>
+                `;
+            });
+        } else {
+            influentialNumbersHTML = '<p class="tw-text-gray-500">ไม่พบเลขที่มีอิทธิพลสูง</p>';
+        }
+        
+        let missingNumbersHTML = '';
+        if (missingNumbers.length > 0) {
+            missingNumbersHTML = missingNumbers.join(', ');
+        } else {
+            missingNumbersHTML = 'ไม่มีเลขที่ขาดหายไป';
+        }
+        
+        // ถ้ามีข้อมูลจาก PHP ให้แสดงด้วย
+        let phpInfluenceHTML = '';
+        if (phpCombinedInfluence) {
+            phpInfluenceHTML = `
+                <div class="tw-mt-4 tw-p-3 tw-bg-yellow-50 tw-rounded">
+                    <p class="tw-font-bold">ข้อมูลจาก PHP (ระบบเดิม):</p>
+                    <p class="tw-mt-1">${phpCombinedInfluence}</p>
+                </div>
+            `;
+        }
+        
+        return `
+            <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
+                <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง (ข้อมูลจาก RootNumber.json)</h3>
+                <div class="tw-mt-2">
+                    <div class="tw-mb-4">
+                        <p class="tw-font-bold tw-text-gray-700">เลขที่มีอิทธิพลสูงสุด:</p>
+                        ${influentialNumbersHTML}
+                    </div>
+                    <div class="tw-mt-4">
+                        <p class="tw-font-bold tw-text-gray-700">เลขที่ขาดหายไป:</p>
+                        <p class="tw-text-gray-700">${missingNumbersHTML}</p>
+                    </div>
+                    ${phpInfluenceHTML}
+                    <div class="tw-mt-4 tw-pt-3 tw-border-t">
+                        <p class="tw-text-sm tw-text-gray-600">
+                            <strong>การคำนวณ:</strong> รวมตัวเลขจากข้อมูลทั้งหมด
+                            ${calculationType === 'combined' ? '+ เลขสิ่งแวดล้อม 20 รายการ' : ''}
+                        </p>
+                        <p class="tw-text-sm tw-text-gray-600 tw-mt-1">
+                            <strong>แหล่งข้อมูลความหมาย:</strong> RootNumber.json
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    // ดึงข้อมูลความหมายจาก RootNumber.json
+    _getNumberMeaningFromRootNumber: function(number) {
+        console.log(`🔍 DEBUG: Getting meaning for number ${number} from RootNumber.json`);
+        
+        // ตรวจสอบว่า rootNumberData มีอยู่ใน window หรือไม่
+        if (!window.rootNumberData) {
+            console.log('❌ DEBUG: rootNumberData not found in window, trying to get from result.js');
+            // พยายามเรียกฟังก์ชันจาก result.js
+            if (window.getNumberMeaning) {
+                const meaningData = window.getNumberMeaning(number);
+                if (meaningData && meaningData.MEANING) {
+                    return meaningData.MEANING;
                 }
             }
+            return 'ไม่พบข้อมูลความหมายจาก RootNumber.json';
+        }
+        
+        // ตรวจสอบโครงสร้างข้อมูล
+        if (!window.rootNumberData.LifePath || !Array.isArray(window.rootNumberData.LifePath)) {
+            console.log('❌ DEBUG: rootNumberData.LifePath not found or not array');
+            return 'โครงสร้างข้อมูล RootNumber.json ไม่ถูกต้อง';
+        }
+        
+        const targetId = number.toString();
+        const foundItem = window.rootNumberData.LifePath.find(item => {
+            if (item && item.ID) {
+                return item.ID === targetId;
+            }
+            return false;
         });
         
-        // เพิ่มเลขสิ่งแวดล้อม
-        if (surroundingNumbers) {
-            try {
-                const numbersArray = JSON.parse(surroundingNumbers);
-                if (Array.isArray(numbersArray)) {
-                    numbersArray.forEach(num => {
-                        if (num && num.toString) {
-                            const numStr = num.toString();
-                            for (let i = 0; i < numStr.length; i++) {
-                                const digit = numStr[i];
-                                if (digit >= '1' && digit <= '9') {
-                                    combinedNumberString += digit;
-                                }
-                            }
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error('❌ DEBUG: Error parsing surrounding numbers:', error);
-            }
+        if (foundItem && foundItem.MEANING) {
+            return foundItem.MEANING;
+        } else {
+            return `ไม่พบความหมายสำหรับเลข ${number} ใน RootNumber.json`;
         }
-        
-        // คำนวณและแสดงผล
-        const pythagoreanHTML = this.calculatePythagoreanSquareHTML(combinedNumberString);
-        const mostInfluentialHTML = this.calculateMostInfluentialNumbers(combinedNumberString);
-        
-        explainedContent.innerHTML = `
-            <div class="pythagorean-square-container">
-                <h2>Pythagorean Square (รวมเลขสิ่งแวดล้อม) - ${result.title || `Result ${resultIndex + 1}`}</h2>
-                <div class="tw-mb-4 tw-p-3 tw-bg-yellow-50 tw-rounded tw-text-sm">
-                    <p><strong>Combined Calculation</strong></p>
-                    <ul class="tw-list-disc tw-list-inside tw-mt-1">
-                        <li>Total digits: ${combinedNumberString.length}</li>
-                        <li>Including 20 surrounding numbers</li>
-                    </ul>
-                </div>
-                ${pythagoreanHTML}
-                ${mostInfluentialHTML}
-            </div>
-        `;
     },
 
-    // ===== UTILITY FUNCTIONS =====
+    // ฟังก์ชันที่เหลือเหมือนเดิม
     calculatePythagoreanSquareHTML: function(numberString) {
         const counts = new Array(10).fill(0);
         
@@ -313,26 +385,29 @@ const pythagorean = {
         
         return `
             <div class="pythagorean-square">
+                <!-- แถวที่ 1 -->
                 <div class="square-cell number-1">1<span>(${counts[1]})</span></div>
                 <div class="square-cell number-4">4<span>(${counts[4]})</span></div>
                 <div class="square-cell number-7">7<span>(${counts[7]})</span></div>
+                <div class="square-cell" style="background-color: #e8f5e9; color: #2e7d32;">${rowSums[0]}</div>
                 
+                <!-- แถวที่ 2 -->
                 <div class="square-cell number-2">2<span>(${counts[2]})</span></div>
                 <div class="square-cell number-5">5<span>(${counts[5]})</span></div>
                 <div class="square-cell number-8">8<span>(${counts[8]})</span></div>
+                <div class="square-cell" style="background-color: #e8f5e9; color: #2e7d32;">${rowSums[1]}</div>
                 
+                <!-- แถวที่ 3 -->
                 <div class="square-cell number-3">3<span>(${counts[3]})</span></div>
                 <div class="square-cell number-6">6<span>(${counts[6]})</span></div>
                 <div class="square-cell number-9">9<span>(${counts[9]})</span></div>
+                <div class="square-cell" style="background-color: #e8f5e9; color: #2e7d32;">${rowSums[2]}</div>
                 
-                <div class="square-cell sum">${rowSums[0]}</div>
-                <div class="square-cell sum">${rowSums[1]}</div>
-                <div class="square-cell sum">${rowSums[2]}</div>
-                
-                <div class="square-cell sum">${colSums[0]}</div>
-                <div class="square-cell sum">${colSums[1]}</div>
-                <div class="square-cell sum">${colSums[2]}</div>
-                <div class="square-cell sum">${diagonalLeft}/${diagonalRight}</div>
+                <!-- แถวที่ 4 -->
+                <div class="square-cell" style="background-color: #e3f2fd; color: #1565c0;">${colSums[0]}</div>
+                <div class="square-cell" style="background-color: #e3f2fd; color: #1565c0;">${colSums[1]}</div>
+                <div class="square-cell" style="background-color: #e3f2fd; color: #1565c0;">${colSums[2]}</div>
+                <div class="square-cell" style="background-color: #fce4ec; color: #ad1457;">${diagonalLeft}/${diagonalRight}</div>
             </div>
         `;
     },
@@ -376,52 +451,9 @@ const pythagorean = {
         }
         
         return numberString;
-    },
-
-    calculateMostInfluentialNumbers: function(numberString) {
-        const counts = new Array(10).fill(0);
-        
-        for (let i = 0; i < numberString.length; i++) {
-            const digit = parseInt(numberString[i]);
-            if (digit >= 1 && digit <= 9) {
-                counts[digit]++;
-            }
-        }
-        
-        const maxCount = Math.max(...counts.slice(1));
-        const influentialNumbers = [];
-        for (let i = 1; i <= 9; i++) {
-            if (counts[i] === maxCount) {
-                influentialNumbers.push(i);
-            }
-        }
-        
-        const missingNumbers = [];
-        for (let i = 1; i <= 9; i++) {
-            if (counts[i] === 0) {
-                missingNumbers.push(i);
-            }
-        }
-        
-        return `
-            <div class="tw-mt-6 tw-p-4 tw-bg-blue-50 tw-rounded-lg">
-                <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-2">สรุปผลเลขแวดล้อมที่มีอิทธิพลสูง</h3>
-                <p class="tw-text-gray-700">
-                    <strong>เลขที่มีอิทธิพลสูงสุด:</strong> 
-                    ${influentialNumbers.length > 0 ? influentialNumbers.join(', ') : 'ไม่พบ'}
-                    (ปรากฏ ${maxCount} ครั้ง)
-                </p>
-                <p class="tw-text-gray-700 tw-mt-2">
-                    <strong>เลขที่ขาดหายไป:</strong> 
-                    ${missingNumbers.length > 0 ? missingNumbers.join(', ') : 'ไม่มี'}
-                </p>
-            </div>
-        `;
     }
 };
 
-// Expose to global scope
 window.pythagorean = pythagorean;
 
 console.log('✅ DEBUG: pythagorean.js loaded successfully');
-console.log('📋 DEBUG: Available functions:', Object.keys(pythagorean));
