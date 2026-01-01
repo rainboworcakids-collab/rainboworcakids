@@ -1,7 +1,7 @@
 // result.js - Main result handling functions
 
 // Version Info
-const VERSION = 'v8.4-Complete-Integration';
+const VERSION = 'v8.8-Complete-Integration';
 
 // Configuration for GitHub Pages
 const currentPath = window.location.pathname;
@@ -19,8 +19,9 @@ console.log('📍 DEBUG: CONTENTS_DIR:', CONTENTS_DIR);
 let analysisData = null;
 let pinnacleData = null;
 
-// Store LifePathProperty.json data
+// Store LifePathProperty.json and RootNumber.json data
 let lifePathProperties = null;
+let rootNumberData = null;  // เพิ่มตัวแปรเก็บข้อมูล RootNumber.json
 
 // Tab switching function
 function switchTab(tabName, buttonElement) {
@@ -104,19 +105,60 @@ function initializePage() {
     }, 50);
 }
 
-// Load LifePathProperty.json
+// Load LifePathProperty.json and RootNumber.json
 async function loadLifePathProperties() {
     console.log('🔄 DEBUG: loadLifePathProperties() called');
     
-    // ลองหลายๆ path ที่เป็นไปได้
-    const possiblePaths = [
+    // ลองหลายๆ path ที่เป็นไปได้สำหรับ LifePathProperty.json
+    const possibleLifePathPaths = [
         `${folderPath}/data/LifePathProperty.json`,
         `./data/LifePathProperty.json`,
         `../data/LifePathProperty.json`,
         `${window.location.origin}${folderPath}/data/LifePathProperty.json`
     ];
     
-    for (const lifePathUrl of possiblePaths) {
+    // ลองหลายๆ path ที่เป็นไปได้สำหรับ RootNumber.json
+    const possibleRootNumberPaths = [
+        `${folderPath}/data/RootNumber.json`,
+        `./data/RootNumber.json`,
+        `../data/RootNumber.json`,
+        `${window.location.origin}${folderPath}/data/RootNumber.json`
+    ];
+    
+    // โหลด RootNumber.json ก่อน
+    for (const rootNumberUrl of possibleRootNumberPaths) {
+        console.log(`📂 DEBUG: Trying to load RootNumber.json from:`, rootNumberUrl);
+        
+        try {
+            const response = await fetch(rootNumberUrl);
+            console.log(`📂 DEBUG: Fetch response for ${rootNumberUrl}:`, response.status, response.statusText);
+            
+            if (!response.ok) {
+                console.log(`❌ DEBUG: Failed to load from ${rootNumberUrl}, trying next...`);
+                continue;
+            }
+            
+            const data = await response.json();
+            console.log('✅ DEBUG: Loaded RootNumber.json successfully from:', rootNumberUrl);
+            console.log('✅ DEBUG: RootNumber data structure:', data);
+            
+            // บันทึกข้อมูล RootNumber ไว้ในตัวแปร global
+            rootNumberData = data;
+            
+            // ตั้งค่าใน global scope สำหรับไฟล์อื่นๆ ที่อาจเรียกใช้
+            window.rootNumberData = rootNumberData;
+            console.log('✅ DEBUG: Set window.rootNumberData');
+            
+            break; // หยุดเมื่อโหลดสำเร็จ
+            
+        } catch (error) {
+            console.log(`❌ DEBUG: Error loading from ${rootNumberUrl}:`, error.message);
+            continue;
+        }
+    }
+    
+    // โหลด LifePathProperty.json ตามเดิม
+    for (const lifePathUrl of possibleLifePathPaths) {
         console.log(`📂 DEBUG: Trying to load LifePathProperty.json from:`, lifePathUrl);
         
         try {
@@ -130,8 +172,6 @@ async function loadLifePathProperties() {
             
             const data = await response.json();
             console.log('✅ DEBUG: Loaded LifePathProperty.json successfully from:', lifePathUrl);
-            console.log('✅ DEBUG: Raw data type:', typeof data);
-            console.log('✅ DEBUG: Data structure:', data);
             
             // Handle different data structures
             if (Array.isArray(data)) {
@@ -141,25 +181,22 @@ async function loadLifePathProperties() {
                 console.log('✅ DEBUG: Data is an object, keys:', Object.keys(data));
                 
                 // Try to convert object to array
-                // Method 1: Check if it has numeric keys (like {"1": {...}, "2": {...}})
                 const numericKeys = Object.keys(data).filter(key => !isNaN(key));
                 if (numericKeys.length > 0) {
                     console.log('✅ DEBUG: Object has numeric keys, converting to array');
                     lifePathProperties = Object.values(data).map((item, index) => {
-                        // Ensure each item has LifePathNumber
                         if (!item.LifePathNumber && numericKeys[index]) {
                             item.LifePathNumber = parseInt(numericKeys[index]);
                         }
                         return item;
                     });
                 } 
-                // Method 2: Try to access by LifePathNumber property
                 else if (Object.values(data).some(item => item.LifePathNumber)) {
                     console.log('✅ DEBUG: Object values have LifePathNumber property');
                     lifePathProperties = Object.values(data);
                 } else {
                     console.log('⚠️ DEBUG: Object structure not recognized, using as-is');
-                    lifePathProperties = data; // Keep as object
+                    lifePathProperties = data;
                 }
             } else {
                 console.error('❌ DEBUG: Unknown data format:', typeof data);
@@ -184,19 +221,16 @@ async function loadLifePathProperties() {
 function getLifePathDetails(lifePathNumber) {
     console.log("🔍 DEBUG: getLifePathDetails() called for number:", lifePathNumber);
     
-    // ตรวจสอบว่า lifePathProperties มีข้อมูลและมีโครงสร้างถูกต้อง
     if (!lifePathProperties || !lifePathProperties.LifePath || !Array.isArray(lifePathProperties.LifePath)) {
         console.log("❌ DEBUG: lifePathProperties not loaded properly or wrong structure");
         return null;
     }
     
-    // แปลงตัวเลขเป็น string เพื่อค้นหา (เพราะใน JSON เก็บ ID เป็น string)
     const targetId = lifePathNumber.toString();
     
     console.log("🔍 DEBUG: Searching for ID:", targetId);
     console.log("🔍 DEBUG: LifePath array length:", lifePathProperties.LifePath.length);
     
-    // ค้นหาใน array LifePath
     const foundItem = lifePathProperties.LifePath.find(item => {
         if (item && item.ID) {
             const match = item.ID === targetId;
@@ -213,7 +247,35 @@ function getLifePathDetails(lifePathNumber) {
         return foundItem;
     } else {
         console.log("❌ DEBUG: No life path found for number:", lifePathNumber);
-        console.log("❌ DEBUG: Available IDs:", lifePathProperties.LifePath.map(item => item.ID));
+        return null;
+    }
+}
+
+// Get number meaning from RootNumber.json
+function getNumberMeaning(number) {
+    console.log("🔍 DEBUG: getNumberMeaning() called for number:", number);
+    
+    if (!rootNumberData || !rootNumberData.LifePath || !Array.isArray(rootNumberData.LifePath)) {
+        console.log("❌ DEBUG: rootNumberData not loaded properly");
+        return null;
+    }
+    
+    const targetId = number.toString();
+    
+    console.log("🔍 DEBUG: Searching for ID in rootNumberData:", targetId);
+    
+    const foundItem = rootNumberData.LifePath.find(item => {
+        if (item && item.ID) {
+            return item.ID === targetId;
+        }
+        return false;
+    });
+    
+    if (foundItem) {
+        console.log("✅ DEBUG: Found number meaning:", foundItem);
+        return foundItem;
+    } else {
+        console.log("❌ DEBUG: No meaning found for number:", number);
         return null;
     }
 }
@@ -318,11 +380,12 @@ async function loadAndDisplayResults() {
             loadingDetails.textContent = `Loading Life Path properties...`;
         }
         
-        // Load LifePathProperty.json
+        // Load LifePathProperty.json และ RootNumber.json
         console.log('📦 DEBUG: Calling loadLifePathProperties()...');
         await loadLifePathProperties();
         console.log('📦 DEBUG: loadLifePathProperties() completed');
         console.log('📦 DEBUG: lifePathProperties after load:', lifePathProperties);
+        console.log('📦 DEBUG: rootNumberData after load:', rootNumberData);
         
         if (loadingDetails) {
             loadingDetails.textContent = `Checking data validity...`;
@@ -434,13 +497,113 @@ function createResultSection(result, index) {
     const title = result.title || `Result ${index + 1}`;
     const data = result.data || {};
     
-    const destinyNum = data.destiny_number;
-    const lifePathNum = data.life_path_number;
-    const karmicNum = data.thirdAndFourth?.karmic;
-    const lifeLessonNum = data.thirdAndFourth?.lifeLesson;
+    console.log('🎨 DEBUG: Creating result section for data:', data);
+    console.log('🎨 DEBUG: Result title:', title);
+    console.log('🎨 DEBUG: Is Full Name option?', title.includes('Full Name'));
     
-    console.log('🎨 DEBUG: Creating result section:', { 
-        type, title, destinyNum, lifePathNum, karmicNum, lifeLessonNum 
+    // 1. ดึงข้อมูลจาก PHP structure ตามโค้ด process.php
+    let destinyNum = null;
+    let lifePathNum = null;
+    let karmicNum = null;
+    let lifeLessonNum = null;
+    
+    // ลองหาเลขจาก data ที่มีอยู่ในรูปแบบต่างๆ
+    if (data['เลขภาระกิจ-Destiny Number']) {
+        const destinyText = data['เลขภาระกิจ-Destiny Number'];
+        const match = destinyText.match(/(\d+)/);
+        if (match) destinyNum = match[1];
+    } else if (data.destiny_number) {
+        destinyNum = data.destiny_number;
+    }
+    
+    if (data['เลขเส้นทางชีวิต-Life Path Number']) {
+        const lifePathText = data['เลขเส้นทางชีวิต-Life Path Number'];
+        const match = lifePathText.match(/(\d+)/);
+        if (match) lifePathNum = match[1];
+    } else if (data.life_path_number) {
+        lifePathNum = data.life_path_number;
+    }
+    
+    // สำหรับ Full Name option โดยเฉพาะ
+    const isFullName = title.includes('Full Name');
+    
+    if (isFullName) {
+        console.log('🔍 DEBUG: Full Name option detected, looking for specific data structure');
+        
+        // ตรวจสอบโครงสร้างข้อมูลสำหรับ Full Name
+        // 1. ตรวจสอบใน data โดยตรง
+        if (data.karmic) karmicNum = data.karmic;
+        if (data.lifeLesson) lifeLessonNum = data.lifeLesson;
+        
+        // 2. ตรวจสอบใน thirdAndFourth
+        if (!karmicNum && data.thirdAndFourth && data.thirdAndFourth.karmic) {
+            karmicNum = data.thirdAndFourth.karmic;
+        }
+        if (!lifeLessonNum && data.thirdAndFourth && data.thirdAndFourth.lifeLesson) {
+            lifeLessonNum = data.thirdAndFourth.lifeLesson;
+        }
+        
+        // 3. ตรวจสอบใน nameNumbers (ถ้ามี)
+        if (data.nameNumbers) {
+            const nameNumbers = data.nameNumbers;
+            if (nameNumbers.karmic) karmicNum = nameNumbers.karmic;
+            if (nameNumbers.lifeLesson) lifeLessonNum = nameNumbers.lifeLesson;
+        }
+        
+        // 4. ตรวจสอบใน Numerology Table
+        if (data['Numerology Table']) {
+            const tableHTML = data['Numerology Table'];
+            
+            // ใช้ regex หาตัวเลขในตาราง
+            const karmicMatch = tableHTML.match(/KarmicLesson(\d+)\.html/);
+            if (karmicMatch && !lifeLessonNum) lifeLessonNum = karmicMatch[1];
+            
+            // หาเลขกรรมจาก td ที่มีเฉพาะตัวเลข (ไม่มีลิงก์)
+            const karmicTdMatch = tableHTML.match(/<td>(\d+)<\/td>/g);
+            if (karmicTdMatch && karmicTdMatch.length >= 3) {
+                // td ที่ 3 มักจะเป็นเลขกรรม
+                const karmicRawMatch = karmicTdMatch[2].match(/(\d+)/);
+                if (karmicRawMatch && !karmicNum) karmicNum = karmicRawMatch[1];
+            }
+        }
+        
+        // 5. ตรวจสอบใน full_name_result (ถ้ามี)
+        if (data.full_name_result) {
+            console.log('🔍 DEBUG: Found full_name_result:', data.full_name_result);
+            if (data.full_name_result.karmic) karmicNum = data.full_name_result.karmic;
+            if (data.full_name_result.lifeLesson) lifeLessonNum = data.full_name_result.lifeLesson;
+        }
+    } else {
+        // สำหรับ Birth Date option
+        if (data['Numerology Table']) {
+            const tableHTML = data['Numerology Table'];
+            
+            const karmicMatch = tableHTML.match(/KarmicLesson(\d+)\.html/);
+            if (karmicMatch && !lifeLessonNum) lifeLessonNum = karmicMatch[1];
+            
+            const karmicTdMatch = tableHTML.match(/<td>(\d+)<\/td>/g);
+            if (karmicTdMatch && karmicTdMatch.length >= 3) {
+                const karmicRawMatch = karmicTdMatch[2].match(/(\d+)/);
+                if (karmicRawMatch && !karmicNum) karmicNum = karmicRawMatch[1];
+            }
+        }
+        
+        if (!karmicNum && data.karmic) karmicNum = data.karmic;
+        if (!lifeLessonNum && data.lifeLesson) lifeLessonNum = data.lifeLesson;
+        if (!karmicNum && data.thirdAndFourth?.karmic) karmicNum = data.thirdAndFourth.karmic;
+        if (!lifeLessonNum && data.thirdAndFourth?.lifeLesson) lifeLessonNum = data.thirdAndFourth.lifeLesson;
+    }
+    
+    // ดึงข้อมูลสรุปผลเลขแวดล้อมที่มีอิทธิผลสูงจาก PHP
+    let combinedInfluence = data['สรุปผลเลขแวดล้อมที่มีอิทธิผลสูง'] || null;
+    
+    console.log('🎨 DEBUG: Final numbers for display:', { 
+        title, 
+        destinyNum, 
+        lifePathNum, 
+        karmicNum, 
+        lifeLessonNum,
+        hasCombinedInfluence: !!combinedInfluence
     });
     
     // Extract pinnacle data if available
@@ -456,9 +619,7 @@ function createResultSection(result, index) {
     }
     
     // Get life path details from JSON
-    console.log('🎨 DEBUG: Getting life path details for number:', lifePathNum);
     const lifePathDetails = getLifePathDetails(lifePathNum);
-    console.log('🎨 DEBUG: Life path details found:', lifePathDetails);
     const lifePathDetailsHTML = createLifePathDetailsHTML(lifePathNum, lifePathDetails);
     
     return `
@@ -497,7 +658,7 @@ function createResultSection(result, index) {
                 
                 <!-- Buttons for additional content -->
                 <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-px-4 tw-text-center">
-                    <button onclick="pythagorean.showPythagoreanSquare(${index})" 
+                    <button onclick="pythagorean.showPythagoreanSquare(${index}, '${combinedInfluence ? combinedInfluence.replace(/'/g, "\\'") : ''}')" 
                             class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-text-lg">
                         Pythagorean Square
                     </button>
@@ -505,7 +666,7 @@ function createResultSection(result, index) {
                             class="tw-bg-blue-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-ml-4 tw-text-lg">
                         Pinnacle Cycle
                     </button>
-                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${index})" 
+                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, '${combinedInfluence ? combinedInfluence.replace(/'/g, "\\'") : ''}')" 
                             class="tw-bg-purple-500 tw-text-white tw-py-4 tw-px-8 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-mt-4 tw-text-lg">
                         Pythagorean Square (รวมเลขสิ่งแวดล้อม)
                     </button>
@@ -804,6 +965,7 @@ window.loadExplainedContent = loadExplainedContent;
 window.loadPinnacle = loadPinnacle;
 window.analysisData = analysisData;
 window.pinnacleData = pinnacleData;
+window.getNumberMeaning = getNumberMeaning;  // เพิ่มฟังก์ชันนี้ให้สามารถเรียกใช้ได้จากไฟล์อื่น
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', initializePage);
