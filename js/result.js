@@ -1,5 +1,5 @@
-// result.js - เพิ่มส่วนตั้งค่า option
-console.log('🚀 DEBUG: result.js loaded - v9.7-Option-Support');
+// result.js - แก้ไขปัญหาค่า option
+console.log('🚀 DEBUG: result.js loaded - v10.1-Option-Fixed');
 
 // Configuration
 const currentPath = window.location.pathname;
@@ -14,36 +14,62 @@ let analysisData = null;
 let pinnacleData = null;
 let lifePathProperties = null;
 let rootNumberData = null;
+let currentOption = 'BD'; // Default value
 
 // ===== ฟังก์ชันตั้งค่า option =====
 function setCalculationOption() {
     console.log('🔧 DEBUG: Setting calculation option...');
     
-    // ตรวจสอบ URL parameters
+    // ลองอ่านจากหลายแหล่งตามลำดับความสำคัญ:
+    // 1. จาก URL parameter (สูงสุด)
     const urlParams = new URLSearchParams(window.location.search);
     const optionFromURL = urlParams.get('option');
     
-    // ตรวจสอบ sessionStorage
-    const optionFromStorage = sessionStorage.getItem('calculationOption');
+    // 2. จาก sessionStorage ที่เก็บจากหน้า Psychomatrix.html
+    const optionFromStorage = sessionStorage.getItem('psychomatrixOption');
     
-    // กำหนดค่า option (ลำดับความสำคัญ: URL > sessionStorage > ค่าเริ่มต้น)
-    let selectedOption = 'Num-Ard';
+    // 3. จาก API response (ต่ำสุด)
+    let optionFromAPI = null;
+    const resultData = sessionStorage.getItem('psychomatrixResult');
+    if (resultData) {
+        try {
+            const parsedData = JSON.parse(resultData);
+            optionFromAPI = parsedData.option;
+        } catch (error) {
+            console.error('❌ DEBUG: Error parsing result data:', error);
+        }
+    }
     
+    // กำหนดค่า option (ลำดับความสำคัญ: URL > Storage > API > Default)
     if (optionFromURL) {
-        selectedOption = optionFromURL;
-        console.log(`✅ DEBUG: Using option from URL: ${selectedOption}`);
+        currentOption = optionFromURL;
+        console.log(`✅ DEBUG: Using option from URL: ${currentOption}`);
     } else if (optionFromStorage) {
-        selectedOption = optionFromStorage;
-        console.log(`✅ DEBUG: Using option from sessionStorage: ${selectedOption}`);
+        currentOption = optionFromStorage;
+        console.log(`✅ DEBUG: Using option from sessionStorage: ${currentOption}`);
+    } else if (optionFromAPI) {
+        currentOption = optionFromAPI;
+        console.log(`✅ DEBUG: Using option from API: ${currentOption}`);
+    } else {
+        currentOption = 'BD'; // Default
+        console.log(`⚠️ DEBUG: No option found, using default: ${currentOption}`);
     }
     
-    // ตั้งค่าใน pythagorean module
+    // Debug ข้อมูลทุกแหล่ง
+    console.log('📊 DEBUG: Option sources:', {
+        URL: optionFromURL,
+        sessionStorage: optionFromStorage,
+        API: optionFromAPI,
+        Final: currentOption
+    });
+    
+    // ตั้งค่าใน pythagorean module ถ้ามี
     if (window.pythagorean && window.pythagorean.setCalculationOption) {
-        window.pythagorean.setCalculationOption(selectedOption);
+        window.pythagorean.setCalculationOption(currentOption);
     }
     
-    console.log(`✅ DEBUG: Final calculation option: ${selectedOption}`);
-    return selectedOption;
+    console.log(`✅ DEBUG: Final calculation option: ${currentOption}`);
+    return currentOption;
 }
 
 // ===== CORE FUNCTIONS =====
@@ -91,7 +117,7 @@ function initializePage() {
     console.log('🌐 DEBUG: Initializing page...');
     
     // ตั้งค่า option ก่อน
-    setCalculationOption();
+    currentOption = setCalculationOption();
     
     // Check for data in sessionStorage
     const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
@@ -114,7 +140,6 @@ function initializePage() {
         }, 100);
     }, 50);
 }
-
 
 // Load RootNumber.json
 async function loadRootNumberData() {
@@ -525,6 +550,7 @@ function loadPinnacle() {
 // Create result section
 function createResultSection(result, index) {
     console.log('🎨 DEBUG: Creating result section:', index);
+    console.log('🎨 DEBUG: Current option:', currentOption);
     
     const type = result.type || 'unknown';
     const title = result.title || `Result ${index + 1}`;
@@ -534,7 +560,7 @@ function createResultSection(result, index) {
     
     if (isCombinedInfluence) {
         return `<div></div>`;
-    }
+    } 
 
     const destinyNum = data.destiny_number || data.destiny;
     const lifePathNum = data.life_path_number || data.lifePath;
@@ -562,65 +588,19 @@ function createResultSection(result, index) {
         console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
     }
     
-    // ตรวจสอบ option ปัจจุบันและกำหนดข้อความปุ่มตามเงื่อนไข
-    const currentOption = window.pythagorean ? window.pythagorean.calculationOption : 'Num-Ard';
-    
-    console.log(`🔧 DEBUG: Current option for button display: ${currentOption}`);
-    
-    // กำหนดปุ่มที่จะแสดงตาม option
-    let showBasicPythagorean = true; // แสดงปุ่ม Pythagorean Square พื้นฐานเสมอ
-    let showPinnacle = true; // แสดงปุ่ม Pinnacle Cycle เสมอ
-    let showCombinedButton = false; // แสดงปุ่ม combined หรือไม่
-    let combinedButtonText = '';
-    
-    // กำหนดตามเงื่อนไขที่ให้มา
-    switch(currentOption) {
-        case 'BD':
-        case 'IDC':
-        case 'FullName':
-            // แสดงเฉพาะ 2 ปุ่มแรก
-            showCombinedButton = false;
-            break;
-            
-        case 'BD-IDC':
-            showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย2ตาราง)';
-            break;
-            
-        case 'BD-IDC-FullName':
-            showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย3ตาราง)';
-            break;
-            
-        case 'Num-Ard':
-            showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (รวมเลขสิ่งแวดล้อม)';
-            break;
-            
-        default:
-            showCombinedButton = false;
-    }
-    
-    console.log(`🔧 DEBUG: Button display settings:`);
-    console.log(`  - Basic Pythagorean: ${showBasicPythagorean}`);
-    console.log(`  - Pinnacle: ${showPinnacle}`);
-    console.log(`  - Combined: ${showCombinedButton} (${combinedButtonText})`);
-    
-    // สร้าง HTML สำหรับปุ่ม
+    // สร้างปุ่มตาม option
     let buttonsHTML = '';
     
-    // ปุ่ม Pythagorean Square พื้นฐาน
-    if (showBasicPythagorean) {
-        buttonsHTML += `
-            <button onclick="pythagorean.showPythagoreanSquare(${index})" 
-                    class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
-                Pythagorean Square
-            </button>
-        `;
-    }
+    // ปุ่ม Pythagorean Square (แสดงเสมอ)
+    buttonsHTML += `
+        <button onclick="pythagorean.showPythagoreanSquare(${index})" 
+                class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
+            Pythagorean Square
+        </button>
+    `;
     
-    // ปุ่ม Pinnacle Cycle
-    if (showPinnacle) {
+    // ปุ่ม Pinnacle Cycle (แสดงเสมอถ้ามีข้อมูลวันเกิด)
+    if (pinnacleData) {
         buttonsHTML += `
             <button onclick="loadPinnacle()" 
                     class="tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
@@ -629,8 +609,45 @@ function createResultSection(result, index) {
         `;
     }
     
-    // ปุ่ม Combined (ถ้าต้องแสดง)
-    if (showCombinedButton && combinedButtonText) {
+    // ปุ่ม Combined (แสดงตาม option)
+    let showCombinedButton = false;
+    let combinedButtonText = '';
+    
+    // ตรวจสอบเงื่อนไขตาม option
+    switch(currentOption) {
+        case 'BD':
+        case 'IDC':
+        case 'FullName':
+            // ไม่แสดงปุ่ม combined
+            showCombinedButton = false;
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 2 buttons only`);
+            break;
+            
+        case 'BD-IDC':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย2ตาราง)';
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            break;
+            
+        case 'BD-IDC-FullName':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย3ตาราง)';
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            break;
+            
+        case 'Num-Ard':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (รวมเลขสิ่งแวดล้อม)';
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            break;
+            
+        default:
+            showCombinedButton = false;
+            console.log(`⚠️ DEBUG: Unknown option ${currentOption} - Showing 2 buttons only`);
+    }
+    
+    // เพิ่มปุ่ม combined ถ้าต้องแสดง
+    if (showCombinedButton) {
         buttonsHTML += `
             <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
                     class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
@@ -831,11 +848,6 @@ function displayResults(data) {
         });
     } else if (data.data) {
         console.log('🎨 DEBUG: Using single result mode');
-      //  html += createResultSection({
-    //        type: 'single',
-    //        title: 'Analysis Result',
-    //        data: data.data
-     //   }, 0);
     } else {
         console.log('🎨 DEBUG: Creating fallback display');
         html += createFallbackDisplay(data);
@@ -890,6 +902,7 @@ window.loadExplainedContent = loadExplainedContent;
 window.loadPinnacle = loadPinnacle;
 window.testPythagoreanButton = testPythagoreanButton;
 window.checkScriptsLoaded = checkScriptsLoaded;
+window.currentOption = currentOption;
 
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
@@ -898,4 +911,4 @@ if (document.readyState === 'loading') {
     initializePage();
 }
 
-console.log('✅ DEBUG: result.js loaded completely version 9.7');
+console.log('✅ DEBUG: result.js loaded completely version 10.1');
