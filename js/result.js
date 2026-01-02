@@ -1,7 +1,7 @@
 // result.js - Main result handling functions (Complete Rewrite)
-// Version: 9.3-Fixed-Pythagorean-Integration
+// Version: 9.4-Fixed-Pythagorean-Integration
 
-console.log('🚀 DEBUG: result.js loaded - v9.3-Fixed-Pythagorean-Integration');
+console.log('🚀 DEBUG: result.js loaded - v9.4-Fixed-Pythagorean-Integration');
 
 
 // Configuration for GitHub Pages
@@ -498,35 +498,12 @@ function createResultSection(result, index) {
     const title = result.title || `Result ${index + 1}`;
     const data = result.data || {};
     
-    // ตรวจสอบว่าเป็น combined-influence หรือไม่
     const isCombinedInfluence = type === 'combined-influence';
     
     if (isCombinedInfluence) {
-        console.log('🔄 DEBUG: Skipping number grid for combined-influence');
-        // สำหรับ combined-influence: แสดงเฉพาะปุ่ม
-        return `
-            <div class="result-section tw-mb-8 tw-p-6 tw-bg-white tw-rounded-lg tw-shadow">
-                <div class="section-header tw-text-xl tw-font-bold tw-text-purple-800 tw-mb-4 tw-pb-2 tw-border-b">
-                    <i class="fas fa-magnet tw-mr-2"></i>${title}
-                </div>
-                <div class="section-content">
-                    <div class="tw-mb-6 tw-p-4 tw-bg-purple-50 tw-rounded-lg">
-                        <p class="tw-font-bold tw-text-purple-700">🧲 พลังตัวเลขรอบตัว (Combined Influence)</p>
-                        <p class="tw-text-gray-600 tw-mt-2">ข้อมูลนี้รวมตัวเลขจากทั้งหมด ${data.surrounding_data ? Object.keys(data.surrounding_data).length : 0} รายการสิ่งแวดล้อม</p>
-                    </div>
-                    
-                    <!-- Buttons for additional content -->
-                    <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-text-center">
-                        <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
-                                class="tw-bg-purple-600 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-700 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
-                            ดู Pythagorean Square (รวมสิ่งแวดล้อม)
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
+        return `<div></div>`;
+    } 
+
     // สำหรับผลลัพธ์อื่นๆ (birth-date, id-card, full-name): แสดงปกติ
     const destinyNum = data.destiny_number || data.destiny;
     const lifePathNum = data.life_path_number || data.lifePath;
@@ -760,11 +737,11 @@ function displayResults(data) {
         });
     } else if (data.data) {
         console.log('🎨 DEBUG: Using single result mode');
-        html += createResultSection({
-            type: 'single',
-            title: 'Analysis Result',
-            data: data.data
-        }, 0);
+      //  html += createResultSection({
+    //        type: 'single',
+    //        title: 'Analysis Result',
+    //        data: data.data
+     //   }, 0);
     } else {
         console.log('🎨 DEBUG: Creating fallback display');
         html += createFallbackDisplay(data);
@@ -827,4 +804,4 @@ if (document.readyState === 'loading') {
     initializePage();
 }
 
-console.log('✅ DEBUG: result.js loaded completely  version 9.3');
+console.log('✅ DEBUG: result.js loaded completely  version 9.4');
