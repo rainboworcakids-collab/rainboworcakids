@@ -1,10 +1,10 @@
-// Psychomatrix.js - Version 2.2 (FINAL)
+// Psychomatrix.js - Version 2.3 (FINAL)
 // Complete implementation for GitHub Pages + Supabase Edge Functions
 // Features: localStorage, Modal Management, API Integration, Debug Logging
 // Created: 2025-12-24
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Psychomatrix.js v2.2 Initializing...');
+    console.log('🚀 Psychomatrix.js v2.3 Initializing...');
     
     // ==================== GLOBAL VARIABLES ====================
     const mainForm = document.querySelector('form');
@@ -218,6 +218,14 @@ async function callPsychomatrixAPI(formData) {
     
     try {
         showLoading(true);
+ 
+        // บันทึก option ลง sessionStorage ก่อนเรียก API
+        try {
+            sessionStorage.setItem('psychomatrixOption', formData.option);
+            console.log(`💾 Saved option to sessionStorage: ${formData.option}`);
+        } catch (error) {
+            console.error('❌ Error saving option to sessionStorage:', error);
+        }
         
         // Log raw input
         console.log('📥 Raw Input Data:', formData);
@@ -407,7 +415,7 @@ async function callPsychomatrixAPI(formData) {
         } else if (action === 'analyze') {
             // ==================== ANALYZE ACTION ====================
             console.log('🔮 Processing ANALYZE action...');
-            
+
             // Validate required fields based on option
             const option = document.querySelector('select[name="option"]').value;
             const birthDay = document.querySelector('select[name="birth_day"]').value;
