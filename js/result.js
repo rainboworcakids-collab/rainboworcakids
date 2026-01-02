@@ -1,10 +1,7 @@
-// result.js - Main result handling functions (Complete Rewrite)
-// Version: 9.4-Fixed-Pythagorean-Integration
+// result.js - เพิ่มส่วนตั้งค่า option
+console.log('🚀 DEBUG: result.js loaded - v9.7-Option-Support');
 
-console.log('🚀 DEBUG: result.js loaded - v9.4-Fixed-Pythagorean-Integration');
-
-
-// Configuration for GitHub Pages
+// Configuration
 const currentPath = window.location.pathname;
 const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
 const CONTENTS_DIR = 'PsychomatrixContents';
@@ -17,6 +14,37 @@ let analysisData = null;
 let pinnacleData = null;
 let lifePathProperties = null;
 let rootNumberData = null;
+
+// ===== ฟังก์ชันตั้งค่า option =====
+function setCalculationOption() {
+    console.log('🔧 DEBUG: Setting calculation option...');
+    
+    // ตรวจสอบ URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const optionFromURL = urlParams.get('option');
+    
+    // ตรวจสอบ sessionStorage
+    const optionFromStorage = sessionStorage.getItem('calculationOption');
+    
+    // กำหนดค่า option (ลำดับความสำคัญ: URL > sessionStorage > ค่าเริ่มต้น)
+    let selectedOption = 'Num-Ard';
+    
+    if (optionFromURL) {
+        selectedOption = optionFromURL;
+        console.log(`✅ DEBUG: Using option from URL: ${selectedOption}`);
+    } else if (optionFromStorage) {
+        selectedOption = optionFromStorage;
+        console.log(`✅ DEBUG: Using option from sessionStorage: ${selectedOption}`);
+    }
+    
+    // ตั้งค่าใน pythagorean module
+    if (window.pythagorean && window.pythagorean.setCalculationOption) {
+        window.pythagorean.setCalculationOption(selectedOption);
+    }
+    
+    console.log(`✅ DEBUG: Final calculation option: ${selectedOption}`);
+    return selectedOption;
+}
 
 // ===== CORE FUNCTIONS =====
 
@@ -62,6 +90,9 @@ function toggleDebugInfo() {
 function initializePage() {
     console.log('🌐 DEBUG: Initializing page...');
     
+    // ตั้งค่า option ก่อน
+    setCalculationOption();
+    
     // Check for data in sessionStorage
     const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
     console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
@@ -83,6 +114,7 @@ function initializePage() {
         }, 100);
     }, 50);
 }
+
 
 // Load RootNumber.json
 async function loadRootNumberData() {
@@ -502,15 +534,13 @@ function createResultSection(result, index) {
     
     if (isCombinedInfluence) {
         return `<div></div>`;
-    } 
+    }
 
-    // สำหรับผลลัพธ์อื่นๆ (birth-date, id-card, full-name): แสดงปกติ
     const destinyNum = data.destiny_number || data.destiny;
     const lifePathNum = data.life_path_number || data.lifePath;
     const karmicNum = data.thirdAndFourth?.karmic || data.karmic;
     const lifeLessonNum = data.thirdAndFourth?.lifeLesson || data.lifeLesson;
     
-    // Get life path details
     let lifePathDetails = null;
     let lifePathDetailsHTML = '';
     
@@ -521,7 +551,6 @@ function createResultSection(result, index) {
         }
     }
     
-    // Check if this is birth date data for pinnacle
     if (type === 'birth-date' && data.birth_date) {
         pinnacleData = {
             lifePathNumber: lifePathNum,
@@ -533,6 +562,83 @@ function createResultSection(result, index) {
         console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
     }
     
+    // ตรวจสอบ option ปัจจุบันและกำหนดข้อความปุ่มตามเงื่อนไข
+    const currentOption = window.pythagorean ? window.pythagorean.calculationOption : 'Num-Ard';
+    
+    console.log(`🔧 DEBUG: Current option for button display: ${currentOption}`);
+    
+    // กำหนดปุ่มที่จะแสดงตาม option
+    let showBasicPythagorean = true; // แสดงปุ่ม Pythagorean Square พื้นฐานเสมอ
+    let showPinnacle = true; // แสดงปุ่ม Pinnacle Cycle เสมอ
+    let showCombinedButton = false; // แสดงปุ่ม combined หรือไม่
+    let combinedButtonText = '';
+    
+    // กำหนดตามเงื่อนไขที่ให้มา
+    switch(currentOption) {
+        case 'BD':
+        case 'IDC':
+        case 'FullName':
+            // แสดงเฉพาะ 2 ปุ่มแรก
+            showCombinedButton = false;
+            break;
+            
+        case 'BD-IDC':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย2ตาราง)';
+            break;
+            
+        case 'BD-IDC-FullName':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย3ตาราง)';
+            break;
+            
+        case 'Num-Ard':
+            showCombinedButton = true;
+            combinedButtonText = 'Pythagorean Square (รวมเลขสิ่งแวดล้อม)';
+            break;
+            
+        default:
+            showCombinedButton = false;
+    }
+    
+    console.log(`🔧 DEBUG: Button display settings:`);
+    console.log(`  - Basic Pythagorean: ${showBasicPythagorean}`);
+    console.log(`  - Pinnacle: ${showPinnacle}`);
+    console.log(`  - Combined: ${showCombinedButton} (${combinedButtonText})`);
+    
+    // สร้าง HTML สำหรับปุ่ม
+    let buttonsHTML = '';
+    
+    // ปุ่ม Pythagorean Square พื้นฐาน
+    if (showBasicPythagorean) {
+        buttonsHTML += `
+            <button onclick="pythagorean.showPythagoreanSquare(${index})" 
+                    class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
+                Pythagorean Square
+            </button>
+        `;
+    }
+    
+    // ปุ่ม Pinnacle Cycle
+    if (showPinnacle) {
+        buttonsHTML += `
+            <button onclick="loadPinnacle()" 
+                    class="tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
+                Pinnacle Cycle
+            </button>
+        `;
+    }
+    
+    // ปุ่ม Combined (ถ้าต้องแสดง)
+    if (showCombinedButton && combinedButtonText) {
+        buttonsHTML += `
+            <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
+                    class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
+                ${combinedButtonText}
+            </button>
+        `;
+    }
+    
     return `
         <div class="result-section tw-mb-8 tw-p-6 tw-bg-white tw-rounded-lg tw-shadow">
             <div class="section-header tw-text-xl tw-font-bold tw-text-blue-800 tw-mb-4 tw-pb-2 tw-border-b">
@@ -540,7 +646,7 @@ function createResultSection(result, index) {
             </div>
             <div class="section-content">
                 
-                <!-- Number Grid (สำหรับผลลัพธ์ที่ไม่ใช่ combined-influence) -->
+                <!-- Number Grid -->
                 <div class="data-grid tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4 tw-mb-6">
                     <div class="data-item tw-text-center">
                         <div class="label tw-text-sm tw-font-semibold tw-text-gray-600 tw-mb-2">Life Path Number</div>
@@ -564,23 +670,11 @@ function createResultSection(result, index) {
                     </div>
                 </div>
                 
-                <!-- Life Path Details -->
                 ${lifePathDetailsHTML || ''}
                 
                 <!-- Buttons for additional content -->
                 <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-text-center">
-                    <button onclick="pythagorean.showPythagoreanSquare(${index})" 
-                            class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
-                        Pythagorean Square
-                    </button>
-                    <button onclick="loadPinnacle()" 
-                            class="tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
-                        Pinnacle Cycle
-                    </button>
-                    <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
-                            class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
-                        Pythagorean Square (รวมเลขสิ่งแวดล้อม)
-                    </button>
+                    ${buttonsHTML}
                 </div>
             </div>
         </div>
@@ -804,4 +898,4 @@ if (document.readyState === 'loading') {
     initializePage();
 }
 
-console.log('✅ DEBUG: result.js loaded completely  version 9.4');
+console.log('✅ DEBUG: result.js loaded completely version 9.7');
