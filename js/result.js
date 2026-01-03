@@ -1,5 +1,5 @@
 // result.js - แก้ไขปัญหาค่า option
-console.log('🚀 DEBUG: result.js loaded - v10.1-Option-Fixed');
+console.log('🚀 DEBUG: result.js loaded - v11-Option-Fixed');
 
 // Configuration
 const currentPath = window.location.pathname;
@@ -16,7 +16,6 @@ let lifePathProperties = null;
 let rootNumberData = null;
 let currentOption = 'BD'; // Default value
 
-// ===== ฟังก์ชันตั้งค่า option =====
 function setCalculationOption() {
     console.log('🔧 DEBUG: Setting calculation option...');
     
@@ -506,72 +505,69 @@ function loadExplainedContent(url, category, number) {
 }
 
 // Load Pinnacle
-function loadPinnacle() {
-    console.log('📖 DEBUG: Loading Pinnacle Cycle');
-    
-    const explainedContent = document.getElementById('explainedContent');
-    const explainedButton = document.querySelector('.tablink:nth-child(2)');
-    
-    if (!explainedContent || !explainedButton) {
-        console.error('❌ DEBUG: Explained content or button not found');
-        return;
+async function loadPinnacle() {
+  console.log('📖 DEBUG: Loading Pinnacle Cycle via Edge Function');
+  
+  const explainedContent = document.getElementById('explainedContent');
+  const explainedButton = document.querySelector('.tablink:nth-child(2)');
+  
+  if (!explainedContent || !explainedButton) {
+    console.error('❌ DEBUG: Explained content or button not found');
+    return;
+  }
+  
+  // Show loading
+  explainedContent.innerHTML = `
+    <div class="tw-text-center tw-py-8">
+      <div class="spinner"></div>
+      <p class="tw-mt-4 tw-text-gray-600">กำลังคำนวณ Pinnacle Cycle...</p>
+    </div>
+  `;
+  
+  switchTab('Explained', explainedButton);
+  
+  try {
+    // Check if pinnacle module is loaded
+    if (!window.pinnacle) {
+      throw new Error('Pinnacle module not loaded');
     }
     
-    // Check if we have pinnacle data
-    if (!pinnacleData) {
-        explainedContent.innerHTML = `
-            <div class="tw-text-center tw-py-8 tw-text-red-500">
-                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                <p class="tw-font-bold">No birth date data available</p>
-                <p class="tw-text-sm">Please analyze birth date data first to view Pinnacle Cycle</p>
-            </div>
-        `;
-        switchTab('Explained', explainedButton);
-        return;
+    // Initialize and load pinnacle data
+    const pinnacleResult = await window.pinnacle.initPinnacleInResult();
+    
+    // Display the results
+    explainedContent.innerHTML = pinnacleResult.html;
+    
+    // Add the graphs container
+    if (pinnacleResult.graphsContainer) {
+      const graphsSection = explainedContent.querySelector('#pinnacleGraphsContainer');
+      if (graphsSection) {
+        graphsSection.replaceWith(pinnacleResult.graphsContainer);
+      } else {
+        explainedContent.appendChild(pinnacleResult.graphsContainer);
+      }
     }
     
-    const url = `${BASE_PATH}/pinnacle.html`;
-    console.log('📖 DEBUG: Pinnacle URL:', url);
+    console.log('✅ Pinnacle loaded successfully');
     
+  } catch (error) {
+    console.error('❌ Error loading pinnacle:', error);
     explainedContent.innerHTML = `
-        <div class="tw-text-center tw-py-8">
-            <div class="spinner"></div>
-            <p class="tw-mt-4 tw-text-gray-600">Loading Pinnacle Cycle...</p>
-        </div>
+      <div class="tw-text-center tw-py-8 tw-text-red-500">
+        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+        <p class="tw-font-bold">Cannot load Pinnacle Cycle</p>
+        <p class="tw-text-sm">${error.message}</p>
+      </div>
     `;
-    
-    switchTab('Explained', explainedButton);
-    
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            return response.text();
-        })
-        .then(html => {
-            explainedContent.innerHTML = `
-                <div class="external-content-body">
-                    ${html}
-                </div>
-            `;
-        })
-        .catch(error => {
-            console.error(`❌ DEBUG: Error loading pinnacle:`, error);
-            explainedContent.innerHTML = `
-                <div class="tw-text-center tw-py-8 tw-text-red-500">
-                    <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-                    <p class="tw-font-bold">Cannot load Pinnacle Cycle</p>
-                    <p class="tw-text-sm">${error.message}</p>
-                </div>
-            `;
-        });
+  }
 }
+
 
 // Create result section
 function createResultSection(result, index) {
     console.log('🎨 DEBUG: Creating result section:', index);
-    console.log('🎨 DEBUG: Current option:', currentOption);
+    console.log('🎨 DEBUG: Result type:', result.type);
+    console.log('🎨 DEBUG: Result data:', result.data);
     
     const type = result.type || 'unknown';
     const title = result.title || `Result ${index + 1}`;
@@ -598,32 +594,62 @@ function createResultSection(result, index) {
         }
     }
     
+    // แยกข้อมูลสำหรับ pinnacle ตาม type
     if (type === 'birth-date' && data.birth_date) {
+        // แยกส่วนวันที่และเวลา
+        const birthDateStr = data.birth_date;
+        let birthDay = '', birthMonth = '', birthYear = '';
+        let birthHour = 0, birthMinute = 0;
+        
+        if (birthDateStr && birthDateStr.includes('/')) {
+            // แยกชั่วโมงนาทีถ้ามี
+            const timeMatch = birthDateStr.match(/(\d{2}):(\d{2})/);
+            if (timeMatch) {
+                birthHour = parseInt(timeMatch[1]);
+                birthMinute = parseInt(timeMatch[2]);
+            }
+            
+            // แยกวันที่
+            const dateParts = birthDateStr.split(' ');
+            if (dateParts.length >= 2) {
+                const datePart = dateParts[1]; // "DD/MM/YYYY"
+                const [day, month, year] = datePart.split('/').map(Number);
+                birthDay = day.toString().padStart(2, '0');
+                birthMonth = month.toString().padStart(2, '0');
+                birthYear = year.toString();
+            }
+        }
+        
+        // เก็บข้อมูล pinnacle
         pinnacleData = {
-            lifePathNumber: lifePathNum,
+            lifePathNumber: data.life_path_number || data.lifePath || lifePathNum,
             birth_date: data.birth_date,
-            UDate: data.birth_date.split('/')[0] || '',
-            UMonth: data.birth_date.split('/')[1] || '',
-            UYear: data.birth_date.split('/')[2] ? data.birth_date.split('/')[2].split(' ')[0] : ''
+            UDate: birthDay,
+            UMonth: birthMonth,
+            UYear: birthYear,
+            birth_hour: birthHour,
+            birth_minute: birthMinute,
+            destiny_number: data.destiny_number || data.destiny
         };
+        
         console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
     }
     
     // สร้างปุ่มตาม option
-    let buttonsHTML = '';
+    let buttonsHTML = ''; // ประกาศตัวแปรที่นี่ก่อนใช้
     
     // ปุ่ม Pythagorean Square (แสดงเสมอ)
     buttonsHTML += `
-        <button onclick="pythagorean.showPythagoreanSquare(${index})" 
+        <button onclick="window.pythagorean.showPythagoreanSquare(${index})" 
                 class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
             Pythagorean Square
         </button>
     `;
     
-    // ปุ่ม Pinnacle Cycle (แสดงเสมอถ้ามีข้อมูลวันเกิด)
-    if (pinnacleData) {
+    // ปุ่ม Pinnacle Cycle (แสดงเฉพาะ birth-date type)
+    if (type === 'birth-date' && pinnacleData) {
         buttonsHTML += `
-            <button onclick="loadPinnacle()" 
+            <button onclick="window.pinnacle.showPinnacleCycle(${index})" 
                     class="tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
                 Pinnacle Cycle
             </button>
@@ -670,7 +696,7 @@ function createResultSection(result, index) {
     // เพิ่มปุ่ม combined ถ้าต้องแสดง
     if (showCombinedButton) {
         buttonsHTML += `
-            <button onclick="pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
+            <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
                     class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
                 ${combinedButtonText}
             </button>
@@ -718,6 +744,7 @@ function createResultSection(result, index) {
         </div>
     `;
 }
+
 
 // Create fallback display
 function createFallbackDisplay(data) {
