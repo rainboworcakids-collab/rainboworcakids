@@ -219,14 +219,6 @@ async function callPsychomatrixAPI(formData) {
     try {
         showLoading(true);
  
-        // บันทึก option ลง sessionStorage ก่อนเรียก API
-        try {
-            sessionStorage.setItem('psychomatrixOption', formData.option);
-            console.log(`💾 Saved option to sessionStorage: ${formData.option}`);
-        } catch (error) {
-            console.error('❌ Error saving option to sessionStorage:', error);
-        }
-        
         // Log raw input
         console.log('📥 Raw Input Data:', formData);
         console.log('📊 Data Types:');
@@ -326,8 +318,18 @@ async function callPsychomatrixAPI(formData) {
         console.log('✅ Stored successfully');
         
         // Redirect
-        console.log('🔄 Redirecting to result.html');
-        window.location.href = 'result.html';
+        // ใน callPsychomatrixAPI() function - หาส่วน redirect
+        console.log('✅ SUCCESS! Response data:', result);
+
+        // **เปลี่ยน: ส่ง option ผ่าน URL parameter แทน sessionStorage**
+        const option = formData.option || 'BD';
+        const redirectUrl = `result.html?option=${encodeURIComponent(option)}`;
+
+        console.log('🔄 Redirecting to:', redirectUrl);
+        window.location.href = redirectUrl;
+
+//       console.log('🔄 Redirecting to result.html');
+//        window.location.href = 'result.html';
         
     } catch (error) {
         console.error('❌ CATCH BLOCK - API CALL FAILED:');
