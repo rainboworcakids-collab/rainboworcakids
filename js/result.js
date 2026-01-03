@@ -17,14 +17,6 @@ let rootNumberData = null;
 let currentOption = 'BD'; // Default value
 
 // ===== ฟังก์ชันตั้งค่า option =====
-//function setCalculationOption() {
-//    console.log('🔧 DEBUG: Setting calculation option...');
-    
-    // ลองอ่านจากหลายแหล่งตามลำดับความสำคัญ:
-    // 1. จาก URL parameter (สูงสุด)
-//    const urlParams = new URLSearchParams(window.location.search);
-//    const optionFromURL = urlParams.get('option');
-    
 function setCalculationOption() {
     console.log('🔧 DEBUG: Setting calculation option...');
     
