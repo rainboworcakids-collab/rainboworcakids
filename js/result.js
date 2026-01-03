@@ -17,13 +17,42 @@ let rootNumberData = null;
 let currentOption = 'BD'; // Default value
 
 // ===== ฟังก์ชันตั้งค่า option =====
-function setCalculationOption() {
-    console.log('🔧 DEBUG: Setting calculation option...');
+//function setCalculationOption() {
+//    console.log('🔧 DEBUG: Setting calculation option...');
     
     // ลองอ่านจากหลายแหล่งตามลำดับความสำคัญ:
     // 1. จาก URL parameter (สูงสุด)
+//    const urlParams = new URLSearchParams(window.location.search);
+//    const optionFromURL = urlParams.get('option');
+    
+function setCalculationOption() {
+    console.log('🔧 DEBUG: Setting calculation option...');
+    
+    // อ่านจาก URL parameter เป็นหลัก
     const urlParams = new URLSearchParams(window.location.search);
     const optionFromURL = urlParams.get('option');
+    
+    // ถ้ามีจาก URL ให้ใช้
+    if (optionFromURL) {
+        currentOption = optionFromURL;
+        console.log(`✅ DEBUG: Using option from URL parameter: ${currentOption}`);
+    } 
+    // ถ้าไม่มีจาก URL ลองอ่านจาก sessionStorage
+    else {
+        try {
+            const optionFromStorage = sessionStorage.getItem('psychomatrixOption');
+            if (optionFromStorage) {
+                currentOption = optionFromStorage;
+                console.log(`✅ DEBUG: Using option from sessionStorage: ${currentOption}`);
+            } else {
+                currentOption = 'BD'; // Default
+                console.log(`⚠️ DEBUG: No option found, using default: ${currentOption}`);
+            }
+        } catch (error) {
+            console.error('❌ DEBUG: Error reading sessionStorage:', error);
+            currentOption = 'BD';
+        }
+    }    
     
     // 2. จาก sessionStorage ที่เก็บจากหน้า Psychomatrix.html
     const optionFromStorage = sessionStorage.getItem('psychomatrixOption');
