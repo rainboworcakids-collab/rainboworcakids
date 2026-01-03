@@ -96,15 +96,16 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script src="js/pythagorean.js?v=10.1"></script>
-    <script src="js/result.js?v=10.1"></script>
+    <script src="js/pythagorean.js?v=10.10"></script>
+    <script src="js/pinnacle.js?v=1.00"></script>
+    <script src="js/result.js?v=11.00"></script>
 
     <script src="js/debug-logger.js"></script>
 
 
 <!-- แก้ไข version badge: -->
 <div class="version-badge">
-    v9.2-Clean-Combined-Display
+    v9.4-Clean-Combined-Display
 </div>
 
     <!-- ทดสอบการทำงานของปุ่ม -->
@@ -132,6 +133,20 @@
             }, 2000);
         });
     </script>
+
+
+<script>
+// เพิ่มฟังก์ชัน debug
+function showDebugInfo() {
+    const debugInfo = `
+        sessionStorage psychomatrixResult: ${sessionStorage.getItem('psychomatrixResult')?.substring(0, 200)}...
+        <br>window.analysisData: ${JSON.stringify(window.analysisData || {}).substring(0, 200)}...
+        <br>pinnacleData: ${JSON.stringify(window.pinnacleData || {})}
+    `;
+    document.getElementById('debugInfo').innerHTML = debugInfo;
+    document.getElementById('debugInfo').classList.remove('tw-hidden');
+}
+</script>
 
 </body>
 </html>
