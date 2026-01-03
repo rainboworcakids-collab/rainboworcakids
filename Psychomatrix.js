@@ -327,9 +327,6 @@ async function callPsychomatrixAPI(formData) {
 
         console.log('🔄 Redirecting to:', redirectUrl);
         window.location.href = redirectUrl;
-
-//       console.log('🔄 Redirecting to result.html');
-//        window.location.href = 'result.html';
         
     } catch (error) {
         console.error('❌ CATCH BLOCK - API CALL FAILED:');
