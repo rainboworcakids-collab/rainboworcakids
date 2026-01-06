@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Psychomatrix Analysis - RainbowOrcaKids</title>
+    <title>LuckyNumber Psychomatrix</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -31,19 +31,26 @@
     <div class="Container">
         <!-- Header -->
         <div class="text-center mb-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-white mb-2">🔮 Psychomatrix Analysis</h1>
+            <h1 class="text-3xl font-bold text-white mb-2">LuckyNumber Psychomatrix</h1>
             <p class="text-blue-100">วิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
         </div>
         
         <!-- Analysis Form -->
-        <form id="psychomatrixForm" class="no-print max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-2xl" 
-      action="javascript:void(0);" 
-      onsubmit="return false;">
+        <form id="LuckyNumberForm" class="no-print max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-2xl">
 
             <!-- Section 1: Birth Date -->
             <div class="section1 mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200">	
                 <div class="mb-4">
                     <label class="block text-lg font-bold text-gray-800 mb-4">📅 ข้อมูลวันเกิด (Birth Date)</label>
+                    
+                    <input type="text" name="search_name" id="search_name"  class="hidden">
+
+                    <button type="button" id="load_search"
+                        class="bg-gradient-to-r from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 
+                           text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg transition-all duration-200 w-full">
+                📂 โหลดข้อมูล
+                    </button>
+
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                         <!-- Day -->
                         <div>
@@ -89,81 +96,73 @@
                         </div>
                     </div>
                 </div>
-            </div>		
-            
-            <!-- Section 2: ID Card -->
-            <div class="section2 mb-6 p-5 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border border-gray-200">	
+            </div>	
+                                   
+
+             <!-- Section 2: Birth Date -->
+            <div class="section2 mb-6 p-5 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200">	
                 <div class="mb-4">
-                    <label class="block text-lg font-bold text-gray-800 mb-3">🪪 เลขบัตรประชาชน</label>
-                    <input type="text" name="id_card" placeholder="1103705060128" maxlength="13"
-                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                           pattern="\d{13}" title="กรุณากรอกเลข 13 หลัก">
-                    <p class="text-sm text-gray-500 mt-2">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค เช่น 1103705060128</p>
-                </div>
-            </div>		
-            
-            <!-- Section 3: Full Name -->
-            <div class="section3 mb-6 p-5 rounded-xl bg-gradient-to-r from-yellow-50 to-orange-50 border border-gray-200">		
-                <div class="mb-4">
-                    <label class="block text-lg font-bold text-gray-800 mb-3">✍️ ชื่อ-สกุลภาษาอังกฤษ</label>
-                    <input type="text" name="full_name" placeholder="Thanadej Hwangsutham"
-                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500">
-                    <p class="text-sm text-gray-500 mt-2">สามารถกรอกชื่อภาษาไทยได้ ระบบจะแปลงให้อัตโนมัติ เช่น ธเนศเดช หวังสุธรรม</p>
-                </div>
-            </div>		
-            
-            <!-- Button: Manage Surrounding Data -->
-            <button type="button" id="openSurroundingDataModal" 
-                    class="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white p-4 rounded-lg hover:from-purple-600 hover:to-purple-800 font-bold text-lg shadow-lg transition-all duration-200 mb-6">
-                🧲 จัดการข้อมูลพลังตัวเลขรอบตัว (20 รายการ)
-            </button>
-            
-            <!-- Section: Options & Actions -->
-            <div class="section bg-gray-50 p-5 rounded-xl border border-gray-200">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
-                    
-                    <!-- Left: Display Options -->
-                    <div class="lg:col-span-2">
-                        <label class="block mb-3 text-lg font-bold text-gray-800">📊 ตัวเลือกการแสดงผล</label>
-                        <select name="option" class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mb-4">
-                            <option value="BD" selected>📅 Birth Date เท่านั้น</option>
-                            <option value="IDC">🪪 ID Card เท่านั้น</option>
-                            <option value="FullName">✍️ Full Name เท่านั้น</option>	
-                            <option value="BD-IDC">📅🪪 Birth Date + ID Card</option>
-                            <option value="BD-IDC-FullName">📅🪪✍️ Birth + ID Card + Full Name</option>			
-                            <option value="Num-Ard">🧲 รวมทุกตัวเลขรอบตัว</option>
-                        </select>
-                        
-                        <div class="flex items-center gap-3 mb-4">
-                            <input type="checkbox" id="use_average" name="use_average" value="use_average" checked
-                                   class="w-6 h-6 text-blue-600 rounded focus:ring-blue-500">
-                            <label for="use_average" class="text-base font-medium text-gray-700">
-                                ✅ ใช้ค่าเฉลี่ยเมื่อต้องรวมตาราง (แนะนำ)
-                            </label>
-                        </div>				
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <input type="text" name="search_name" id="search_name" 
-                                   class="md:col-span-2 p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                   placeholder="🔍 ชื่อสำหรับบันทึก/โหลดข้อมูล">
+                    <label class="block text-lg font-bold text-gray-800 mb-4">📅 ข้อมูลวันเทียบ ( Comparison Date)</label>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <!-- Day -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">วันที่</label>
+                            <select name="comparison_day" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกวัน</option>
+                                <!-- Options will be populated by JavaScript below -->
+                            </select>
+                        </div>
+                        <!-- Month -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เดือน</label>
+                            <select name="comparison_month" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกเดือน</option>
+                            </select>
+                        </div>
+                        <!-- Century -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ศตวรรษ</label>
+                            <select name="comparison_century" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="19">19</option>
+                                <option value="20" selected>20</option>
+                            </select>
+                        </div>
+                        <!-- Year -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">ปี</label>
+                            <select name="comparison_year" class="p-3 w-full border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">เลือกปี</option>
+                            </select>
+                        </div>
+                        <!-- Time -->
+                        <div class="md:col-span-2 lg:col-span-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">เวลาเกิด</label>
                             <div class="flex gap-2">
-                                <button type="button" id="load_search" 
-                                        class="bg-yellow-500 text-white px-4 py-3 rounded-lg hover:bg-yellow-600 font-medium w-full">
-                                    📂
-                                </button>
-                                <button type="submit" name="action" value="save" 
-                                        class="bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 font-medium w-full">
-                                    💾
-                                </button>
+                                <select name="comparison_hour" class="p-3 flex-1 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">ชม.</option>
+                                </select>
+                                <select name="comparison_minute" class="p-3 flex-1 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">นาที</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Right: Analyze Button -->
+                </div>
+            </div>	
+                
+            <!-- ในส่วน Options & Actions เพิ่มปุ่ม Load Data -->
+            <div class="section bg-gray-50 p-5 rounded-xl border border-gray-200">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
                     <div class="text-center">
                         <div class="mb-3">
-                            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" 
-                                 class="h-20 w-20 mx-auto rounded-full shadow-lg">
+                                 <!-- Middle: Empty or logo -->
+                            <div class="text-center">
+                                <div class="mb-3">
+                                    <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" 
+                                        class="h-20 w-20 mx-auto rounded-full shadow-lg">
+                                </div>
+                            </div>
+               
                         </div>
                         <button type="submit" name="action" value="analyze" 
                                 class="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-green-500 hover:to-green-700 
@@ -173,10 +172,12 @@
                     </div>
                     
                 </div>
-            </div>	
             
+            </div>
+                        
         </form>
     </div>
+
 
     <!-- Modal: Search & Load -->
     <div id="searchModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-40">
@@ -190,110 +191,143 @@
                 <button type="button" id="select_search" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 font-medium">
                     ✅ เลือก
                 </button>
-                <button type="button" id="delete_search" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 font-medium">
-                    🗑️ ลบ
-                </button>
                 <button type="button" id="cancel_search" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 font-medium">
                     ❌ ยกเลิก
                 </button>
-                <button type="button" id="save_localstorage_file" class="text-xs text-blue-600 hover:text-blue-800 border border-blue-300 px-3 py-1 rounded">
-                    💾 บันทึกไฟล์
-                </button>
                 <input type="file" id="load_localstorage_file_input" accept=".txt,.json" class="hidden">
-                <button type="button" id="load_localstorage_file_btn" class="text-xs text-green-600 hover:text-green-800 border border-green-300 px-3 py-1 rounded">
-                    📥 โหลดไฟล์
-                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Surrounding Data (20 Fields) -->
-    <div id="surroundingDataModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4 text-center text-purple-700">🧲 แก้ไขข้อมูลพลังตัวเลขรอบตัว (20 รายการ)</h3>
-            <form id="surroundingDataForm">
-                
-				<div id="surroundingFieldsContainer" class="px-2">
-    				<!-- JavaScript will generate 20 fields here -->
-				</div>
-
-                <input type="hidden" id="modal_search_name" name="search_name">
-                <div class="flex gap-3 justify-center">
-                    <button type="submit" id="saveSurroundingData" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 font-medium">
-                        💾 บันทึก/อัปเดต
-                    </button>
-                    <button type="button" id="cancelSurroundingData" class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 font-medium">
-                        ❌ ยกเลิก
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+ 
     <script src="js/github-fix.js"></script>
 
     <!--  โหลด Debug Logger ก่อน -->
     <script src="js/debug-logger.js"></script>
     
     <!-- Psychomatrix JavaScript -->
-    <script src="Psychomatrix.js?v=2.0"></script>
+    <script src="js/Lucky_number.js?v=2.4"></script>
     
     <!-- Inline JavaScript to populate select options immediately -->
+    <!-- แก้ไข Inline JavaScript สำหรับตั้งค่า default -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Populate Day (01-31)
-            const daySelect = document.querySelector('select[name="birth_day"]');
-            for (let i = 1; i <= 31; i++) {
-                const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0');
-                if (i === 28) option.selected = true; // Default to 28
-                option.textContent = String(i).padStart(2, '0');
-                daySelect.appendChild(option);
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // ============== ตั้งค่า Birth Date Default ==============
+        const birthDaySelect = document.querySelector('select[name="birth_day"]');
+        const birthMonthSelect = document.querySelector('select[name="birth_month"]');
+        const birthYearSelect = document.querySelector('select[name="birth_year"]');
+        const birthHourSelect = document.querySelector('select[name="birth_hour"]');
+        const birthMinuteSelect = document.querySelector('select[name="birth_minute"]');
+        
+        // ============== ตั้งค่า Comparison Date Default ==============
+        const compDaySelect = document.querySelector('select[name="comparison_day"]');
+        const compMonthSelect = document.querySelector('select[name="comparison_month"]');
+        const compYearSelect = document.querySelector('select[name="comparison_year"]');
+        const compHourSelect = document.querySelector('select[name="comparison_hour"]');
+        const compMinuteSelect = document.querySelector('select[name="comparison_minute"]');
+        const compCenturySelect = document.querySelector('select[name="comparison_century"]');
+        
+        // ตั้งค่า default ทั้ง Birth Date และ Comparison Date
+        for (let i = 1; i <= 31; i++) {
+            const day = String(i).padStart(2, '0');
             
-            // Populate Month (01-12)
-            const monthSelect = document.querySelector('select[name="birth_month"]');
-            for (let i = 1; i <= 12; i++) {
-                const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0');
-                if (i === 1) option.selected = true; // Default to January
-                option.textContent = String(i).padStart(2, '0');
-                monthSelect.appendChild(option);
-            }
+            // Birth Day
+            const birthOption = document.createElement('option');
+            birthOption.value = day;
+            birthOption.textContent = day;
+            if (i === 28) birthOption.selected = true;
+            birthDaySelect.appendChild(birthOption.cloneNode(true));
             
-            // Populate Year (00-99)
-            const yearSelect = document.querySelector('select[name="birth_year"]');
-            for (let i = 0; i <= 99; i++) {
-                const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0');
-                if (i === 15) option.selected = true; // Default to 15 (2015)
-                option.textContent = String(i).padStart(2, '0');
-                yearSelect.appendChild(option);
-            }
+            // Comparison Day
+            compDaySelect.appendChild(birthOption.cloneNode(true));
+        }
+        
+        for (let i = 1; i <= 12; i++) {
+            const month = String(i).padStart(2, '0');
             
-            // Populate Hour (00-23)
-            const hourSelect = document.querySelector('select[name="birth_hour"]');
-            for (let i = 0; i <= 23; i++) {
-                const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0');
-                if (i === 1) option.selected = true; // Default to 01
-                option.textContent = String(i).padStart(2, '0');
-                hourSelect.appendChild(option);
-            }
+            // Birth Month
+            const birthOption = document.createElement('option');
+            birthOption.value = month;
+            birthOption.textContent = month;
+            if (i === 1) birthOption.selected = true;
+            birthMonthSelect.appendChild(birthOption.cloneNode(true));
             
-            // Populate Minute (00-59)
-            const minuteSelect = document.querySelector('select[name="birth_minute"]');
-            for (let i = 0; i <= 59; i++) {
-                const option = document.createElement('option');
-                option.value = String(i).padStart(2, '0');
-                if (i === 0) option.selected = true; // Default to 00
-                option.textContent = String(i).padStart(2, '0');
-                minuteSelect.appendChild(option);
-            }
+            // Comparison Month
+            compMonthSelect.appendChild(birthOption.cloneNode(true));
+        }
+        
+        // ตั้งค่า Year (00-99)
+        const currentYear = new Date().getFullYear();
+        const currentShortYear = currentYear % 100;
+        
+        for (let i = 0; i <= 99; i++) {
+            const year = String(i).padStart(2, '0');
             
-            console.log('✅ สร้าง options สำเร็จ');
-        });
-    </script>
+            // Birth Year
+            const birthOption = document.createElement('option');
+            birthOption.value = year;
+            birthOption.textContent = year;
+            if (i === 15) birthOption.selected = true;
+            birthYearSelect.appendChild(birthOption.cloneNode(true));
+            
+            // Comparison Year
+            const compOption = birthOption.cloneNode(true);
+            if (i === currentShortYear) compOption.selected = true;
+            compYearSelect.appendChild(compOption);
+        }
+        
+        // ตั้งค่า Hour (00-23)
+        for (let i = 0; i <= 23; i++) {
+            const hour = String(i).padStart(2, '0');
+            
+            const birthOption = document.createElement('option');
+            birthOption.value = hour;
+            birthOption.textContent = hour;
+            if (i === 1) birthOption.selected = true;
+            birthHourSelect.appendChild(birthOption.cloneNode(true));
+            
+            const compOption = birthOption.cloneNode(true);
+            if (i === 0) compOption.selected = true;
+            compHourSelect.appendChild(compOption);
+        }
+        
+        // ตั้งค่า Minute (00-59)
+        for (let i = 0; i <= 59; i++) {
+            const minute = String(i).padStart(2, '0');
+            
+            const birthOption = document.createElement('option');
+            birthOption.value = minute;
+            birthOption.textContent = minute;
+            if (i === 0) birthOption.selected = true;
+            birthMinuteSelect.appendChild(birthOption.cloneNode(true));
+            
+            compMinuteSelect.appendChild(birthOption.cloneNode(true));
+        }
+        
+        // ตั้งค่า Comparison Century ตามปีปัจจุบัน
+        if (currentYear >= 2000 && currentYear < 2100) {
+            compCenturySelect.value = '20';
+        } else {
+            compCenturySelect.value = '19';
+        }
+        
+        console.log('✅ สร้าง options สำเร็จ (Birth Date และ Comparison Date)');
+        
+        // เพิ่ม: ตั้งค่า Comparison Date เป็นวันปัจจุบัน
+        const today = new Date();
+        const currentDay = String(today.getDate()).padStart(2, '0');
+        const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+        
+        // หาค่าปัจจุบันใน dropdown และเลือก
+        setTimeout(() => {
+            // ตั้งค่า Comparison Date เป็นวันปัจจุบัน
+            compDaySelect.value = currentDay;
+            compMonthSelect.value = currentMonth;
+            console.log('📅 Comparison Date ตั้งค่าเป็นวันปัจจุบัน:', 
+                       `${currentDay}/${currentMonth}/${currentYear}`);
+        }, 100);
+    });
+</script>
 </body>
 </html>
 
