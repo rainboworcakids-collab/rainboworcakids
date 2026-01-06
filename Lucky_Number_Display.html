@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผลการวิเคราะห์ Lucky Number</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* CSS สำหรับแสดงผลตัวเลขและธาตุ */
+        .number-1 { color: #FF6B6B; font-weight: bold; }
+        .number-2 { color: #4ECDC4; font-weight: bold; }
+        .number-3 { color: #FFD166; font-weight: bold; }
+        .number-4 { color: #06D6A0; font-weight: bold; }
+        .number-5 { color: #118AB2; font-weight: bold; }
+        .number-6 { color: #073B4C; font-weight: bold; }
+        .number-7 { color: #7209B7; font-weight: bold; }
+        .number-8 { color: #F72585; font-weight: bold; }
+        .number-9 { color: #3A86FF; font-weight: bold; }
+        
+        .ทองหยิน, .ทองหยาง { background: linear-gradient(135deg, #FFF3CD 0%, #FFE69C 100%); border: 2px solid #FFE69C; }
+        .น้ำหยิน, .น้ำหยาง { background: linear-gradient(135deg, #D1ECF1 0%, #BEE5EB 100%); border: 2px solid #BEE5EB; }
+        .ไฟหยิน, .ไฟหยาง { background: linear-gradient(135deg, #F8D7DA 0%, #F5C6CB 100%); border: 2px solid #F5C6CB; }
+        .ไม้หยิน, .ไม้หยาง { background: linear-gradient(135deg, #D4EDDA 0%, #C3E6CB 100%); border: 2px solid #C3E6CB; }
+        .ดินหยินหยาง { background: linear-gradient(135deg, #E2E3E5 0%, #D6D8DB 100%); border: 2px solid #D6D8DB; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div id="loading" class="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto"></div>
+            <p class="mt-4 text-lg font-medium">กำลังโหลดผลลัพธ์...</p>
+        </div>
+    </div>
+
+    <div id="results-container" class="max-w-6xl mx-auto hidden">
+        <!-- ผลลัพธ์จะถูกเติมที่นี่ด้วย JavaScript -->
+    </div>
+
+    <div id="error-container" class="max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-lg p-6 hidden">
+        <h2 class="text-2xl font-bold text-red-700 mb-4">เกิดข้อผิดพลาด</h2>
+        <p id="error-message" class="text-red-600 mb-4"></p>
+        <a href="Lucky_number.html" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            ← กลับไปหน้าหลัก
+        </a>
+    </div>
+
+    <script>
+    // ==================== GLOBAL FUNCTIONS ====================
+    
+    // ฟังก์ชันจัดรูปแบบความหมาย
+    function formatMeaning(text) {
+        if (!text) return '';
+        return text.replace(/\n/g, '<br>');
+    }
+
+    // ==================== MAIN LOGIC ====================
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            // ดึงข้อมูลจาก sessionStorage
+            const storedResult = sessionStorage.getItem('psychomatrixResult');
+            
+            if (!storedResult) {
+                throw new Error('ไม่พบข้อมูลผลลัพธ์ กรุณาทำรายการใหม่');
+            }
+            
+            const result = JSON.parse(storedResult);
+            
+            if (!result.success || !result.results) {
+                throw new Error(result.error || 'ข้อมูลผลลัพธ์ไม่ถูกต้อง');
+            }
+            
+            const data = result.results;
+            
+            // ซ่อน loading
+            document.getElementById('loading').style.display = 'none';
+            
+            // แสดงผลลัพธ์
+            renderResults(data);
+            
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-message').textContent = error.message;
+            document.getElementById('error-container').classList.remove('hidden');
+        }
+    });
+
+    // ==================== RENDER FUNCTIONS ====================
+    
+    function renderResults(data) {
+        const container = document.getElementById('results-container');
+        
+        let html = `
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold text-purple-700 mb-2">
+                        🔮 ผลการวิเคราะห์ Lucky Number
+                    </h1>
+                    <p class="text-gray-600">อัปเดตล่าสุด: ${new Date().toLocaleString('th-TH')}</p>
+                </div>
+                
+                <!-- ข้อมูลพื้นฐาน -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-bold text-blue-700 mb-3">📅 ข้อมูลพื้นฐาน</h3>
+                        <p><strong>เลือกใช้:</strong> วันเกิด (Birth Date)</p>
+                        <p><strong>วันเกิด:</strong> ${data.UDate}/${data.UMonth}/${data.UYear}</p>
+                        <p><strong>เวลาเกิด:</strong> ${data.Ubirth_time}</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h3 class="text-lg font-bold text-green-700 mb-3">📊 ข้อมูลเทียบ</h3>
+                        <p><strong>วันที่เทียบ:</strong> ${data.YDate}/${data.YMonth}/${data.YYear}</p>
+                        <p><strong>การทำนาย:</strong> เลขนำโชค-ปีวัฏจักร</p>
+                    </div>
+                </div>
+        `;
+        
+        // เลขเส้นทางชีวิต
+        html += `
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg mb-8 border-l-4 border-purple-500">
+                <h2 class="text-2xl font-bold text-purple-800 mb-4 flex items-center">
+                    <span class="mr-2">🌟</span> เลขเส้นทางชีวิต (Life Path Number)
+                </h2>
+                
+                <div class="flex flex-wrap items-center gap-4 mb-4">
+                    <div class="text-center">
+                        <span class="text-6xl font-bold number-${data.LifePathNumber}">
+                            ${data.LifePathNumber}
+                        </span>
+                        <p class="text-sm text-gray-600">เลขเส้นทางชีวิต</p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="px-4 py-2 rounded-lg ${data.LifePathElement}${data.LifePathEnergy}">
+                            <span class="font-bold">ธาตุ${data.LifePathElement}</span>
+                            <br>
+                            <span class="text-sm">${data.LifePathEnergy}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">ลักษณะทั่วไป:</h3>
+                    <p class="text-gray-700">${formatMeaning(data.RootNumberMeaning)}</p>
+                </div>
+            </div>
+        `;
+        
+        // เลขโชคชะตา
+        html += `
+            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-lg mb-8 border-l-4 border-blue-500">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center">
+                    <span class="mr-2">💫</span> เลขโชคชะตา (Destiny Number)
+                </h2>
+                
+                <div class="mb-4">
+                    <span class="text-5xl font-bold number-${data.LifePathNumber}">
+                        ${data.DestinyNumber}
+                    </span>
+                </div>
+                
+                <div class="mt-4">
+                    <h3 class="text-lg font-bold text-gray-700 mb-2">พรสวรรค์และภารกิจ:</h3>
+                    <p class="text-gray-700">${formatMeaning(data.DestinyNumberMeaning)}</p>
+                </div>
+            </div>
+        `;
+        
+        if (data.Prophesy === "1") {
+            // เลขนำโชคของวันเกิด
+            html += `
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-lg mb-8 border-l-4 border-green-500">
+                    <h2 class="text-2xl font-bold text-green-800 mb-4 flex items-center">
+                        <span class="mr-2">🍀</span> เลขนำโชคของวันเกิด
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <span class="text-4xl font-bold text-green-600">
+                            ${data.LifePathLucky}
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            // ปีวัฏจักร
+            html += renderPersonalYearSection(data);
+            
+            // เดือนวัฏจักร
+            html += renderPersonalMonthSection(data);
+            
+            // วันวัฏจักร
+            html += renderPersonalDaySection(data);
+            
+        } else if (data.Prophesy === "2") {
+            // การวิเคราะห์ความสัมพันธ์
+            html += renderRelationshipAnalysis(data);
+        }
+        
+        html += `
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <a href="Lucky_number.html" 
+                       class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:opacity-90 transition-all">
+                       ← ทำรายการใหม่
+                    </a>
+                    <button onclick="window.print()" 
+                            class="ml-4 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300">
+                        🖨️ พิมพ์ผลลัพธ์
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        container.classList.remove('hidden');
+    }
+    
+    function renderPersonalYearSection(data) {
+        let html = `
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg mb-8 border-l-4 border-yellow-500">
+                <h2 class="text-2xl font-bold text-yellow-800 mb-4 flex items-center">
+                    <span class="mr-2">📅</span> ปีวัฏจักร (Personal Year Number)
+                </h2>
+        `;
+        
+        if (data.IsBeforeBirthday && data.PersonalYearNumberPrev) {
+            html += `
+                <div class="mb-6 p-4 bg-white rounded-lg">
+                    <h3 class="text-lg font-bold text-blue-700 mb-2">ช่วงก่อนวันเกิด</h3>
+                    <div class="flex flex-wrap items-center gap-4 mb-3">
+                        <span class="text-4xl font-bold number-${data.PersonalYearNumberPrev}">
+                            ${data.PersonalYearNumberPrev}
+                        </span>
+                        <div class="px-4 py-2 rounded-lg ${data.PersonalYearPrevElement}${data.PersonalYearPrevEnergy}">
+                            <span class="font-bold">ธาตุ${data.PersonalYearPrevElement}</span>
+                            <br>
+                            <span class="text-sm">${data.PersonalYearPrevEnergy}</span>
+                        </div>
+                    </div>
+                    <p><strong>ความสัมพันธ์:</strong> ${data.PersonalYearPrevElementRelation}</p>
+                    <p class="mt-2"><strong>เลขนำโชคประจำปี:</strong> 
+                        <span class="text-2xl text-green-600 font-bold">${data.PersonalYearPrevLucky}</span>
+                    </p>
+                </div>
+                
+                <div class="p-4 bg-white rounded-lg">
+                    <h3 class="text-lg font-bold text-green-700 mb-2">ช่วงหลังวันเกิด</h3>
+            `;
+        }
+        
+        html += `
+                    <div class="flex flex-wrap items-center gap-4 mb-3">
+                        <span class="text-4xl font-bold number-${data.PersonalYearNumber}">
+                            ${data.PersonalYearNumber}
+                        </span>
+                        <div class="px-4 py-2 rounded-lg ${data.PersonalYearElement}${data.PersonalYearEnergy}">
+                            <span class="font-bold">ธาตุ${data.PersonalYearElement}</span>
+                            <br>
+                            <span class="text-sm">${data.PersonalYearEnergy}</span>
+                        </div>
+                    </div>
+                    <p><strong>ความสัมพันธ์:</strong> ${data.PersonalYearElementRelation}</p>
+                    <p class="mt-2"><strong>เลขนำโชคประจำปี:</strong> 
+                        <span class="text-2xl text-green-600 font-bold">${data.PersonalYearLucky}</span>
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        return html;
+    }
+    
+    function renderPersonalMonthSection(data) {
+        return `
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg mb-8 border-l-4 border-indigo-500">
+                <h2 class="text-2xl font-bold text-indigo-800 mb-4 flex items-center">
+                    <span class="mr-2">📆</span> เดือนวัฏจักร (Personal Month Number)
+                </h2>
+                
+                <div class="flex flex-wrap items-center gap-4 mb-3">
+                    <span class="text-4xl font-bold number-${data.PersonalMonthNumber}">
+                        ${data.PersonalMonthNumber}
+                    </span>
+                    <div class="px-4 py-2 rounded-lg ${data.PersonalMonthElement}${data.PersonalMonthEnergy}">
+                        <span class="font-bold">ธาตุ${data.PersonalMonthElement}</span>
+                        <br>
+                        <span class="text-sm">${data.PersonalMonthEnergy}</span>
+                    </div>
+                </div>
+                
+                <p><strong>ความสัมพันธ์:</strong> ${data.PersonalMonthElementRelation}</p>
+                <p class="mt-2"><strong>เลขนำโชคประจำเดือน:</strong> 
+                    <span class="text-2xl text-green-600 font-bold">${data.PersonalMonthLucky}</span>
+                </p>
+            </div>
+        `;
+    }
+    
+    function renderPersonalDaySection(data) {
+        return `
+            <div class="bg-gradient-to-r from-pink-50 to-rose-50 p-6 rounded-lg mb-8 border-l-4 border-pink-500">
+                <h2 class="text-2xl font-bold text-pink-800 mb-4 flex items-center">
+                    <span class="mr-2">📅</span> วันวัฏจักร (Personal Day Number)
+                </h2>
+                
+                <div class="flex flex-wrap items-center gap-4 mb-3">
+                    <span class="text-4xl font-bold number-${data.PersonalDayNumber}">
+                        ${data.PersonalDayNumber}
+                    </span>
+                    <div class="px-4 py-2 rounded-lg ${data.PersonalDayElement}${data.PersonalDayEnergy}">
+                        <span class="font-bold">ธาตุ${data.PersonalDayElement}</span>
+                        <br>
+                        <span class="text-sm">${data.PersonalDayEnergy}</span>
+                    </div>
+                </div>
+                
+                <p><strong>ความสัมพันธ์:</strong> ${data.PersonalDayElementRelation}</p>
+                <p class="mt-2"><strong>เลขนำโชคประจำวัน:</strong> 
+                    <span class="text-2xl text-green-600 font-bold">${data.PersonalDayLucky}</span>
+                </p>
+            </div>
+        `;
+    }
+    
+    function renderRelationshipAnalysis(data) {
+        return `
+            <div class="bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-lg mb-8 border-l-4 border-teal-500">
+                <h2 class="text-2xl font-bold text-teal-800 mb-4 flex items-center">
+                    <span class="mr-2">💑</span> การวิเคราะห์ความสัมพันธ์
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-lg">
+                        <h3 class="text-lg font-bold text-blue-700 mb-2">บุคคลที่ 1</h3>
+                        <p><strong>เลขเส้นทางชีวิต:</strong> 
+                            <span class="text-3xl number-${data.LifePathNumber}">${data.LifePathNumber}</span>
+                        </p>
+                        <p><strong>ธาตุ:</strong> ${data.LifePathElement} (${data.LifePathEnergy})</p>
+                    </div>
+                    
+                    <div class="bg-white p-4 rounded-lg">
+                        <h3 class="text-lg font-bold text-green-700 mb-2">บุคคลที่ 2</h3>
+                        <p><strong>เลขเส้นทางชีวิต:</strong> 
+                            <span class="text-3xl number-${data.RootNumberCompare}">${data.RootNumberCompare}</span>
+                        </p>
+                        <p><strong>ธาตุ:</strong> ${data.CompareElement} (${data.CompareEnergy})</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg">
+                    <h3 class="text-lg font-bold text-purple-700 mb-2">ผลการวิเคราะห์</h3>
+                    <p><strong>ผลรวมเลขชีวิต:</strong> ${data.SumNum}</p>
+                    <p><strong>เลข Math:</strong> ${data.MathNum}</p>
+                    <p><strong>ความสัมพันธ์ธาตุ:</strong> ${data.CompareElementRelation}</p>
+                    <p><strong>ความหมาย:</strong> ${formatMeaning(data.RootNumberCompareMeaning)}</p>
+                </div>
+            </div>
+        `;
+    }
+    </script>
+</body>
+</html>
