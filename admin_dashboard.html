@@ -277,232 +277,237 @@
    <!-- Debug Logger -->
     <script src="js/debug-logger.js"></script>
     
-    <script>
-        // ฟังก์ชันตรวจสอบว่าผู้ใช้เป็น admin หรือไม่
-        async function checkAdminPermission() {
-            try {
-                console.log("🔍 Checking admin permission...");
-                
-                const supabase = await getSupabaseClient();
-                if (!supabase) {
-                    console.error("❌ Supabase client not available");
-                    return false;
-                }
-                
-                // ตรวจสอบ session
-                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-                if (sessionError) {
-                    console.error("❌ Session error:", sessionError);
-                    return false;
-                }
-                
-                if (!session || !session.user) {
-                    console.warn("⚠️ No user session found");
-                    return false;
-                }
-                
-                console.log("👤 User logged in:", session.user.email);
-                
-                // ดึงข้อมูลผู้ใช้จากตาราง users
-                const { data: userData, error: userError } = await supabase
-                    .from('users')
-                    .select('role, display_name, email')
-                    .eq('uid', session.user.id)
-                    .single();
-                
-                if (userError) {
-                    console.error("❌ Error fetching user data:", userError);
-                    
-                    // ลองใช้ fetchUserProfile จาก auth_status_manager.js
-                    try {
-                        if (typeof window.fetchUserProfile === 'function') {
-                            const profile = await window.fetchUserProfile(session.user);
-                            if (profile && profile.role === 'admin') {
-                                console.log("✅ Admin check passed via fetchUserProfile");
-                                return true;
-                            }
-                        }
-                    } catch (profileError) {
-                        console.error("❌ Error with fetchUserProfile:", profileError);
-                    }
-                    
-                    return false;
-                }
-                
-                console.log("📊 User role from database:", userData.role);
-                
-                // ตรวจสอบว่า role เป็น admin หรือไม่
-                const isAdmin = userData.role === 'admin' || 
-                               userData.role === 'administrator' || 
-                               userData.role === 'superadmin';
-                
-                if (isAdmin) {
-                    console.log("✅ User is admin:", userData.display_name || userData.email);
-                    // อัปเดตข้อมูลผู้ใช้ใน UI
-                    document.getElementById('adminName').textContent = userData.display_name || userData.email.split('@')[0];
-                    document.getElementById('adminBadge').innerHTML = `<i class="fas fa-crown mr-1"></i>Admin: ${userData.display_name || userData.email.split('@')[0]}`;
-                } else {
-                    console.log("❌ User is NOT admin. Role:", userData.role);
-                }
-                
-                return isAdmin;
-                
-            } catch (error) {
-                console.error("❌ Error in checkAdminPermission:", error);
+    <!-- แก้ไขส่วน script ใน admin_dashboard.html -->
+<script>
+    // ===============================================
+    // ฟังก์ชันตรวจสอบ admin permission (แบบเดียวกับ masterdata_grades_manager.html)
+    // ===============================================
+    async function checkAdminPermission() {
+        try {
+            console.log("🔍 Checking admin permission...");
+            
+            const supabase = await getSupabaseClient();
+            if (!supabase) {
+                console.error("❌ Supabase client not available");
                 return false;
             }
-        }
-        
-        // ฟังก์ชันโหลดสถิติ
-        async function loadAdminStats() {
-            try {
-                const supabase = await getSupabaseClient();
-                if (!supabase) return;
-                
-                // ดึงจำนวนผู้ใช้ทั้งหมด
-                const { count: totalUsers } = await supabase
-                    .from('users')
-                    .select('*', { count: 'exact', head: true });
-                
-                // ดึงจำนวน admin users
-                const { count: adminUsers } = await supabase
-                    .from('users')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('role', 'admin');
-                
-                // ดึงจำนวนภารกิจ
-                const { count: totalMissions } = await supabase
-                    .from('missions')
-                    .select('*', { count: 'exact', head: true });
-                
-                // อัปเดต UI
-                if (totalUsers !== null) document.getElementById('totalUsers').textContent = totalUsers;
-                if (adminUsers !== null) document.getElementById('adminUsers').textContent = adminUsers;
-                if (totalMissions !== null) document.getElementById('totalMissions').textContent = totalMissions;
-                
-            } catch (error) {
-                console.error("❌ Error loading admin stats:", error);
-            }
-        }
-        
-        // ฟังก์ชันแสดง/ซ่อนเนื้อหาตามสิทธิ์
-        async function checkAndDisplayContent() {
-            const isAdmin = await checkAdminPermission();
             
-            const permissionContainer = document.getElementById('permissionDeniedContainer');
-            const dashboardContainer = document.getElementById('adminDashboard');
+            // ตรวจสอบ session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) {
+                console.error("❌ Session error:", sessionError);
+                return false;
+            }
+            
+            if (!session || !session.user) {
+                console.warn("⚠️ No user session found");
+                return false;
+            }
+            
+            console.log("👤 User logged in:", session.user.email);
+            
+            // ใช้ fetchUserProfile จาก auth_status_manager.js
+            if (typeof window.fetchUserProfile !== 'function') {
+                console.error("❌ fetchUserProfile function not available");
+                return false;
+            }
+            
+            const profile = await window.fetchUserProfile(session.user);
+            console.log("📊 User profile:", profile);
+            
+            if (!profile) {
+                console.error("❌ Cannot fetch user profile");
+                return false;
+            }
+            
+            // ตรวจสอบว่า role เป็น admin หรือไม่
+            const isAdmin = profile.role === 'admin' || 
+                           profile.role === 'administrator' || 
+                           profile.role === 'superadmin';
             
             if (isAdmin) {
-                // แสดง admin dashboard
-                if (permissionContainer) permissionContainer.classList.add('hidden');
-                if (dashboardContainer) dashboardContainer.classList.remove('hidden');
-                
-                // โหลดข้อมูลเพิ่มเติม
-                await loadAdminStats();
-                
+                console.log("✅ Admin permission granted");
+                // อัปเดตข้อมูลผู้ใช้ใน UI
+                updateAdminUI(profile, session.user.email);
             } else {
-                // แสดงข้อความไม่มีสิทธิ์
-                if (permissionContainer) permissionContainer.classList.remove('hidden');
-                if (dashboardContainer) dashboardContainer.classList.add('hidden');
-                
-                // แสดง SweetAlert แจ้งเตือน
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'ไม่มีสิทธิ์เข้าถึง',
-                        text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
-                        confirmButtonText: 'กลับไปหน้าหลัก',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = 'index.html';
-                        }
-                    });
-                } else {
-                    // ถ้าไม่มี SweetAlert ให้ redirect ทันที
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 2000);
-                }
+                console.warn("⚠️ User is not an admin, role:", profile.role);
             }
+            
+            return isAdmin;
+            
+        } catch (error) {
+            console.error("❌ Error in checkAdminPermission:", error);
+            return false;
         }
-        
-        // ฟังก์ชันรีเฟรช
-        async function checkAdminAndRefresh() {
-            await checkAndDisplayContent();
-        }
-        
-        // ฟังก์ชันออกจากระบบ
-        async function logoutAdmin() {
-            try {
-                if (typeof handleLogout === 'function') {
-                    await handleLogout();
-                } else {
-                    const supabase = await getSupabaseClient();
-                    if (supabase) {
-                        await supabase.auth.signOut();
-                        window.location.href = 'login_supabase.html';
-                    }
-                }
-            } catch (error) {
-                console.error("❌ Logout error:", error);
-            }
-        }
-        
-        // ฟังก์ชัน placeholder สำหรับ features อื่นๆ
-        function showSystemLogs() {
-            Swal.fire({
-                icon: 'info',
-                title: 'System Logs',
-                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
-                confirmButtonText: 'ตกลง'
-            });
-        }
-        
-        function exportDatabase() {
-            Swal.fire({
-                icon: 'info',
-                title: 'Export Data',
-                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
-                confirmButtonText: 'ตกลง'
-            });
-        }
-        
-        function showSystemSettings() {
-            Swal.fire({
-                icon: 'info',
-                title: 'System Settings',
-                text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
-                confirmButtonText: 'ตกลง'
-            });
-        }
+    }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log("📄 Admin Dashboard page loaded");
+    // ฟังก์ชันอัปเดต UI สำหรับ admin
+    function updateAdminUI(profile, email) {
+        try {
+            const displayName = profile.display_name || 
+                               profile.name || 
+                               email.split('@')[0] || 
+                               'ผู้ดูแลระบบ';
             
-            // ตรวจสอบสิทธิ์และแสดงเนื้อหา
-            await checkAndDisplayContent();
+            document.getElementById('adminName').textContent = displayName;
+            document.getElementById('adminBadge').innerHTML = `<i class="fas fa-crown mr-1"></i>Admin: ${displayName}`;
             
-            // ตั้งค่า auth listener
-            try {
-                const supabase = await getSupabaseClient();
-                if (supabase && supabase.auth) {
-                    supabase.auth.onAuthStateChange(async (event, session) => {
-                        console.log(`🔄 Auth State Change: ${event}`);
-                        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                            // รอสักครู่ให้ state อัปเดต
-                            setTimeout(async () => {
-                                await checkAndDisplayContent();
-                            }, 500);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Error setting up auth listener:", error);
+            console.log("✅ Admin UI updated for:", displayName);
+        } catch (error) {
+            console.error("❌ Error updating admin UI:", error);
+        }
+    }
+
+    // ฟังก์ชันโหลดสถิติ
+    async function loadAdminStats() {
+        try {
+            const supabase = await getSupabaseClient();
+            if (!supabase) return;
+            
+            // ดึงจำนวนผู้ใช้ทั้งหมด
+            const { count: totalUsers } = await supabase
+                .from('users')
+                .select('*', { count: 'exact', head: true });
+            
+            // ดึงจำนวน admin users
+            const { count: adminUsers } = await supabase
+                .from('users')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'admin');
+            
+            // ดึงจำนวนภารกิจ
+            const { count: totalMissions } = await supabase
+                .from('missions')
+                .select('*', { count: 'exact', head: true });
+            
+            // อัปเดต UI
+            if (totalUsers !== null) document.getElementById('totalUsers').textContent = totalUsers;
+            if (adminUsers !== null) document.getElementById('adminUsers').textContent = adminUsers;
+            if (totalMissions !== null) document.getElementById('totalMissions').textContent = totalMissions;
+            
+        } catch (error) {
+            console.error("❌ Error loading admin stats:", error);
+        }
+    }
+    
+    // ฟังก์ชันแสดง/ซ่อนเนื้อหาตามสิทธิ์
+    async function checkAndDisplayContent() {
+        const isAdmin = await checkAdminPermission();
+        
+        const permissionContainer = document.getElementById('permissionDeniedContainer');
+        const dashboardContainer = document.getElementById('adminDashboard');
+        
+        if (isAdmin) {
+            // แสดง admin dashboard
+            if (permissionContainer) permissionContainer.classList.add('hidden');
+            if (dashboardContainer) dashboardContainer.classList.remove('hidden');
+            
+            // โหลดข้อมูลเพิ่มเติม
+            await loadAdminStats();
+            
+        } else {
+            // แสดงข้อความไม่มีสิทธิ์
+            if (permissionContainer) permissionContainer.classList.remove('hidden');
+            if (dashboardContainer) dashboardContainer.classList.add('hidden');
+            
+            // แสดง SweetAlert แจ้งเตือน
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีสิทธิ์เข้าถึง',
+                    text: 'หน้านี้จำกัดการเข้าถึงเฉพาะผู้ดูแลระบบเท่านั้น',
+                    confirmButtonText: 'กลับไปหน้าหลัก',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
+                // ถ้าไม่มี SweetAlert ให้ redirect ทันที
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
             }
+        }
+    }
+    
+    // ฟังก์ชันรีเฟรช
+    async function checkAdminAndRefresh() {
+        await checkAndDisplayContent();
+    }
+    
+    // ฟังก์ชันออกจากระบบ
+    async function logoutAdmin() {
+        try {
+            if (typeof handleLogout === 'function') {
+                await handleLogout();
+            } else {
+                const supabase = await getSupabaseClient();
+                if (supabase) {
+                    await supabase.auth.signOut();
+                    window.location.href = 'login_supabase.html';
+                }
+            }
+        } catch (error) {
+            console.error("❌ Logout error:", error);
+        }
+    }
+    
+    // ฟังก์ชัน placeholder สำหรับ features อื่นๆ
+    function showSystemLogs() {
+        Swal.fire({
+            icon: 'info',
+            title: 'System Logs',
+            text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+            confirmButtonText: 'ตกลง'
         });
-    </script>
+    }
+    
+    function exportDatabase() {
+        Swal.fire({
+            icon: 'info',
+            title: 'Export Data',
+            text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+            confirmButtonText: 'ตกลง'
+        });
+    }
+    
+    function showSystemSettings() {
+        Swal.fire({
+            icon: 'info',
+            title: 'System Settings',
+            text: 'ฟีเจอร์นี้กำลังอยู่ระหว่างการพัฒนา',
+            confirmButtonText: 'ตกลง'
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log("📄 Admin Dashboard page loaded");
+        
+        // ตรวจสอบสิทธิ์และแสดงเนื้อหา
+        await checkAndDisplayContent();
+        
+        // ตั้งค่า auth listener
+        try {
+            const supabase = await getSupabaseClient();
+            if (supabase && supabase.auth) {
+                supabase.auth.onAuthStateChange(async (event, session) => {
+                    console.log(`🔄 Auth State Change: ${event}`);
+                    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                        // รอสักครู่ให้ state อัปเดต
+                        setTimeout(async () => {
+                            await checkAndDisplayContent();
+                        }, 500);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Error setting up auth listener:", error);
+        }
+    });
+</script>
     
     <style>
         /* Custom styles */
