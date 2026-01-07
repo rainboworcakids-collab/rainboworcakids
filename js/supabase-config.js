@@ -87,29 +87,7 @@ async function ensureUserDocumentExists(user, logHandler = console) {
 
     try {
         console.log(`🔄 กำลังสร้าง/ตรวจสอบผู้ใช้: ${userEmail}`);
-        
-        // ตรวจสอบสถานะผู้ใช้ก่อน
-    const { data: status, error: statusError } = await supabaseClient.rpc('get_user_detailed_status', {
-      p_user_id: user_uid
-    });
-    
-    if (status && !status.is_active) {
-      console.warn(`⚠️ ผู้ใช้ถูกปิดใช้งาน: ${userEmail}`);
-      
-      // ส่งการแจ้งเตือนให้ผู้ดูแลระบบ
-      await supabaseClient
-        .from('admin_alerts')
-        .insert({
-          alert_type: 'deactivated_user_login_attempt',
-          user_id: user_uid,
-          message: `ผู้ใช้ที่ถูกปิดใช้งานพยายามล็อกอิน: ${userEmail}`,
-          severity: 'warning'
-        });
-      
-      return false;
-    }
-    
-        
+
         // ใช้ RPC function create_user_safe ที่มีอยู่แล้ว (returns boolean)
         const { data: result, error } = await supabaseClient.rpc('create_user_safe', {
             p_uid: user_uid,
