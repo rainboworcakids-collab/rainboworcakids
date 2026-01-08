@@ -204,14 +204,41 @@
 
     <!--  โหลด Debug Logger ก่อน -->
     <script src="js/debug-logger.js"></script>
+
+    <script src="js/auth_status_manager.js"></script>
     
     <!-- Psychomatrix JavaScript -->
-    <script src="js/Lucky_number.js?v=2.4"></script>
+    <script src="js/Lucky_number.js?v=2.85"></script>
     
     <!-- Inline JavaScript to populate select options immediately -->
     <!-- แก้ไข Inline JavaScript สำหรับตั้งค่า default -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log("🔐 Checking login status for profile page...");
+    
+        // ทดสอบว่าฟังก์ชันพร้อมใช้งานไหม
+        console.log("checkCurrentSession:", typeof checkCurrentSession);
+        console.log("checkSupabaseSessionAndNav:", typeof checkSupabaseSessionAndNav);
+        console.log("Swal:", typeof Swal);
+    
+        // ใช้ฟังก์ชันที่มีอยู่แล้ว
+        await checkSupabaseSessionAndNav();
+
+        // ตรวจสอบอีกครั้งว่า session มีอยู่จริง
+        const session = await checkCurrentSession();
+    
+        console.log("Session:", session);
+    
+        if (!session) {
+            console.log("No session found, redirecting to login...");
+        
+            // ลองใช้ alert แบบธรรมดาก่อน
+            alert('กรุณาล็อกอินก่อนเข้าถึงหน้านี้');
+            window.location.href = 'index.html';
+            return;
+        }
+        
+        
         // ============== ตั้งค่า Birth Date Default ==============
         const birthDaySelect = document.querySelector('select[name="birth_day"]');
         const birthMonthSelect = document.querySelector('select[name="birth_month"]');
