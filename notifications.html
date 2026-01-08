@@ -288,6 +288,30 @@
     <!-- Notifications Page Specific Script -->
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+                console.log("🔐 Checking login status for profile page...");
+    
+    // ทดสอบว่าฟังก์ชันพร้อมใช้งานไหม
+    console.log("checkCurrentSession:", typeof checkCurrentSession);
+    console.log("checkSupabaseSessionAndNav:", typeof checkSupabaseSessionAndNav);
+    console.log("Swal:", typeof Swal);
+    
+    // ใช้ฟังก์ชันที่มีอยู่แล้ว
+    await checkSupabaseSessionAndNav();
+
+    // ตรวจสอบอีกครั้งว่า session มีอยู่จริง
+    const session = await checkCurrentSession();
+    
+    console.log("Session:", session);
+    
+    if (!session) {
+        console.log("No session found, redirecting to login...");
+        
+        // ลองใช้ alert แบบธรรมดาก่อน
+        alert('กรุณาล็อกอินก่อนเข้าถึงหน้านี้');
+        window.location.href = 'index.html';
+        return;
+    }
+            
             console.log("📄 Notifications page loaded");
             
             // ฟังก์ชันสำหรับดึงและแสดงรายการแจ้งเตือน
