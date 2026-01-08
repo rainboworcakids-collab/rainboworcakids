@@ -1,5 +1,5 @@
 // ===============================================
-// nav.js (V9.1 - Pure Render Mode with Admin Menu)
+// nav.js (V9.2 - เพิ่มเมนู Psychomatrix)
 // ===============================================
 
 function createAndInjectNavigation() {
@@ -22,6 +22,9 @@ function createAndInjectNavigation() {
                 <a href="index.html" class="text-white hover:text-blue-200 font-medium">
                     <i class="fas fa-home mr-1"></i>หน้าหลัก
                 </a>
+                <a href="psychomatrix_hub.html" class="text-white hover:text-blue-200 font-medium">
+                    <i class="fas fa-star-of-life mr-1"></i>Psychomatrix
+                </a>
                 <a href="missions.html" class="text-white hover:text-blue-200 font-medium">
                     <i class="fas fa-list-alt mr-1"></i>ภารกิจ
                 </a>
@@ -36,7 +39,7 @@ function createAndInjectNavigation() {
                     <span class="notification-badge hidden">0</span>
                 </a>
 
-                <!-- ✅ Admin Dashboard (Desktop) - ซ่อนไว้ก่อน -->
+                <!-- ✅ Admin Dashboard (Desktop) -->
                 <a href="admin_dashboard.html" id="admin-dashboard-desktop" class="text-yellow-300 hover:text-yellow-200 font-medium hidden">
                     <i class="fas fa-shield-alt mr-1"></i>Admin Dashboard
                 </a>
@@ -59,6 +62,9 @@ function createAndInjectNavigation() {
                 <a href="index.html" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
                     <i class="fas fa-home mr-2"></i>หน้าหลัก
                 </a>
+                <a href="psychomatrix_hub.html" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
+                    <i class="fas fa-star-of-life mr-2"></i>Psychomatrix
+                </a>
                 <a href="missions.html" class="block text-white hover:bg-blue-700 px-3 py-2 rounded-md">
                     <i class="fas fa-list-alt mr-2"></i>ภารกิจ
                 </a>
@@ -73,7 +79,7 @@ function createAndInjectNavigation() {
                     <span class="notification-badge hidden">0</span>
                 </a>
                 
-                <!-- ✅ Admin Dashboard (Mobile) - ซ่อนไว้ก่อน -->
+                <!-- ✅ Admin Dashboard (Mobile) -->
                 <a href="admin_dashboard.html" id="admin-dashboard-mobile" class="block text-yellow-300 hover:bg-blue-700 px-3 py-2 rounded-md hidden">
                     <i class="fas fa-shield-alt mr-2"></i>Admin Dashboard
                 </a>
@@ -86,7 +92,7 @@ function createAndInjectNavigation() {
     `;
 
     document.body.insertBefore(navBar, document.body.firstChild);
-    console.log("✅ Navigation created with admin menu items (hidden).");
+    console.log("✅ Navigation created with Psychomatrix menu item.");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
