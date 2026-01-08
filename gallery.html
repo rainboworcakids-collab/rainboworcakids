@@ -1113,6 +1113,32 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log("🔐 Checking login status for profile page...");
+    
+            // ทดสอบว่าฟังก์ชันพร้อมใช้งานไหม
+            console.log("checkCurrentSession:", typeof checkCurrentSession);
+            console.log("checkSupabaseSessionAndNav:", typeof checkSupabaseSessionAndNav);
+            console.log("Swal:", typeof Swal);
+    
+            // ใช้ฟังก์ชันที่มีอยู่แล้ว
+            await checkSupabaseSessionAndNav();
+
+            // ตรวจสอบอีกครั้งว่า session มีอยู่จริง
+            const session = await checkCurrentSession();
+    
+            console.log("Session:", session);
+    
+            if (!session) {
+                console.log("No session found, redirecting to login...");
+        
+                // ลองใช้ alert แบบธรรมดาก่อน
+                alert('กรุณาล็อกอินก่อนเข้าถึงหน้านี้');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            
+            
             // เริ่มต้น debug logger (จะเริ่มต้นอัตโนมัติอยู่แล้ว)
             // แต่สามารถตั้งค่าตัวเลือกเพิ่มเติมได้
             window.DebugLogger.init({
