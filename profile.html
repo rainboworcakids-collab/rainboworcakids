@@ -212,6 +212,7 @@
     <!-- Individual Modules (สามารถเพิ่มได้ตามต้องการ) -->
     <script src="js/modules/user-info-module.js"></script>
     
+   
     <!-- Custom Script for Profile Page -->
     <script>
         // Module status update function
@@ -249,7 +250,42 @@
         }
         
         // Initialize module status
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log("🔐 Checking login status for profile page...");
+
+            // ใช้ฟังก์ชันที่มีอยู่แล้ว
+            await checkSupabaseSessionAndNav();
+
+            // ตรวจสอบอีกครั้งว่า session มีอยู่จริง
+            const session = await checkCurrentSession();
+
+            if (!session) {
+                // ตรวจสอบว่า Swal พร้อมใช้งานหรือไม่
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'กรุณาล็อกอินก่อน',
+                        text: 'หน้านี้ต้องการการล็อกอินเพื่อเข้าถึง กรุณาล็อกอินก่อนดำเนินการต่อ',
+                        confirmButtonText: 'ไปหน้าล็อกอิน',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = 'index.html';
+                    }
+                });
+            } else {
+                // ถ้าไม่มี SweetAlert2 ให้ใช้ alert แบบปกติ
+                alert('กรุณาล็อกอินก่อนเข้าถึงหน้านี้');
+                window.location.href = 'index.html';
+            }
+            return;
+        }
+
+        console.log("✅ Login verified, loading profile page content...");
+  
+
+            
             // ตั้งค่าสถานะเริ่มต้น
             updateModuleStatus('auth', 'loading', 'กำลังตรวจสอบสิทธิ์...');
             updateModuleStatus('profile', 'loading', 'รอดำเนินการ...');
