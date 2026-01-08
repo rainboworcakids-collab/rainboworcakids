@@ -10,7 +10,8 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.0.0"></script>
@@ -18,6 +19,9 @@
     <!-- Psychomatrix Main CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     <link rel="stylesheet" href="css/result-style.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
@@ -36,11 +40,6 @@
 </head>
 <body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
 
-    <!-- Version Badge -->
-    <div class="version-badge">
-        v8.8-Complete-Integration
-    </div>
-    
     <!-- Tab Buttons -->
     <div class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-rounded tw-shadow">
         <button class="tablink" onclick="switchTab('Main', this)" id="defaultOpen">Main</button>
@@ -95,58 +94,72 @@
         <div id="explainedContent" class="explained-content"></div>
     </div>
 
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth_status_manager.js"></script>
+
     <!-- JavaScript Files -->
     <script src="js/pythagorean.js?v=10.10"></script>
     <script src="js/pinnacle.js?v=1.00"></script>
     <script src="js/result.js?v=11.00"></script>
 
+
     <script src="js/debug-logger.js"></script>
 
-
-<!-- แก้ไข version badge: -->
-<div class="version-badge">
-    v9.4-Clean-Combined-Display
-</div>
-
-    <!-- ทดสอบการทำงานของปุ่ม -->
+    <!-- เพิ่มใน result.html ก่อน </body> -->
     <script>
+        // สำหรับหน้า result.html ให้ใช้ navigation ที่ต่างออกไป
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log("🔐 Checking login status for profile page...");
+    
+            // ทดสอบว่าฟังก์ชันพร้อมใช้งานไหม
+            console.log("checkCurrentSession:", typeof checkCurrentSession);
+            console.log("checkSupabaseSessionAndNav:", typeof checkSupabaseSessionAndNav);
+            console.log("Swal:", typeof Swal);
+    
+            // ใช้ฟังก์ชันที่มีอยู่แล้ว
+            await checkSupabaseSessionAndNav();
+
+            // ตรวจสอบอีกครั้งว่า session มีอยู่จริง
+            const session = await checkCurrentSession();
+    
+            console.log("Session:", session);
+    
+            if (!session) {
+                console.log("No session found, redirecting to login...");
         
-        // ตรวจสอบเมื่อโหลดหน้าเสร็จ
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ DEBUG: DOM fully loaded');
+                // ลองใช้ alert แบบธรรมดาก่อน
+                alert('กรุณาล็อกอินก่อนเข้าถึงหน้านี้');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // ตรวจสอบว่าเป็นหน้า result.html หรือไม่
+            if (window.location.pathname.includes('result.html')) {
+                const customNavHTML = `
+                    <nav class="tw-bg-gradient-to-r tw-from-blue-800 tw-to-purple-800 tw-p-4 tw-shadow-md">
+                        <div class="tw-container tw-mx-auto tw-flex tw-justify-between tw-items-center">
+                            <a href="Psychomatrix.html" class="tw-text-white tw-font-bold tw-text-lg hover:tw-text-blue-200">
+                                <img src="images/PsychomatixAnalize.png" alt="Logo" class="tw-h-8 tw-w-8 tw-inline tw-mr-2">
+                                Psychomatrix Analysis
+                            </a>
+                            <div class="tw-flex tw-space-x-4">
+                                <a href="psychomatrix_hub.html" class="tw-text-white hover:tw-text-blue-200">
+                                    <i class="fas fa-home tw-mr-1"></i>Home Psychomatrix
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                `;
             
-            // ตรวจสอบอีกครั้งหลังจากโหลดเสร็จ
-            setTimeout(() => {
-                console.log('🔍 DEBUG: Final script check:');
-                console.log('  - window.pythagorean:', window.pythagorean);
-                console.log('  - window.rootNumberData:', window.rootNumberData);
-                console.log('  - Type of showPythagoreanSquare:', 
-                    window.pythagorean ? typeof window.pythagorean.showPythagoreanSquare : 'N/A');
-                
-                // ตรวจสอบว่ามีปุ่มในหน้าไหม
-                const resultContainer = document.getElementById('resultsContainer');
-                if (resultContainer && resultContainer.innerHTML.includes('Pythagorean Square')) {
-                    console.log('✅ DEBUG: Pythagorean buttons found in HTML');
-                } else {
-                    console.log('❌ DEBUG: No Pythagorean buttons found in HTML');
-                }
-            }, 2000);
+                // แทรก navigation ที่ส่วนบนของ body
+                document.body.insertAdjacentHTML('afterbegin', customNavHTML);
+            
+                // ปรับ margin ของ content ด้านล่าง
+                document.querySelector('.tabcontent').style.marginTop = '20px';
+            }
         });
     </script>
 
-
-<script>
-// เพิ่มฟังก์ชัน debug
-function showDebugInfo() {
-    const debugInfo = `
-        sessionStorage psychomatrixResult: ${sessionStorage.getItem('psychomatrixResult')?.substring(0, 200)}...
-        <br>window.analysisData: ${JSON.stringify(window.analysisData || {}).substring(0, 200)}...
-        <br>pinnacleData: ${JSON.stringify(window.pinnacleData || {})}
-    `;
-    document.getElementById('debugInfo').innerHTML = debugInfo;
-    document.getElementById('debugInfo').classList.remove('tw-hidden');
-}
-</script>
 
 </body>
 </html>
