@@ -1,5 +1,5 @@
 // ===============================================
-// js/auth_status_manager.js (Version 7.1 - Fixed)
+// js/auth_status_manager.js (Version 7.2 - Fixed)
 // ===============================================
 
 console.log("📁 Auth Status Manager Loaded - Fixed Version");
@@ -332,6 +332,7 @@ async function checkSupabaseSessionAndNav() {
     }
 }
 
+/*
 async function handleLogout() {
     try {
         const supabase = await getSupabaseClient();
@@ -354,6 +355,67 @@ async function handleLogout() {
     } catch (error) {
         console.error(`❌ Logout failed: ${error.message}`);
         alert('ออกจากระบบไม่สำเร็จ: ' + error.message);
+    }
+}
+*/
+
+// เพิ่มฟังก์ชัน cleanup function
+function cleanupAuthData() {
+    try {
+        // Clear all auth-related localStorage
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+            if (key.includes('supabase') || key.includes('auth')) {
+                localStorage.removeItem(key);
+            }
+        });
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear cookies related to auth
+        document.cookie.split(";").forEach(function(c) {
+            document.cookie = c.replace(/^ +/, "")
+                .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+        
+        console.log('🧹 Cleaned up all auth data');
+        return true;
+    } catch (error) {
+        console.error('Cleanup error:', error);
+        return false;
+    }
+}
+
+async function handleLogout() {
+    try {
+        console.log('🔄 Attempting to log out...');
+        
+        const supabase = await getSupabaseClient();
+        
+        if (supabase) {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) console.warn('SignOut warning:', error.message);
+            } catch (signOutError) {
+                console.warn('SignOut failed, proceeding with cleanup:', signOutError.message);
+            }
+        }
+        
+        // ทำ cleanup อย่างละเอียด
+        cleanupAuthData();
+        userProfileCache = {};
+        
+        console.log('✅ Logout completed. Redirecting...');
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error(`❌ Logout failed: ${error.message}`);
+        
+        // Fallback redirect
+        cleanupAuthData();
+        userProfileCache = {};
+        window.location.href = 'index.html';
     }
 }
 
