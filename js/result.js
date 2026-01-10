@@ -296,11 +296,19 @@ function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
     if (!lifePathData) {
         return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
     }
+
+    let html = `
+        <div class="life-path-details tw-mt-4 tw-p-4 tw-bg-gray-50 tw-rounded-lg" 
+             style="display: block !important; visibility: visible !important;">
+            <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-3">Life Path Number ${lifePathNumber} Details</h3>
+    `;
     
+    /*
     let html = `
         <div class="life-path-details tw-mt-4 tw-p-4 tw-bg-gray-50 tw-rounded-lg">
             <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-3">Life Path Number ${lifePathNumber} Details</h3>
     `;
+    */
     
     if (lifePathData.ShortDefinition) {
         html += `
