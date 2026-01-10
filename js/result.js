@@ -1,5 +1,5 @@
-// result.js - แก้ไขปัญหาค่า option
-console.log('🚀 DEBUG: result.js loaded - v11-Option-Fixed');
+// result.js - เวอร์ชันอัปเดต พร้อมโหลดจาก Supabase Storage
+console.log('🚀 DEBUG: result.js loaded - v12-Supabase-Storage');
 
 // Configuration
 const currentPath = window.location.pathname;
@@ -7,83 +7,47 @@ const folderPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
 const CONTENTS_DIR = 'PsychomatrixContents';
 const BASE_PATH = `${folderPath}/${CONTENTS_DIR}`;
 
+// ✅ Supabase Storage URLs
+const SUPABASE_STORAGE_URL = 'https://oibubvhuiuurkxhnefsw.supabase.co/storage/v1/object/public/data';
+const ROOT_NUMBER_URL = `${SUPABASE_STORAGE_URL}/RootNumber.json`;
+const LIFE_PATH_PROPERTY_URL = `${SUPABASE_STORAGE_URL}/LifePathProperty.json`;
+const PINNACLE_CYCLE_URL = `${SUPABASE_STORAGE_URL}/PinnacleCycle.json`;
+
 console.log('📍 DEBUG: BASE_PATH:', BASE_PATH);
+console.log('📍 DEBUG: Supabase URLs:', { ROOT_NUMBER_URL, LIFE_PATH_PROPERTY_URL, PINNACLE_CYCLE_URL });
 
 // Global variables
 let analysisData = null;
 let pinnacleData = null;
 let lifePathProperties = null;
 let rootNumberData = null;
-let currentOption = 'BD'; // Default value
+let currentOption = 'BD';
 
 function setCalculationOption() {
     console.log('🔧 DEBUG: Setting calculation option...');
     
-    // อ่านจาก URL parameter เป็นหลัก
     const urlParams = new URLSearchParams(window.location.search);
     const optionFromURL = urlParams.get('option');
     
-    // ถ้ามีจาก URL ให้ใช้
     if (optionFromURL) {
         currentOption = optionFromURL;
         console.log(`✅ DEBUG: Using option from URL parameter: ${currentOption}`);
-    } 
-    // ถ้าไม่มีจาก URL ลองอ่านจาก sessionStorage
-    else {
+    } else {
         try {
             const optionFromStorage = sessionStorage.getItem('psychomatrixOption');
             if (optionFromStorage) {
                 currentOption = optionFromStorage;
                 console.log(`✅ DEBUG: Using option from sessionStorage: ${currentOption}`);
             } else {
-                currentOption = 'BD'; // Default
+                currentOption = 'BD';
                 console.log(`⚠️ DEBUG: No option found, using default: ${currentOption}`);
             }
         } catch (error) {
             console.error('❌ DEBUG: Error reading sessionStorage:', error);
             currentOption = 'BD';
         }
-    }    
-    
-    // 2. จาก sessionStorage ที่เก็บจากหน้า Psychomatrix.html
-    const optionFromStorage = sessionStorage.getItem('psychomatrixOption');
-    
-    // 3. จาก API response (ต่ำสุด)
-    let optionFromAPI = null;
-    const resultData = sessionStorage.getItem('psychomatrixResult');
-    if (resultData) {
-        try {
-            const parsedData = JSON.parse(resultData);
-            optionFromAPI = parsedData.option;
-        } catch (error) {
-            console.error('❌ DEBUG: Error parsing result data:', error);
-        }
     }
     
-    // กำหนดค่า option (ลำดับความสำคัญ: URL > Storage > API > Default)
-    if (optionFromURL) {
-        currentOption = optionFromURL;
-        console.log(`✅ DEBUG: Using option from URL: ${currentOption}`);
-    } else if (optionFromStorage) {
-        currentOption = optionFromStorage;
-        console.log(`✅ DEBUG: Using option from sessionStorage: ${currentOption}`);
-    } else if (optionFromAPI) {
-        currentOption = optionFromAPI;
-        console.log(`✅ DEBUG: Using option from API: ${currentOption}`);
-    } else {
-        currentOption = 'BD'; // Default
-        console.log(`⚠️ DEBUG: No option found, using default: ${currentOption}`);
-    }
-    
-    // Debug ข้อมูลทุกแหล่ง
-    console.log('📊 DEBUG: Option sources:', {
-        URL: optionFromURL,
-        sessionStorage: optionFromStorage,
-        API: optionFromAPI,
-        Final: currentOption
-    });
-    
-    // ตั้งค่าใน pythagorean module ถ้ามี
     if (window.pythagorean && window.pythagorean.setCalculationOption) {
         window.pythagorean.setCalculationOption(currentOption);
     }
@@ -94,37 +58,31 @@ function setCalculationOption() {
 
 // ===== CORE FUNCTIONS =====
 
-// Tab switching function
 function switchTab(tabName, buttonElement) {
     console.log('🔧 DEBUG: Switching to tab:', tabName);
     
-    // Hide all tab content
     const tabContents = document.querySelectorAll('.tabcontent');
     tabContents.forEach(tab => {
         tab.classList.remove('active');
     });
     
-    // Reset all tab buttons
     const tabButtons = document.querySelectorAll('.tablink');
     tabButtons.forEach(btn => {
         btn.style.backgroundColor = "";
         btn.style.color = "#aaa";
     });
     
-    // Show selected tab
     const selectedTab = document.getElementById(tabName);
     if (selectedTab) {
         selectedTab.classList.add('active');
     }
     
-    // Style active button
     if (buttonElement) {
         buttonElement.style.backgroundColor = '#f1f2ff';
         buttonElement.style.color = '#00f';
     }
 }
 
-// Toggle debug info
 function toggleDebugInfo() {
     const debugInfo = document.getElementById('debugInfo');
     if (debugInfo) {
@@ -132,38 +90,30 @@ function toggleDebugInfo() {
     }
 }
 
-// Initialize page
 function initializePage() {
     console.log('🌐 DEBUG: Initializing page...');
     
-    // ตั้งค่า option ก่อน
     currentOption = setCalculationOption();
     
-    // Check for data in sessionStorage
     const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
     console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
     
-    if (psychomatrixResult) {
-        console.log('🔍 DEBUG: Data length:', psychomatrixResult.length);
-    }
-    
-    // Open default tab
     setTimeout(() => {
         const defaultOpenButton = document.getElementById("defaultOpen");
         if (defaultOpenButton) {
             defaultOpenButton.click();
         }
         
-        // Load and display results
         setTimeout(() => {
             loadAndDisplayResults();
         }, 100);
     }, 50);
 }
 
-// Load RootNumber.json
+// ==================== โหลดข้อมูลจาก Supabase Storage ====================
+
 async function loadRootNumberData() {
-    console.log('📦 DEBUG: Loading RootNumber.json...');
+    console.log('📦 DEBUG: Loading RootNumber.json from Supabase Storage...');
     
     if (window.rootNumberData) {
         console.log('✅ DEBUG: RootNumber.json already loaded');
@@ -171,47 +121,35 @@ async function loadRootNumberData() {
     }
     
     try {
-        // ลองหลาย path
-        const possiblePaths = [
-            'data/RootNumber.json',
-            '../data/RootNumber.json',
-            './data/RootNumber.json',
-            `${folderPath}/data/RootNumber.json`
-        ];
+        console.log(`🔄 DEBUG: Loading from: ${ROOT_NUMBER_URL}`);
+        const response = await fetch(ROOT_NUMBER_URL, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }
+        });
         
-        let loadedData = null;
-        for (const path of possiblePaths) {
-            try {
-                const response = await fetch(path);
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log(`✅ DEBUG: Loaded RootNumber.json from: ${path}`);
-                    loadedData = data;
-                    break;
-                }
-            } catch (error) {
-                console.log(`❌ DEBUG: Failed to load from ${path}:`, error.message);
-                continue;
-            }
-        }
-        
-        if (loadedData) {
-            window.rootNumberData = loadedData;
-            rootNumberData = loadedData;
-            return loadedData;
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`✅ DEBUG: Loaded RootNumber.json from Supabase Storage`);
+            window.rootNumberData = data;
+            rootNumberData = data;
+            return data;
         } else {
-            console.error('❌ DEBUG: Failed to load RootNumber.json from all paths');
-            return null;
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
         console.error('❌ DEBUG: Error loading RootNumber.json:', error);
-        return null;
+        const fallbackData = { 
+            message: "ไม่สามารถโหลด RootNumber.json ได้",
+            error: error.message,
+            fallback: true 
+        };
+        window.rootNumberData = fallbackData;
+        return fallbackData;
     }
 }
 
-// Load LifePathProperty.json
 async function loadLifePathProperties() {
-    console.log('📦 DEBUG: Loading LifePathProperty.json...');
+    console.log('📦 DEBUG: Loading LifePathProperty.json from Supabase Storage...');
     
     if (window.lifePathProperties) {
         console.log('✅ DEBUG: LifePathProperty.json already loaded');
@@ -219,44 +157,33 @@ async function loadLifePathProperties() {
     }
     
     try {
-        const possiblePaths = [
-            'data/LifePathProperty.json',
-            '../data/LifePathProperty.json',
-            './data/LifePathProperty.json',
-            `${folderPath}/data/LifePathProperty.json`
-        ];
+        console.log(`🔄 DEBUG: Loading from: ${LIFE_PATH_PROPERTY_URL}`);
+        const response = await fetch(LIFE_PATH_PROPERTY_URL, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }
+        });
         
-        let loadedData = null;
-        for (const path of possiblePaths) {
-            try {
-                const response = await fetch(path);
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log(`✅ DEBUG: Loaded LifePathProperty.json from: ${path}`);
-                    loadedData = data;
-                    break;
-                }
-            } catch (error) {
-                console.log(`❌ DEBUG: Failed to load from ${path}:`, error.message);
-                continue;
-            }
-        }
-        
-        if (loadedData) {
-            window.lifePathProperties = loadedData;
-            lifePathProperties = loadedData;
-            return loadedData;
+        if (response.ok) {
+            const data = await response.json();
+            console.log(`✅ DEBUG: Loaded LifePathProperty.json from Supabase Storage`);
+            window.lifePathProperties = data;
+            lifePathProperties = data;
+            return data;
         } else {
-            console.error('❌ DEBUG: Failed to load LifePathProperty.json from all paths');
-            return null;
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
         console.error('❌ DEBUG: Error loading LifePathProperty.json:', error);
-        return null;
+        const fallbackData = { 
+            message: "ไม่สามารถโหลด LifePathProperty.json ได้",
+            error: error.message,
+            fallback: true 
+        };
+        window.lifePathProperties = fallbackData;
+        return fallbackData;
     }
 }
 
-// Get life path details
 function getLifePathDetails(lifePathNumber) {
     console.log("🔍 DEBUG: getLifePathDetails() for number:", lifePathNumber);
     
@@ -267,7 +194,6 @@ function getLifePathDetails(lifePathNumber) {
     
     const targetId = lifePathNumber.toString();
     
-    // Check different possible structures
     if (lifePathProperties.LifePath && Array.isArray(lifePathProperties.LifePath)) {
         const foundItem = lifePathProperties.LifePath.find(item => item && item.ID === targetId);
         if (foundItem) {
@@ -276,7 +202,6 @@ function getLifePathDetails(lifePathNumber) {
         }
     }
     
-    // Try direct array
     if (Array.isArray(lifePathProperties)) {
         const foundItem = lifePathProperties.find(item => item && item.ID === targetId);
         if (foundItem) {
@@ -289,14 +214,14 @@ function getLifePathDetails(lifePathNumber) {
     return null;
 }
 
-// Create life path details HTML
 function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
     console.log('🎨 DEBUG: Creating life path details HTML');
     
     if (!lifePathData) {
         return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
     }
-
+    
+    
     let html = `
         <div class="life-path-details tw-mt-4 tw-p-4 tw-bg-gray-50 tw-rounded-lg" 
              style="display: block !important; visibility: visible !important;">
@@ -342,7 +267,6 @@ function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
     return html;
 }
 
-// Convert name to number string (fallback function)
 function convertNameToNumberStringFallback(name) {
     console.log('🔤 DEBUG: Converting name to numbers (fallback):', name);
     
@@ -391,13 +315,11 @@ function convertNameToNumberStringFallback(name) {
     return numberString;
 }
 
-// Create number button
 function createNumberButton(number, category, actualNumber) {
     if (number === undefined || number === null || number === '') {
         return `<div class="number-button empty">-</div>`;
     }
     
-    // Filename mapping
     let filename = '';
     switch(category) {
         case 'Destiny':
@@ -407,7 +329,7 @@ function createNumberButton(number, category, actualNumber) {
             filename = `LifePathNumber${number}.html`;
             break;
         case 'Karmic':
-            filename = ``; // No specific page for Karmic
+            filename = ``;
             break;
         case 'LifeLesson':
             filename = `KarmicLesson${number}.html`;
@@ -430,7 +352,6 @@ function createNumberButton(number, category, actualNumber) {
     }
 }
 
-// Load explained content
 function loadExplainedContent(url, category, number) {
     console.log(`🔄 DEBUG: Loading ${category} ${number} from: ${url}`);
     
@@ -471,7 +392,6 @@ function loadExplainedContent(url, category, number) {
         .then(html => {
             console.log(`✅ DEBUG: Success loading ${url}`);
             
-            // Fix relative paths
             const fixedHtml = html.replace(
                 /(src|href)=["']([^"']+)["']/g,
                 (match, attr, path) => {
@@ -512,70 +432,52 @@ function loadExplainedContent(url, category, number) {
         });
 }
 
-// Load Pinnacle
+// โหลด Pinnacle Cycle
 async function loadPinnacle() {
-  console.log('📖 DEBUG: Loading Pinnacle Cycle via Edge Function');
-  
-  const explainedContent = document.getElementById('explainedContent');
-  const explainedButton = document.querySelector('.tablink:nth-child(2)');
-  
-  if (!explainedContent || !explainedButton) {
-    console.error('❌ DEBUG: Explained content or button not found');
-    return;
-  }
-  
-  // Show loading
-  explainedContent.innerHTML = `
-    <div class="tw-text-center tw-py-8">
-      <div class="spinner"></div>
-      <p class="tw-mt-4 tw-text-gray-600">กำลังคำนวณ Pinnacle Cycle...</p>
-    </div>
-  `;
-  
-  switchTab('Explained', explainedButton);
-  
-  try {
-    // Check if pinnacle module is loaded
-    if (!window.pinnacle) {
-      throw new Error('Pinnacle module not loaded');
+    console.log('📖 DEBUG: Loading Pinnacle Cycle...');
+    
+    const explainedContent = document.getElementById('explainedContent');
+    const explainedButton = document.querySelector('.tablink:nth-child(2)');
+    
+    if (!explainedContent || !explainedButton) {
+        console.error('❌ DEBUG: Explained content or button not found');
+        return;
     }
     
-    // Initialize and load pinnacle data
-    const pinnacleResult = await window.pinnacle.initPinnacleInResult();
-    
-    // Display the results
-    explainedContent.innerHTML = pinnacleResult.html;
-    
-    // Add the graphs container
-    if (pinnacleResult.graphsContainer) {
-      const graphsSection = explainedContent.querySelector('#pinnacleGraphsContainer');
-      if (graphsSection) {
-        graphsSection.replaceWith(pinnacleResult.graphsContainer);
-      } else {
-        explainedContent.appendChild(pinnacleResult.graphsContainer);
-      }
-    }
-    
-    console.log('✅ Pinnacle loaded successfully');
-    
-  } catch (error) {
-    console.error('❌ Error loading pinnacle:', error);
     explainedContent.innerHTML = `
-      <div class="tw-text-center tw-py-8 tw-text-red-500">
-        <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
-        <p class="tw-font-bold">Cannot load Pinnacle Cycle</p>
-        <p class="tw-text-sm">${error.message}</p>
-      </div>
+        <div class="tw-text-center tw-py-8">
+            <div class="spinner"></div>
+            <p class="tw-mt-4 tw-text-gray-600">กำลังโหลด Pinnacle Cycle...</p>
+        </div>
     `;
-  }
+    
+    switchTab('Explained', explainedButton);
+    
+    try {
+        if (window.pinnacle && typeof window.pinnacle.showPinnacleCycle === 'function') {
+            await window.pinnacle.showPinnacleCycle(0);
+        } else {
+            throw new Error('Pinnacle module not available');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading pinnacle:', error);
+        explainedContent.innerHTML = `
+            <div class="tw-text-center tw-py-8 tw-text-red-500">
+                <i class="fas fa-exclamation-triangle tw-text-3xl tw-mb-4"></i>
+                <p class="tw-font-bold">ไม่สามารถโหลด Pinnacle Cycle</p>
+                <p class="tw-text-sm">${error.message}</p>
+                <button onclick="window.location.reload()" class="tw-mt-4 tw-bg-blue-500 tw-text-white tw-py-2 tw-px-4 tw-rounded">
+                    โหลดหน้าใหม่
+                </button>
+            </div>
+        `;
+    }
 }
 
-
-// Create result section
 function createResultSection(result, index) {
     console.log('🎨 DEBUG: Creating result section:', index);
     console.log('🎨 DEBUG: Result type:', result.type);
-    console.log('🎨 DEBUG: Result data:', result.data);
     
     const type = result.type || 'unknown';
     const title = result.title || `Result ${index + 1}`;
@@ -602,25 +504,21 @@ function createResultSection(result, index) {
         }
     }
     
-    // แยกข้อมูลสำหรับ pinnacle ตาม type
     if (type === 'birth-date' && data.birth_date) {
-        // แยกส่วนวันที่และเวลา
         const birthDateStr = data.birth_date;
         let birthDay = '', birthMonth = '', birthYear = '';
         let birthHour = 0, birthMinute = 0;
         
         if (birthDateStr && birthDateStr.includes('/')) {
-            // แยกชั่วโมงนาทีถ้ามี
             const timeMatch = birthDateStr.match(/(\d{2}):(\d{2})/);
             if (timeMatch) {
                 birthHour = parseInt(timeMatch[1]);
                 birthMinute = parseInt(timeMatch[2]);
             }
             
-            // แยกวันที่
             const dateParts = birthDateStr.split(' ');
             if (dateParts.length >= 2) {
-                const datePart = dateParts[1]; // "DD/MM/YYYY"
+                const datePart = dateParts[1];
                 const [day, month, year] = datePart.split('/').map(Number);
                 birthDay = day.toString().padStart(2, '0');
                 birthMonth = month.toString().padStart(2, '0');
@@ -628,7 +526,6 @@ function createResultSection(result, index) {
             }
         }
         
-        // เก็บข้อมูล pinnacle
         pinnacleData = {
             lifePathNumber: data.life_path_number || data.lifePath || lifePathNum,
             birth_date: data.birth_date,
@@ -640,13 +537,16 @@ function createResultSection(result, index) {
             destiny_number: data.destiny_number || data.destiny
         };
         
-        console.log('📊 DEBUG: Pinnacle data extracted:', pinnacleData);
+        // เก็บใน sessionStorage
+        sessionStorage.setItem('pinnacleData', JSON.stringify(pinnacleData));
+    
+        // เก็บใน window ด้วย
+        window.pinnacleData = pinnacleData;
+        console.log('📊 DEBUG: Pinnacle data extracted:', window.pinnacleData);
     }
     
-    // สร้างปุ่มตาม option
-    let buttonsHTML = ''; // ประกาศตัวแปรที่นี่ก่อนใช้
+    let buttonsHTML = '';
     
-    // ปุ่ม Pythagorean Square (แสดงเสมอ)
     buttonsHTML += `
         <button onclick="window.pythagorean.showPythagoreanSquare(${index})" 
                 class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
@@ -654,7 +554,6 @@ function createResultSection(result, index) {
         </button>
     `;
     
-    // ปุ่ม Pinnacle Cycle (แสดงเฉพาะ birth-date type)
     if (type === 'birth-date' && pinnacleData) {
         buttonsHTML += `
             <button onclick="window.pinnacle.showPinnacleCycle(${index})" 
@@ -664,16 +563,13 @@ function createResultSection(result, index) {
         `;
     }
     
-    // ปุ่ม Combined (แสดงตาม option)
     let showCombinedButton = false;
     let combinedButtonText = '';
     
-    // ตรวจสอบเงื่อนไขตาม option
     switch(currentOption) {
         case 'BD':
         case 'IDC':
         case 'FullName':
-            // ไม่แสดงปุ่ม combined
             showCombinedButton = false;
             console.log(`🔧 DEBUG: Option ${currentOption} - Showing 2 buttons only`);
             break;
@@ -701,7 +597,6 @@ function createResultSection(result, index) {
             console.log(`⚠️ DEBUG: Unknown option ${currentOption} - Showing 2 buttons only`);
     }
     
-    // เพิ่มปุ่ม combined ถ้าต้องแสดง
     if (showCombinedButton) {
         buttonsHTML += `
             <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
@@ -718,7 +613,6 @@ function createResultSection(result, index) {
             </div>
             <div class="section-content">
                 
-                <!-- Number Grid -->
                 <div class="data-grid tw-grid tw-grid-cols-2 md:tw-grid-cols-4 tw-gap-4 tw-mb-6">
                     <div class="data-item tw-text-center">
                         <div class="label tw-text-sm tw-font-semibold tw-text-gray-600 tw-mb-2">Life Path Number</div>
@@ -744,7 +638,6 @@ function createResultSection(result, index) {
                 
                 ${lifePathDetailsHTML || ''}
                 
-                <!-- Buttons for additional content -->
                 <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-text-center">
                     ${buttonsHTML}
                 </div>
@@ -753,8 +646,6 @@ function createResultSection(result, index) {
     `;
 }
 
-
-// Create fallback display
 function createFallbackDisplay(data) {
     console.log('🎨 DEBUG: Creating fallback display');
     
@@ -773,7 +664,6 @@ function createFallbackDisplay(data) {
     `;
 }
 
-// Load and display results
 async function loadAndDisplayResults() {
     console.log('🔄 DEBUG: Starting loadAndDisplayResults()');
     
@@ -783,25 +673,17 @@ async function loadAndDisplayResults() {
     const loadingDetails = document.getElementById('loadingDetails');
     
     if (loadingDetails) {
-        loadingDetails.textContent = `Checking sessionStorage for data...`;
+        loadingDetails.textContent = `กำลังโหลดข้อมูลจาก Supabase Storage...`;
     }
     
-    // Read from sessionStorage
     const resultData = sessionStorage.getItem('psychomatrixResult');
     
     if (!resultData) {
         console.log('❌ DEBUG: No data in sessionStorage');
         
-        // Update error message
         const errorMessage = document.getElementById('errorMessage');
         if (errorMessage) {
-            errorMessage.textContent = 'No analysis data found. Please fill in the data on Psychomatrix.html first.';
-        }
-        
-        // Show debug info
-        const debugSessionStorage = document.getElementById('debugSessionStorage');
-        if (debugSessionStorage) {
-            debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: NOT FOUND`;
+            errorMessage.textContent = 'ไม่พบข้อมูลการวิเคราะห์ กรุณากรอกข้อมูลใน Psychomatrix.html ก่อน';
         }
         
         setTimeout(() => {
@@ -814,7 +696,7 @@ async function loadAndDisplayResults() {
     try {
         console.log('📦 DEBUG: Parsing result data...');
         if (loadingDetails) {
-            loadingDetails.textContent = `Parsing JSON data...`;
+            loadingDetails.textContent = `กำลังแยกวิเคราะห์ข้อมูล JSON...`;
         }
         
         const data = JSON.parse(resultData);
@@ -826,10 +708,9 @@ async function loadAndDisplayResults() {
             throw new Error(errorMsg);
         }
         
-        // Load required JSON files
-        console.log('📦 DEBUG: Loading required JSON files...');
+        console.log('📦 DEBUG: Loading required JSON files from Supabase Storage...');
         if (loadingDetails) {
-            loadingDetails.textContent = `Loading configuration files...`;
+            loadingDetails.textContent = `กำลังโหลดข้อมูลจากเซิร์ฟเวอร์...`;
         }
         
         await Promise.all([
@@ -837,15 +718,14 @@ async function loadAndDisplayResults() {
             loadLifePathProperties()
         ]);
         
-        console.log('✅ DEBUG: JSON files loaded');
+        console.log('✅ DEBUG: JSON files loaded from Supabase');
         
-        // Store analysis data globally
         analysisData = data;
         window.analysisData = data;
         
         console.log('🎨 DEBUG: Displaying results...');
         if (loadingDetails) {
-            loadingDetails.textContent = `Rendering results...`;
+            loadingDetails.textContent = `กำลังแสดงผลลัพธ์...`;
         }
         
         displayResults(data);
@@ -858,21 +738,14 @@ async function loadAndDisplayResults() {
         
     } catch (error) {
         console.error('❌ DEBUG: Error in loadAndDisplayResults:', error);
-        console.error('❌ DEBUG: Error stack:', error.stack);
         
         if (loadingDetails) {
-            loadingDetails.textContent = `Error: ${error.message}`;
+            loadingDetails.textContent = `ข้อผิดพลาด: ${error.message}`;
         }
         
         const errorMessage = document.getElementById('errorMessage');
         if (errorMessage) {
-            errorMessage.textContent = `Error: ${error.message}`;
-        }
-        
-        // Show debug info
-        const debugSessionStorage = document.getElementById('debugSessionStorage');
-        if (debugSessionStorage && resultData) {
-            debugSessionStorage.textContent = `sessionStorage.psychomatrixResult: ${resultData.substring(0, 200)}...`;
+            errorMessage.textContent = `เกิดข้อผิดพลาด: ${error.message}`;
         }
         
         setTimeout(() => {
@@ -882,10 +755,8 @@ async function loadAndDisplayResults() {
     }
 }
 
-// Display results from API
 function displayResults(data) {
     console.log('🎨 DEBUG: Displaying results');
-    console.log('🎨 DEBUG: Data structure:', data);
     
     const resultsContainer = document.getElementById('resultsContainer');
     if (!resultsContainer) {
@@ -911,14 +782,12 @@ function displayResults(data) {
     
     resultsContainer.innerHTML = html;
     
-    // Add event listeners for Pythagorean buttons
     setTimeout(() => {
         const pythagoreanButtons = resultsContainer.querySelectorAll('button[onclick*="pythagorean.show"]');
         console.log(`🎯 DEBUG: Found ${pythagoreanButtons.length} Pythagorean buttons`);
     }, 100);
 }
 
-// Test Pythagorean button
 function testPythagoreanButton() {
     console.log('🧪 DEBUG: Testing Pythagorean button...');
     
@@ -934,7 +803,6 @@ function testPythagoreanButton() {
     }
 }
 
-// Check scripts loaded
 function checkScriptsLoaded() {
     console.log('🔍 DEBUG: Checking loaded scripts:');
     
@@ -967,4 +835,4 @@ if (document.readyState === 'loading') {
     initializePage();
 }
 
-console.log('✅ DEBUG: result.js loaded completely version 10.1');
+console.log('✅ DEBUG: result.js loaded completely - Supabase Storage Ready');
