@@ -14,6 +14,9 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/PsychomatrixStyle.css">
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Favicon -->
     <link rel="icon" href="images/PsychomatixAnalize.png" type="image/png">
     
@@ -34,8 +37,18 @@
     <div class="Container">
         <!-- Header -->
         <div class="text-center mb-6 p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg">
-            <h1 class="text-3xl font-bold text-white mb-2">🔮 Psychomatrix Analysis</h1>
-            <p class="text-blue-100">วิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
+            <nav class="bg-gradient-to-r from-blue-800 to-purple-800 p-4 shadow-md">
+                <div class="container mx-auto flex justify-between items-center">
+                    <h1 class="text-3xl font-bold text-white mb-2"><img src="images/PsychomatixAnalize.png" alt="Logo" class="h-16 w-16 inline mr-2"> Psychomatrix Analysis
+                    </h1>
+                    <div class="flex space-x-4">
+                        <a href="psychomatrix_hub.html" class="text-white text-lg hover:text-blue-200">
+                            <i class="fas fa-home mr-1"></i>Home Psychomatrix
+                        </a>
+                    </div>
+                </div>
+                <p class="text-blue-100">วิเคราะห์พลังตัวเลขตามศาสตร์ของเลขศาสตร์</p>
+            </nav>    
         </div>
         
         <!-- Analysis Form -->
@@ -238,7 +251,7 @@
 
     <script src="js/supabase-config.js"></script>
     <script src="js/auth_status_manager.js"></script>
-    <script src="js/nav.js"></script>
+    <!-- script src="js/nav.js"></script -->
 
     <!--  โหลด Debug Logger ก่อน -->
     <script src="js/debug-logger.js"></script>
@@ -324,6 +337,7 @@
             }
             
             console.log('✅ สร้าง options สำเร็จ');
+            
         });
     </script>
 </body>
