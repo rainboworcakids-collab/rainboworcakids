@@ -46,18 +46,72 @@
             ← กลับไปหน้าหลัก
         </a>
     </div>
-    
+
     <script src="js/supabase-config.js"></script>
     <script src="js/auth_status_manager.js"></script>
     <script src="js/nav.js"></script>
     
     <script>
+    // ==================== GLOBAL VARIABLES ====================
+    let globalData = null;
+    let selectedCalendarDay = null;
+
     // ==================== GLOBAL FUNCTIONS ====================
     
     // ฟังก์ชันจัดรูปแบบความหมาย
     function formatMeaning(text) {
         if (!text) return '';
         return text.replace(/\n/g, '<br>');
+    }
+
+    // ฟังก์ชันสำหรับดึงความหมายของวันวัฏจักร
+    function getPersonalDayMeaning(personalDayNumber) {
+        // ตัวอย่างข้อมูลความหมาย
+        const meanings = {
+            1: "วันแห่งการเริ่มต้นใหม่ ความเป็นผู้นำ",
+            2: "วันแห่งความร่วมมือ การประสานงาน",
+            3: "วันแห่งความสร้างสรรค์ การสื่อสาร",
+            4: "วันแห่งการทำงานหนัก ความมั่นคง",
+            5: "วันแห่งการเปลี่ยนแปลง อิสระ",
+            6: "วันแห่งความรับผิดชอบ ครอบครัว",
+            7: "วันแห่งการเรียนรู้ การวิเคราะห์",
+            8: "วันแห่งความสำเร็จ เงินทอง",
+            9: "วันแห่งการสิ้นสุด การให้"
+        };
+        return meanings[personalDayNumber] || "ไม่พบความหมาย";
+    }
+
+    // ฟังก์ชันสำหรับดึงความสัมพันธ์ธาตุ
+    function getElementRelation(element1, element2) {
+        const elementRelations = {
+            'ทองไม้': 'นำโชคมีชัย',
+            'น้ำไฟ': 'นำโชคมีชัย',
+            'ไฟทอง': 'นำโชคมีชัย',
+            'ไม้ดิน': 'นำโชคมีชัย',
+            'ดินน้ำ': 'นำโชคมีชัย',
+            'ทองดิน': 'ส่งเสริมให้ลาภ',
+            'น้ำทอง': 'ส่งเสริมให้ลาภ',
+            'ไฟไม้': 'ส่งเสริมให้ลาภ',
+            'ไม้น้ำ': 'ส่งเสริมให้ลาภ',
+            'ดินไฟ': 'ส่งเสริมให้ลาภ',
+            'ทองทอง': 'กลมกลืนสุขสบาย',
+            'น้ำน้ำ': 'กลมกลืนสุขสบาย',
+            'ไฟไฟ': 'กลมกลืนสุขสบาย',
+            'ไม้ไม้': 'กลมกลืนสุขสบาย',
+            'ดินดิน': 'กลมกลืนสุขสบาย',
+            'ทองน้ำ': 'ให้เพื่อรับโชค',
+            'น้ำไม้': 'ให้เพื่อรับโชค',
+            'ไฟดิน': 'ให้เพื่อรับโชค',
+            'ไม้ไฟ': 'ให้เพื่อรับโชค',
+            'ดินทอง': 'ให้เพื่อรับโชค',
+            'ทองไฟ': 'พ่ายแพ้อับโชค',
+            'น้ำดิน': 'พ่ายแพ้อับโชค',
+            'ไฟน้ำ': 'พ่ายแพ้อับโชค', 
+            'ไม้ทอง': 'พ่ายแพ้อับโชค',
+            'ดินไม้': 'พ่ายแพ้อับโชค',
+        };
+        
+        return elementRelations[`${element2}${element1}`] || '-';
     }
 
     // ==================== MAIN LOGIC ====================
@@ -76,13 +130,26 @@
                 throw new Error(result.error || 'ข้อมูลผลลัพธ์ไม่ถูกต้อง');
             }
             
-            const data = result.results;
+            // เก็บข้อมูลในตัวแปร global
+            globalData = result.results;
             
+            // ✅ ตั้งค่าเริ่มต้นสำหรับวันวัฏจักร
+            selectedCalendarDay = {
+                day: globalData.YDate,
+                month: globalData.YMonth,
+                year: globalData.YYear,
+                personalDayNumber: globalData.PersonalDayNumber,
+                luckyNumber: globalData.PersonalDayLucky,
+                element: globalData.PersonalDayElement,
+                energy: globalData.PersonalDayEnergy,
+                relation: globalData.PersonalDayElementRelation
+            };
+
             // ซ่อน loading
             document.getElementById('loading').style.display = 'none';
             
             // แสดงผลลัพธ์
-            renderResults(data);
+            renderResults(globalData);
             
         } catch (error) {
             console.error('Error:', error);
@@ -93,7 +160,7 @@
     });
 
     // ==================== RENDER FUNCTIONS ====================
-    
+ 
     function renderResults(data) {
         const container = document.getElementById('results-container');
         
@@ -121,57 +188,53 @@
                         <p><strong>การทำนาย:</strong> เลขนำโชค-ปีวัฏจักร</p>
                     </div>
                 </div>
-        `;
-        
-        // เลขเส้นทางชีวิต
-        html += `
-            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg mb-8 border-l-4 border-purple-500">
-                <h2 class="text-2xl font-bold text-purple-800 mb-4 flex items-center">
-                    <span class="mr-2">🌟</span> เลขเส้นทางชีวิต (Life Path Number)
-                </h2>
                 
-                <div class="flex flex-wrap items-center gap-4 mb-4">
-                    <div class="text-center">
-                        <span class="text-6xl font-bold number-${data.LifePathNumber}">
-                            ${data.LifePathNumber}
-                        </span>
-                        <p class="text-sm text-gray-600">เลขเส้นทางชีวิต</p>
-                    </div>
+                <!-- เลขเส้นทางชีวิต -->
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg mb-8 border-l-4 border-purple-500">
+                    <h2 class="text-2xl font-bold text-purple-800 mb-4 flex items-center">
+                        <span class="mr-2">🌟</span> เลขเส้นทางชีวิต (Life Path Number)
+                    </h2>
                     
-                    <div class="text-center">
-                        <div class="px-4 py-2 rounded-lg ${data.LifePathElement}${data.LifePathEnergy}">
-                            <span class="font-bold">ธาตุ${data.LifePathElement}</span>
-                            <br>
-                            <span class="text-sm">${data.LifePathEnergy}</span>
+                    <div class="flex flex-wrap items-center gap-4 mb-4">
+                        <div class="text-center">
+                            <span class="text-6xl font-bold number-${data.LifePathNumber}">
+                                ${data.LifePathNumber}
+                            </span>
+                            <p class="text-sm text-gray-600">เลขเส้นทางชีวิต</p>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="px-4 py-2 rounded-lg ${data.LifePathElement}${data.LifePathEnergy}">
+                                <span class="font-bold">ธาตุ${data.LifePathElement}</span>
+                                <br>
+                                <span class="text-sm">${data.LifePathEnergy}</span>
+                            </div>
                         </div>
                     </div>
+                    
+                    <div class="mt-4">
+                        <h3 class="text-lg font-bold text-gray-700 mb-2">ลักษณะทั่วไป:</h3>
+                        <p class="text-gray-700">${formatMeaning(data.RootNumberMeaning)}</p>
+                    </div>
                 </div>
                 
-                <div class="mt-4">
-                    <h3 class="text-lg font-bold text-gray-700 mb-2">ลักษณะทั่วไป:</h3>
-                    <p class="text-gray-700">${formatMeaning(data.RootNumberMeaning)}</p>
+                <!-- เลขโชคชะตา -->
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-lg mb-8 border-l-4 border-blue-500">
+                    <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center">
+                        <span class="mr-2">💫</span> เลขโชคชะตา (Destiny Number)
+                    </h2>
+                    
+                    <div class="mb-4">
+                        <span class="text-5xl font-bold number-${data.LifePathNumber}">
+                            ${data.DestinyNumber}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h3 class="text-lg font-bold text-gray-700 mb-2">พรสวรรค์และภารกิจ:</h3>
+                        <p class="text-gray-700">${formatMeaning(data.DestinyNumberMeaning)}</p>
+                    </div>
                 </div>
-            </div>
-        `;
-        
-        // เลขโชคชะตา
-        html += `
-            <div class="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-lg mb-8 border-l-4 border-blue-500">
-                <h2 class="text-2xl font-bold text-blue-800 mb-4 flex items-center">
-                    <span class="mr-2">💫</span> เลขโชคชะตา (Destiny Number)
-                </h2>
-                
-                <div class="mb-4">
-                    <span class="text-5xl font-bold number-${data.LifePathNumber}">
-                        ${data.DestinyNumber}
-                    </span>
-                </div>
-                
-                <div class="mt-4">
-                    <h3 class="text-lg font-bold text-gray-700 mb-2">พรสวรรค์และภารกิจ:</h3>
-                    <p class="text-gray-700">${formatMeaning(data.DestinyNumberMeaning)}</p>
-                </div>
-            </div>
         `;
         
         if (data.Prophesy === "1") {
@@ -196,8 +259,61 @@
             // เดือนวัฏจักร
             html += renderPersonalMonthSection(data);
             
-            // วันวัฏจักร
-            html += renderPersonalDaySection(data);
+            // ปฏิทิน
+            html += renderMonthCalendar(data);
+            
+            // ส่วนแสดง Personal Day
+            html += `
+                <div id="PersonalDayNumber" class="bg-gradient-to-r from-pink-50 to-rose-50 p-6 rounded-lg mb-8 border-l-4 border-pink-500">
+                    <div id="headPersonalDayNumber">
+                        <h2 class="text-2xl font-bold text-pink-800 mb-4 flex items-center">
+                            <span class="mr-2">📅</span> วันวัฏจักร (Personal Day Number): 
+                            ${data.YDate}/${data.YMonth}/${data.YYear}
+                        </h2>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <div id="mainPersonalDayNumber">
+                            <div class="flex flex-wrap items-center gap-4 mb-3">
+                                <span class="text-4xl font-bold number-${data.PersonalDayNumber}">
+                                    ${data.PersonalDayNumber}
+                                </span>
+                                <div class="px-4 py-2 rounded-lg ${data.PersonalDayElement}${data.PersonalDayEnergy}">
+                                    <span class="font-bold">ธาตุ${data.PersonalDayElement}</span>
+                                    <br>
+                                    <span class="text-sm">${data.PersonalDayEnergy}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="personalDayRelation" class="mt-3">
+                            <p><strong>ความสัมพันธ์:</strong> ${data.PersonalDayElementRelation}</p>
+                        </div>
+                        
+                        <div id="sectionLuckyNum" class="mt-4">
+                            <p class="text-2xl mb-2 font-bold" style="color: #606060;">
+                                <strong>เลขนำโชคประจำวัน :</strong> 
+                                <span class="text-4xl p-2 number-${data.PersonalDayNumber}">
+                                    ${data.PersonalDayLucky}
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <div id="sectionLuckyNum1" class="mt-2 text-sm">
+                            <!-- จะถูกอัปเดตโดย updatePersonalDaySection -->
+                        </div>
+                        
+                        <div id="personalDayMeaning" class="mt-4">
+                            <h3 class="text-lg font-bold text-gray-700 mb-2">ความหมายของวันวัฏจักร:</h3>
+                            <p class="text-gray-700">${getPersonalDayMeaning(data.PersonalDayNumber)}</p>
+                        </div>
+                        
+                        <div id="gregorianDateInfo" class="mt-4">
+                            <!-- จะถูกอัปเดตโดย updatePersonalDaySection -->
+                        </div>
+                    </div>
+                </div>
+            `;
             
         } else if (data.Prophesy === "2") {
             // การวิเคราะห์ความสัมพันธ์
@@ -220,7 +336,10 @@
         
         container.innerHTML = html;
         container.classList.remove('hidden');
-    }
+        
+        // ✅ อัปเดต Personal Day Section ด้วยข้อมูลเริ่มต้น
+        updatePersonalDaySection(selectedCalendarDay);
+    }   
     
     function renderPersonalYearSection(data) {
         let html = `
@@ -302,29 +421,234 @@
             </div>
         `;
     }
-    
-    function renderPersonalDaySection(data) {
-        return `
-            <div class="bg-gradient-to-r from-pink-50 to-rose-50 p-6 rounded-lg mb-8 border-l-4 border-pink-500">
-                <h2 class="text-2xl font-bold text-pink-800 mb-4 flex items-center">
-                    <span class="mr-2">📅</span> วันวัฏจักร (Personal Day Number)
+
+    // ฟังก์ชันสร้างปฏิทินจากข้อมูล Edge Function
+    function renderMonthCalendar(data) {
+        const calendar = data.MonthCalendar;
+        const currentDay = parseInt(data.YDate) || 1;
+        const currentMonth = parseInt(data.YMonth);
+        const currentYear = parseInt(data.YYear);
+        
+        let html = `
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg mb-8 border-l-4 border-indigo-500">
+                <h2 class="text-2xl font-bold text-indigo-800 mb-4 flex items-center">
+                    <span class="mr-2">📆</span> ปฏิทินเดือนวัฏจักร ${calendar.monthName} ${calendar.year}
                 </h2>
                 
-                <div class="flex flex-wrap items-center gap-4 mb-3">
-                    <span class="text-4xl font-bold number-${data.PersonalDayNumber}">
-                        ${data.PersonalDayNumber}
-                    </span>
-                    <div class="px-4 py-2 rounded-lg ${data.PersonalDayElement}${data.PersonalDayEnergy}">
-                        <span class="font-bold">ธาตุ${data.PersonalDayElement}</span>
-                        <br>
-                        <span class="text-sm">${data.PersonalDayEnergy}</span>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-indigo-100">
+                                <th class="p-3 border text-center">อา</th>
+                                <th class="p-3 border text-center">จ</th>
+                                <th class="p-3 border text-center">อ</th>
+                                <th class="p-3 border text-center">พ</th>
+                                <th class="p-3 border text-center">พฤ</th>
+                                <th class="p-3 border text-center">ศ</th>
+                                <th class="p-3 border text-center">ส</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        // สร้างปฏิทิน 6 สัปดาห์
+        let dayCounter = 0;
+        let isFirstWeek = true;
+        
+        for (let week = 0; week < 6; week++) {
+            html += '<tr>';
+            
+            for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                // ถ้าอาทิตย์แรกและอยู่ก่อนวันแรกของเดือน
+                if (isFirstWeek && dayOfWeek < calendar.firstDayOfWeek) {
+                    html += '<td class="p-3 border bg-gray-50"></td>';
+                    continue;
+                }
+                
+                // ถ้าเกินจำนวนวันในเดือน
+                if (dayCounter >= calendar.days.length) {
+                    html += '<td class="p-3 border bg-gray-50"></td>';
+                    continue;
+                }
+                
+                const dayData = calendar.days[dayCounter];
+                
+                // ✅ ตรวจสอบว่าเป็นวันที่ปัจจุบันหรือไม่
+                const isCurrentDay = (
+                    dayData.day === currentDay && 
+                    calendar.month === currentMonth && 
+                    calendar.year === currentYear
+                );
+                
+                // ✅ คลาสสำหรับไฮไลท์
+                const highlightClass = isCurrentDay ? 'bg-yellow-100 border-2 border-yellow-400' : '';
+                const dayClass = `calendar-day ${highlightClass} transition-all hover:bg-blue-50 cursor-pointer`;
+                
+                html += `
+                    <td class="p-2 border text-center ${dayClass}" 
+                        data-day="${dayData.day}"
+                        data-month="${calendar.month}"
+                        data-year="${calendar.year}"
+                        data-personal-day="${dayData.personalDayNumber}"
+                        data-lucky-number="${dayData.personalDayLucky}"
+                        data-element="${dayData.element}"
+                        data-energy="${dayData.energy}"
+                        data-relation="${dayData.elementRelation}"
+                        onclick="handleCalendarDayClick(this)">
+                    <div class="font-bold ${isCurrentDay ? 'text-red-600' : ''}">${dayData.day}</div>
+                    <div class="text-xs mt-1">
+                        <span class="number-${dayData.personalDayNumber}">${dayData.personalDayNumber}</span>,
+                        <span class="text-green-600">${dayData.personalDayLucky}</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">${dayData.dayName}</div>
+                    </td>
+                `;
+                
+                dayCounter++;
+            }
+            
+            html += '</tr>';
+            isFirstWeek = false;
+            
+            // หยุดถ้าแสดงวันทั้งหมดแล้ว
+            if (dayCounter >= calendar.days.length) break;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-blue-700 mb-2">📅 วันที่ตามปฏิทิน:</h4>
+                        <p>${data.YDate}/${data.YMonth}/${data.YYear}</p>
+                        <p class="text-sm text-gray-600">(วันเดือนปีที่เลือกเปรียบเทียบ)</p>
+                    </div>
+                    
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-green-700 mb-2">🔄 ข้อมูลความสัมพันธ์:</h4>
+                        <p class="text-sm">
+                            <strong>ปีวัฏจักร:</strong> ${data.PersonalYearRelationText || '-'}<br>
+                            <strong>เดือนวัฏจักร:</strong> ${data.PersonalMonthRelationText || '-'}<br>
+                            <strong>วันวัฏจักร:</strong> ${data.PersonalDayRelationText || '-'}
+                        </p>
                     </div>
                 </div>
                 
-                <p><strong>ความสัมพันธ์:</strong> ${data.PersonalDayElementRelation}</p>
-                <p class="mt-2"><strong>เลขนำโชคประจำวัน:</strong> 
-                    <span class="text-2xl text-green-600 font-bold">${data.PersonalDayLucky}</span>
-                </p>
+                <div class="mt-4 text-sm text-gray-600">
+                    <p>📌 <strong>คำแนะนำ:</strong> คลิกที่วันที่ในปฏิทินเพื่อเปลี่ยนข้อมูลวันวัฏจักร</p>
+                    <p>🌟 <strong>สีเหลือง:</strong> วันที่ปัจจุบันที่เลือก</p>
+                    <p>🔢 <strong>ตัวเลข:</strong> Personal Day Number, เลขนำโชคประจำวัน</p>
+                </div>
+            </div>
+        `;
+        
+        return html;
+    }
+
+    function handleCalendarDayClick(cellElement) {
+        // ✅ 1. ลบไฮไลท์จากทุกเซลล์
+        document.querySelectorAll('.calendar-day').forEach(cell => {
+            cell.classList.remove('bg-yellow-100', 'border-2', 'border-yellow-400');
+            cell.classList.add('border');
+        });
+        
+        // ✅ 2. เพิ่มไฮไลท์ให้เซลล์ที่คลิก
+        cellElement.classList.remove('border');
+        cellElement.classList.add('bg-yellow-100', 'border-2', 'border-yellow-400');
+        
+        // ✅ 3. เก็บข้อมูลวันที่ที่เลือก
+        selectedCalendarDay = {
+            day: cellElement.dataset.day,
+            month: cellElement.dataset.month,
+            year: cellElement.dataset.year,
+            personalDayNumber: cellElement.dataset.personalDay,
+            luckyNumber: cellElement.dataset.luckyNumber,
+            element: cellElement.dataset.element,
+            energy: cellElement.dataset.energy,
+            relation: cellElement.dataset.relation
+        };
+        
+        // ✅ 4. อัปเดตส่วนแสดงผลวันวัฏจักร
+        updatePersonalDaySection(selectedCalendarDay);
+    }
+
+    function updatePersonalDaySection(dayData) {
+        if (!dayData || !globalData) return;
+        
+        const lifePathElement = globalData.LifePathElement;
+        const lifePathNumber = globalData.LifePathNumber;
+        
+        // ✅ อัปเดตหัวข้อ
+        document.getElementById('headPersonalDayNumber').innerHTML = `
+            <h2 class="text-2xl font-bold text-pink-800 mb-4 flex items-center">
+                <span class="mr-2">📅</span> วันวัฏจักร (Personal Day Number): 
+                ${dayData.day}/${dayData.month}/${dayData.year}
+            </h2>
+        `;
+        
+        // ✅ อัปเดตข้อมูลหลัก
+        document.getElementById('mainPersonalDayNumber').innerHTML = `
+            <div class="flex flex-wrap items-center gap-4 mb-3">
+                <span class="text-4xl font-bold number-${dayData.personalDayNumber}">
+                    ${dayData.personalDayNumber}
+                </span>
+                <div class="px-4 py-2 rounded-lg ${dayData.element}${dayData.energy}">
+                    <span class="font-bold">ธาตุ${dayData.element}</span>
+                    <br>
+                    <span class="text-sm">${dayData.energy}</span>
+                </div>
+            </div>
+        `;
+        
+        // ✅ อัปเดตความสัมพันธ์
+        document.getElementById('personalDayRelation').innerHTML = `
+            <p><strong>ความสัมพันธ์:</strong> ${dayData.relation}</p>
+            <p class="text-sm text-gray-600">
+                ธาตุ${dayData.element}${dayData.energy} ${dayData.relation} 
+                ธาตุ${lifePathElement}ของเส้นทางชีวิต
+            </p>
+        `;
+        
+        // ✅ อัปเดตเลขนำโชค
+        document.getElementById('sectionLuckyNum').innerHTML = `
+            <p class='text-2xl mb-2 font-bold' style='color: #606060;'>
+                <strong>เลขนำโชคประจำวัน :</strong> 
+                <span class="text-4xl p-2 number-${dayData.personalDayNumber}">
+                    ${dayData.luckyNumber}
+                </span>
+            </p>
+        `;
+        
+        // ✅ ตรวจสอบความเสริมพลัง
+        const lifePathLucky = (globalData.LifePathLucky || '').split(',');
+        const dayLuckyNumbers = dayData.luckyNumber.split(',');
+        const isSupportive = dayLuckyNumbers.some(num => lifePathLucky.includes(num.trim()));
+        
+        document.getElementById('sectionLuckyNum1').innerHTML = isSupportive ? 
+            "<p style='color:#10F010'>*เสริม: เป็นเลขนำโชคประจำวัน ที่ช่วยส่งเสริมเลขนำโชควันเดือนปีเกิด</p>" : 
+            "-ไม่เสริม: เป็นเลขนำโชคประจำวัน แต่ไม่ส่งเสริมเลขนำโชควันเดือนปีเกิด";
+        
+        // ✅ แสดงความหมายของวันวัฏจักร
+        const dayMeaning = getPersonalDayMeaning(parseInt(dayData.personalDayNumber));
+        document.getElementById('personalDayMeaning').innerHTML = `
+            <h3 class="text-lg font-bold text-gray-700 mb-2">ความหมายของวันวัฏจักร:</h3>
+            <p class="text-gray-700">${formatMeaning(dayMeaning)}</p>
+        `;
+        
+        // ✅ เพิ่มข้อมูลวันที่ตามปฏิทิน
+        const dateObj = new Date(dayData.year, dayData.month - 1, dayData.day);
+        const dayNames = ["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"];
+        const monthNames = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+        
+        document.getElementById('gregorianDateInfo').innerHTML = `
+            <div class="bg-gray-50 p-3 rounded-lg mt-4">
+                <p><strong>📅 วันที่ตามปฏิทิน:</strong> ${dayData.day}/${dayData.month}/${dayData.year}</p>
+                <p><strong>📆 วัน:</strong> วัน${dayNames[dateObj.getDay()]} ที่ ${dayData.day} ${monthNames[dateObj.getMonth()]} พ.ศ. ${parseInt(dayData.year) + 543}</p>
             </div>
         `;
     }
