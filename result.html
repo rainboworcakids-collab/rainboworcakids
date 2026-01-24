@@ -35,7 +35,54 @@
         }
     }
     </script>
+    <style>
+    /* CSS ของ Music */
+    .result-button {
+        min-height: 80px;
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        line-height: 1.3;
+        margin: 4px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        vertical-align: top;
+    }
     
+    .result-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .button-line {
+        display: block;
+        font-size: 14px;
+        line-height: 1.2;
+    }
+    
+    .button-line:first-child {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    
+    /* สำหรับปุ่มที่แสดงผลในแถวเดียวกัน */
+    .tw-inline-block {
+        vertical-align: top;
+    }
+    
+    @media (max-width: 768px) {
+        .result-button {
+            width: 100% !important;
+            margin: 4px 0;
+            min-height: 70px;
+        }
+    }
+</style>
     
 </head>
 <body class="tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-gray-100 tw-p-2 tw-mb-1" onload="console.log('✅ DEBUG: Page loaded completely')">
@@ -49,7 +96,7 @@
     <!-- Main Tab -->
     <div id="Main" class="tabcontent printable tw-max-w-4xl tw-mx-h-auto tw-mx-auto tw-bg-white tw-p-6 tw-rounded tw-shadow tw-mt-6 tw-mb-1 tw-overflow-y-auto tw-max-h-[90vh] active">
         <h1 class="tw-text-3xl tw-font-bold tw-text-center tw-mb-2 tw-flex tw-items-center tw-justify-center">
-            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-24 tw-w-24 tw-mr-4">
+            <img src="images/PsychomatixAnalize.png" alt="Psychomatrix Logo" class="tw-h-18 tw-w-18 tw-mr-4">
             Psychomatrix Analysis
         </h1>
         
@@ -100,9 +147,9 @@
     <!-- JavaScript Files -->
     <script src="js/pythagorean.js?v=10.10"></script>
     <script src="js/pinnacle.js?v=1.00"></script>
-    <script src="js/result.js?v=11.00"></script>
-
-
+    <script src="js/result.js?v=13.02"></script>
+    <script src="js/music-module.js?v=1.02"></script>
+   
     <script src="js/debug-logger.js"></script>
 
     <!-- เพิ่มใน result.html ก่อน </body> -->

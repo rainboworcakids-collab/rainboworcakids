@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elemental Life Path Creator - RainbowOrcaKids</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
+    <link rel="stylesheet" href="css/music-style.css">
+</head>
+<body class="min-h-screen text-white transition-colors duration-1000 bg-slate-950">
+
+    <div class="container mx-auto px-4 py-6 max-w-6xl">
+        <header class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center glass p-6 rounded-3xl" id="mainHeader">
+            <div class="text-left">
+                <h1 class="text-2xl font-bold text-white"><i class="fas fa-magic mr-2"></i> Elemental Sound Healing</h1>
+                <p id="fullName" class="text-slate-300 text-lg font-bold">กำลังโหลดข้อมูล...</p>
+                <div class="text-xs text-slate-400 mt-1">
+                    <span id="birthInfo"></span> | <span id="idCardDisplay"></span>
+                </div>
+            </div>
+            <div class="flex gap-4 mt-4 md:mt-0">
+                <div class="text-center bg-black/40 p-2 rounded-xl px-4 border border-white/10">
+                    <span class="text-[10px] text-slate-500 block uppercase">ธาตุประจำตัว</span>
+                    <span id="elementLabel" class="font-bold text-sm">-</span>
+                </div>
+                <div class="text-center bg-black/40 p-2 rounded-xl px-4 border border-white/10">
+                    <span class="text-[10px] text-slate-500 block uppercase">BPM</span>
+                    <span id="tempoLabel" class="font-bold text-sm">85</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="space-y-6">
+                <div class="glass p-6 rounded-3xl border-t-4" id="statBorder">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-black/30 p-3 rounded-2xl text-center">
+                            <span class="text-[10px] text-slate-500 uppercase block">Life Path</span>
+                            <span id="lpVal" class="text-3xl font-bold">-</span>
+                            <p id="lpMeaning" class="text-[10px] text-slate-400 mt-1 leading-tight"></p>
+                        </div>
+                        <div class="bg-black/30 p-3 rounded-2xl text-center">
+                            <span class="text-[10px] text-slate-500 uppercase block">Destiny</span>
+                            <span id="dsVal" class="text-3xl font-bold">-</span>
+                            <p id="dsMeaning" class="text-[10px] text-slate-400 mt-1 leading-tight"></p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+                            <span class="text-[10px] text-indigo-400 uppercase font-bold">บทเรียนชีวิต (Lessons)</span>
+                            <p id="lessonText" class="text-xs text-slate-300 mt-1 leading-relaxed"></p>
+                        </div>
+                        <div class="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                            <span class="text-[10px] text-red-400 uppercase font-bold">กรรมเก่า (Karmic Debt)</span>
+                            <p id="karmicText" class="text-xs text-slate-300 mt-1 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass p-6 rounded-3xl space-y-4">
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-slate-400">Studio Settings</h3>
+                    
+                    <div>
+                        <label class="text-[10px] text-slate-500 uppercase">Instrument</label>
+                        <select id="instrumentType" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm mt-1 text-white">
+                            <option value="electricPiano">Lo-fi Electric Piano</option>
+                            <option value="acousticGuitar">Nylon Guitar</option>
+                            <option value="vibes">Crystal Vibraphone</option>
+                            <option value="kalimba">African Kalimba</option>
+                            <option value="celesta">Heavenly Celesta</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-slate-500 uppercase">Nature Ambience (FX)</label>
+                        <select id="natureSound" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm mt-1 text-white">
+                            <option value="none">None</option>
+                            <option value="rain">Heavy Rain (ธาตุน้ำ)</option>
+                            <option value="wind">Mountain Wind (ธาตุลม)</option>
+                            <option value="fire">Fire Crackling (ธาตุไฟ)</option>
+                            <option value="stream">River Stream (ธาตุน้ำ/ไม้)</option>
+                            <option value="birds">Forest Birds (ธาตุไม้)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button id="btnLofi" class="flex-1 py-2 rounded-xl text-xs bg-purple-600 font-bold active-mode shadow-lg">Lo-fi Mode</button>
+                        <button id="btnDeepSleep" class="flex-1 py-2 rounded-xl text-xs bg-slate-800 font-bold hover:bg-slate-700">Deep Sleep</button>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] text-slate-500 uppercase">Tempo Control</label>
+                        <input type="range" id="tempoRange" min="40" max="110" value="85" class="w-full accent-white">
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                <div class="glass p-8 rounded-[40px] flex flex-col items-center justify-center min-h-[550px] relative overflow-hidden" id="displayArea">
+                    <div id="visualizer" class="absolute bottom-0 left-0 w-full flex items-end justify-center gap-1 opacity-40 h-48"></div>
+
+                    <div id="artDisk" class="w-64 h-64 rounded-full border-[12px] border-black/40 shadow-2xl flex items-center justify-center relative z-10 bg-black/20">
+                        <div id="innerDisk" class="w-full h-full rounded-full flex items-center justify-center">
+                           <i id="elementIcon" class="fas fa-compact-disc text-8xl text-white/20"></i>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-8 z-10">
+                        <h2 class="text-4xl font-bold tracking-tighter text-white" id="songTitle">Soul Frequency</h2>
+                        <p id="playerStatus" class="text-slate-400 text-sm mt-2">Ready to heal your spirit</p>
+                        <div id="noteDisplay" class="flex gap-2 mt-4 justify-center"></div>
+                    </div>
+
+                    <button id="mainPlayBtn" class="mt-8 w-20 h-20 bg-white text-black rounded-full flex items-center justify-center text-2xl shadow-2xl z-20 hover:scale-110 active:scale-90 transition-all">
+                        <i class="fas fa-play ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/music-script.js"></script>
+</body>
+</html>

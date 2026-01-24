@@ -111,10 +111,10 @@
             <div class="section2 mb-6 p-5 rounded-xl bg-gradient-to-r from-green-50 to-teal-50 border border-gray-200">	
                 <div class="mb-4">
                     <label class="block text-lg font-bold text-gray-800 mb-3">🪪 เลขบัตรประชาชน</label>
-                    <input type="text" name="id_card" placeholder="1103705060128" maxlength="13"
+                    <input type="text" name="id_card" placeholder="9103705060100" maxlength="13"
                            class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                            pattern="\d{13}" title="กรุณากรอกเลข 13 หลัก">
-                    <p class="text-sm text-gray-500 mt-2">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค เช่น 1103705060128</p>
+                    <p class="text-sm text-gray-500 mt-2">กรอกเลข 13 หลัก ไม่ต้องใส่เว้นวรรค เช่น 9103705060109</p>
                 </div>
             </div>		
             
@@ -246,7 +246,6 @@
         </div>
     </div>
 
-
     <script src="js/github-fix.js"></script>
 
     <script src="js/supabase-config.js"></script>
@@ -258,6 +257,8 @@
     
     <!-- Psychomatrix JavaScript -->
     <script src="js/Psychomatrix.js?v=2.0"></script>
+
+    <script src="js/music-creator.js"></script>
     
     <!-- Inline JavaScript to populate select options immediately -->
     <script>
@@ -291,7 +292,7 @@
             for (let i = 1; i <= 31; i++) {
                 const option = document.createElement('option');
                 option.value = String(i).padStart(2, '0');
-                if (i === 28) option.selected = true; // Default to 28
+               // if (i === 28) option.selected = true; // Default to 28
                 option.textContent = String(i).padStart(2, '0');
                 daySelect.appendChild(option);
             }
@@ -301,7 +302,7 @@
             for (let i = 1; i <= 12; i++) {
                 const option = document.createElement('option');
                 option.value = String(i).padStart(2, '0');
-                if (i === 1) option.selected = true; // Default to January
+             //   if (i === 1) option.selected = true; // Default to January
                 option.textContent = String(i).padStart(2, '0');
                 monthSelect.appendChild(option);
             }
@@ -311,7 +312,7 @@
             for (let i = 0; i <= 99; i++) {
                 const option = document.createElement('option');
                 option.value = String(i).padStart(2, '0');
-                if (i === 15) option.selected = true; // Default to 15 (2015)
+              //  if (i === 15) option.selected = true; // Default to 15 (2015)
                 option.textContent = String(i).padStart(2, '0');
                 yearSelect.appendChild(option);
             }
@@ -321,7 +322,7 @@
             for (let i = 0; i <= 23; i++) {
                 const option = document.createElement('option');
                 option.value = String(i).padStart(2, '0');
-                if (i === 1) option.selected = true; // Default to 01
+            //    if (i === 1) option.selected = true; // Default to 01
                 option.textContent = String(i).padStart(2, '0');
                 hourSelect.appendChild(option);
             }
@@ -331,15 +332,16 @@
             for (let i = 0; i <= 59; i++) {
                 const option = document.createElement('option');
                 option.value = String(i).padStart(2, '0');
-                if (i === 0) option.selected = true; // Default to 00
+           //     if (i === 0) option.selected = true; // Default to 00
                 option.textContent = String(i).padStart(2, '0');
                 minuteSelect.appendChild(option);
             }
             
-            console.log('✅ สร้าง options สำเร็จ');
-            
+            console.log('✅ สร้าง options สำเร็จ');            
         });
+        
     </script>
+
 </body>
 </html>
 
