@@ -1,7 +1,7 @@
-// Lucky_number.js - Version 2.82 (FINAL)
+// Lucky_number.js - Version 2.85 (FINAL)
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Lucky_number.js v2.82 Initializing...');
+    console.log('Lucky_number.js v2.85 Initializing...');
     
     // ==================== GLOBAL VARIABLES ====================
     const mainForm = document.querySelector('form');
@@ -68,58 +68,58 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-    console.log('📂 Loading data for:', searchName);
+        console.log('📂 Loading data for:', searchName);
 
-    // Populate main form fields (Birth Date)
-    if (data.main_data) {
-        // Birth Date
-        document.querySelector('select[name="birth_day"]').value = data.main_data.birth_day || '';
-        document.querySelector('select[name="birth_month"]').value = data.main_data.birth_month || '';
-        document.querySelector('select[name="birth_century"]').value = data.main_data.birth_century || '20';
-        document.querySelector('select[name="birth_year"]').value = data.main_data.birth_year || '';
-        document.querySelector('select[name="birth_hour"]').value = data.main_data.birth_hour || '00';
-        document.querySelector('select[name="birth_minute"]').value = data.main_data.birth_minute || '00';
+        // Populate main form fields (Birth Date)
+        if (data.main_data) {
+            // Birth Date
+            document.querySelector('select[name="birth_day"]').value = data.main_data.birth_day || '';
+            document.querySelector('select[name="birth_month"]').value = data.main_data.birth_month || '';
+            document.querySelector('select[name="birth_century"]').value = data.main_data.birth_century || '20';
+            document.querySelector('select[name="birth_year"]').value = data.main_data.birth_year || '';
+            document.querySelector('select[name="birth_hour"]').value = data.main_data.birth_hour || '00';
+            document.querySelector('select[name="birth_minute"]').value = data.main_data.birth_minute || '00';
         
-        // Comparison Date (ตั้งค่าเป็นวันปัจจุบันเสมอเมื่อโหลดข้อมูล)
+            // Comparison Date (ตั้งค่าเป็นวันปัจจุบันเสมอเมื่อโหลดข้อมูล)
+            const today = new Date();
+            document.querySelector('select[name="comparison_day"]').value = String(today.getDate()).padStart(2, '0');
+            document.querySelector('select[name="comparison_month"]').value = String(today.getMonth() + 1).padStart(2, '0');
+            document.querySelector('select[name="comparison_century"]').value = '20';
+            document.querySelector('select[name="comparison_year"]').value = String(today.getFullYear() % 100).padStart(2, '0');
+            document.querySelector('select[name="comparison_hour"]').value = '00';
+            document.querySelector('select[name="comparison_minute"]').value = '00';
+        
+            mainSearchNameInput.value = searchName;
+        } else {
+            clearMainFormFieldsExceptSearchName();
+            mainSearchNameInput.value = searchName;
+        }
+
+        modalSearchNameInput.value = searchName;
+        alert('✅ โหลดข้อมูลเรียบร้อยแล้ว!');
+    }
+
+    // แก้ไขฟังก์ชัน clearMainFormFieldsExceptSearchName
+    function clearMainFormFieldsExceptSearchName() {
         const today = new Date();
+        // Clear Birth Date
+        document.querySelector('select[name="birth_day"]').value = String(today.getDate()).padStart(2, '0');
+        document.querySelector('select[name="birth_month"]').value  = String(today.getMonth() + 1).padStart(2, '0');
+        document.querySelector('select[name="birth_century"]').value = '20';
+        document.querySelector('select[name="birth_year"]').value = String(today.getFullYear() % 100).padStart(2, '0');
+        document.querySelector('select[name="birth_hour"]').value = '00';
+        document.querySelector('select[name="birth_minute"]').value = '00';
+    
+        // Clear Comparison Date (ตั้งค่าเป็นวันปัจจุบัน)
         document.querySelector('select[name="comparison_day"]').value = String(today.getDate()).padStart(2, '0');
         document.querySelector('select[name="comparison_month"]').value = String(today.getMonth() + 1).padStart(2, '0');
         document.querySelector('select[name="comparison_century"]').value = '20';
         document.querySelector('select[name="comparison_year"]').value = String(today.getFullYear() % 100).padStart(2, '0');
         document.querySelector('select[name="comparison_hour"]').value = '00';
         document.querySelector('select[name="comparison_minute"]').value = '00';
-        
-        mainSearchNameInput.value = searchName;
-    } else {
-        clearMainFormFieldsExceptSearchName();
-        mainSearchNameInput.value = searchName;
+    
+        mainSearchNameInput.value = '';
     }
-
-    modalSearchNameInput.value = searchName;
-    alert('✅ โหลดข้อมูลเรียบร้อยแล้ว!');
-}
-
-    // แก้ไขฟังก์ชัน clearMainFormFieldsExceptSearchName
-    function clearMainFormFieldsExceptSearchName() {
-    // Clear Birth Date
-    document.querySelector('select[name="birth_day"]').value = '';
-    document.querySelector('select[name="birth_month"]').value = '';
-    document.querySelector('select[name="birth_century"]').value = '20';
-    document.querySelector('select[name="birth_year"]').value = '';
-    document.querySelector('select[name="birth_hour"]').value = '00';
-    document.querySelector('select[name="birth_minute"]').value = '00';
-    
-    // Clear Comparison Date (ตั้งค่าเป็นวันปัจจุบัน)
-    const today = new Date();
-    document.querySelector('select[name="comparison_day"]').value = String(today.getDate()).padStart(2, '0');
-    document.querySelector('select[name="comparison_month"]').value = String(today.getMonth() + 1).padStart(2, '0');
-    document.querySelector('select[name="comparison_century"]').value = '20';
-    document.querySelector('select[name="comparison_year"]').value = String(today.getFullYear() % 100).padStart(2, '0');
-    document.querySelector('select[name="comparison_hour"]').value = '00';
-    document.querySelector('select[name="comparison_minute"]').value = '00';
-    
-    mainSearchNameInput.value = '';
-}
 
 
     function clearSurroundingModalFields() {
@@ -201,132 +201,132 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     async function callLuckyNumberAPI(formData) {
-    console.log('==================== API CALL START ====================');
-    console.log('📤 Function: callLuckyNumberAPI()');
-    console.log('📡 Endpoint:', LuckyNumber_FUNCTION);
-    console.log('🕐 Time:', new Date().toLocaleString('th-TH'));
+        console.log('==================== API CALL START ====================');
+        console.log('📤 Function: callLuckyNumberAPI()');
+        console.log('📡 Endpoint:', LuckyNumber_FUNCTION);
+        console.log('🕐 Time:', new Date().toLocaleString('th-TH'));
     
-    try {
-        showLoading(true);
+        try {
+            showLoading(true);
  
-        // Log raw input
-        console.log('📥 Raw Input Data:', formData);
-        console.log('📊 Data Types:');
-        Object.entries(formData).forEach(([key, val]) => {
-            console.log(`   ${key}: ${typeof val} = ${val}`);
-        });
+            // Log raw input
+            console.log('📥 Raw Input Data:', formData);
+            console.log('📊 Data Types:');
+            Object.entries(formData).forEach(([key, val]) => {
+                console.log(`   ${key}: ${typeof val} = ${val}`);
+            });
 
-        const payload = {
-            birth_day: String(formData.birth_day || ''),
-            birth_month: String(formData.birth_month || ''),
-            birth_century: String(formData.birth_century || '20'),
-            birth_year: String(formData.birth_year || ''),
-            birth_hour: String(formData.birth_hour || '00'),
-            birth_minute: String(formData.birth_minute || '00'),
-            // ข้อมูลวันเทียบ
-            comparison_day: String(formData.comparison_day || ''),
-            comparison_month: String(formData.comparison_month || ''),
-            comparison_century: String(formData.comparison_century || '20'),
-            comparison_year: String(formData.comparison_year || ''),
-            comparison_hour: String(formData.comparison_hour || '00'),
-            comparison_minute: String(formData.comparison_minute || '00'),
-            option: 'BD', // ตั้งค่าเป็น BD เสมอ
-            prophesy: "1" // ตั้งค่า prophesy
-        };
+            const payload = {
+                birth_day: String(formData.birth_day || ''),
+                birth_month: String(formData.birth_month || ''),
+                birth_century: String(formData.birth_century || '20'),
+                birth_year: String(formData.birth_year || ''),
+                birth_hour: String(formData.birth_hour || '00'),
+                birth_minute: String(formData.birth_minute || '00'),
+                // ข้อมูลวันเทียบ
+                comparison_day: String(formData.comparison_day || ''),
+                comparison_month: String(formData.comparison_month || ''),
+                comparison_century: String(formData.comparison_century || '20'),
+                comparison_year: String(formData.comparison_year || ''),
+                comparison_hour: String(formData.comparison_hour || '00'),
+                comparison_minute: String(formData.comparison_minute || '00'),
+                option: 'BD', // ตั้งค่าเป็น BD เสมอ
+                prophesy: "1" // ตั้งค่า prophesy
+            };
 
-        console.log('📦 FINAL PAYLOAD:');
-        console.log('Method: POST');
-        console.log('Content-Type: application/json');
-        console.log('Body:', JSON.stringify(payload, null, 2));
+            console.log('📦 FINAL PAYLOAD:');
+            console.log('Method: POST');
+            console.log('Content-Type: application/json');
+            console.log('Body:', JSON.stringify(payload, null, 2));
         
-        // Show payload size
-        const payloadSize = JSON.stringify(payload).length;
-        console.log(`📊 Payload size: ${payloadSize} bytes`);
+            // Show payload size
+            const payloadSize = JSON.stringify(payload).length;
+            console.log(`📊 Payload size: ${payloadSize} bytes`);
 
-        const response = await fetch(LuckyNumber_FUNCTION, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload),
-            mode: 'cors',
-            cache: 'no-cache'
-        });
+            const response = await fetch(LuckyNumber_FUNCTION, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload),
+                mode: 'cors',
+                cache: 'no-cache'
+            });
 
-        console.log('📥 Response received:', {
-            status: response.status,
-            statusText: response.statusText,
-            ok: response.ok,
-            headers: Object.fromEntries([...response.headers.entries()])
-        });
+            console.log('📥 Response received:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                headers: Object.fromEntries([...response.headers.entries()])
+            });
 
-        if (!response.ok) {
-            console.error('❌ Response NOT OK');
-            const errorText = await response.text();
-            console.error('Error body:', errorText);
+            if (!response.ok) {
+                console.error('❌ Response NOT OK');
+                const errorText = await response.text();
+                console.error('Error body:', errorText);
             
-            // Try to parse as JSON
-            let errorDetails = errorText;
-            try {
-                const errorJson = JSON.parse(errorText);
-                console.error('Parsed error JSON:', errorJson);
-                errorDetails = JSON.stringify(errorJson, null, 2);
-            } catch (e) {
-                console.error('Could not parse error as JSON, using raw text');
+                // Try to parse as JSON
+                let errorDetails = errorText;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    console.error('Parsed error JSON:', errorJson);
+                    errorDetails = JSON.stringify(errorJson, null, 2);
+                } catch (e) {
+                    console.error('Could not parse error as JSON, using raw text');
+                }
+            
+                throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorDetails}`);
             }
-            
-            throw new Error(`HTTP ${response.status}: ${response.statusText}\n\n${errorDetails}`);
-        }
 
-        const result = await response.json();
-        console.log('✅ SUCCESS! Response data:', result);
+            const result = await response.json();
+            console.log('✅ SUCCESS! Response data:', result);
         
-        // **เปลี่ยน: ตอนนี้ response มีโครงสร้าง { success: true, results: [...] }**
-        if (!result.success) {
-            throw new Error(result.error || 'API call was not successful');
-        }
+            // **เปลี่ยน: ตอนนี้ response มีโครงสร้าง { success: true, results: [...] }**
+            if (!result.success) {
+                throw new Error(result.error || 'API call was not successful');
+            }
         
-        // Store in sessionStorage
-        console.log('💾 Storing result in sessionStorage...');
-        sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
-        console.log('✅ Stored successfully');
+            // Store in sessionStorage
+            console.log('💾 Storing result in sessionStorage...');
+            sessionStorage.setItem('psychomatrixResult', JSON.stringify(result));
+            console.log('✅ Stored successfully');
         
-        // Redirect
-        // ใน callLuckyNumberAPI() function - หาส่วน redirect
-        console.log('✅ SUCCESS! Response data:', result);
+            // Redirect
+            // ใน callLuckyNumberAPI() function - หาส่วน redirect
+            console.log('✅ SUCCESS! Response data:', result);
 
-        // **เปลี่ยน: ส่ง option ผ่าน URL parameter แทน sessionStorage**
-        const option = formData.option || 'BD';
-        const redirectUrl = `Lucky_Number_Display.html?option=${encodeURIComponent(option)}`;
+            // **เปลี่ยน: ส่ง option ผ่าน URL parameter แทน sessionStorage**
+            const option = formData.option || 'BD';
+            const redirectUrl = `Lucky_Number_Display.html?option=${encodeURIComponent(option)}`;
 
-        console.log('🔄 Redirecting to:', redirectUrl);
-        window.location.href = redirectUrl;
+            console.log('🔄 Redirecting to:', redirectUrl);
+            window.location.href = redirectUrl;
 
-    } catch (error) {
-        console.error('❌ CATCH BLOCK - API CALL FAILED:');
-        console.error('Error name:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Stack trace:', error.stack);
+        } catch (error) {
+            console.error('❌ CATCH BLOCK - API CALL FAILED:');
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Stack trace:', error.stack);
         
-        showLoading(false);
+            showLoading(false);
         
-        // Enhanced error message
-        let errorMessage = error.message;
-        if (error.message.includes('400')) {
-            errorMessage += '\n\n💡 สาเหตุที่เป็นไปได้:\n' +
+            // Enhanced error message
+            let errorMessage = error.message;
+            if (error.message.includes('400')) {
+                errorMessage += '\n\n💡 สาเหตุที่เป็นไปได้:\n' +
                            '1. ข้อมูลขาด field ที่จำเป็นต้องใช้งาน\n' +
                            '2. ชนิดข้อมูลไม่ถูกต้อง\n' +
                            '3. Edge Function ไม่พบ field ที่ต้องการ\n\n' +
                            '🔍 ตรวจสอบข้อมูลใน Debug Logger ที่มุมล่างขวา';
-        }
+            }
         
-        alert(`❌ เกิดข้อผิดพลาด:\n\n${errorMessage}`);
-    } finally {
-        console.log('==================== API CALL END ====================');
-        setTimeout(() => showLoading(false), 1000);
+            alert(`❌ เกิดข้อผิดพลาด:\n\n${errorMessage}`);
+        } finally {
+            console.log('==================== API CALL END ====================');
+            setTimeout(() => showLoading(false), 1000);
+        }
     }
-}
 
 
     // ==================== FIXED FORM HANDLER ====================

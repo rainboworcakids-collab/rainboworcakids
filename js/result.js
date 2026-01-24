@@ -98,6 +98,12 @@ function initializePage() {
     const psychomatrixResult = sessionStorage.getItem('psychomatrixResult');
     console.log('🔍 DEBUG: psychomatrixResult exists:', !!psychomatrixResult);
     
+    // โหลด styles จาก music module (ถ้ามี)
+    if (window.musicModule && window.musicModule.addMusicButtonStyles) {
+        window.musicModule.addMusicButtonStyles();
+        window.musicModule.addMusicPlayerStyles();
+    }
+    
     setTimeout(() => {
         const defaultOpenButton = document.getElementById("defaultOpen");
         if (defaultOpenButton) {
@@ -221,19 +227,11 @@ function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
         return '<div class="life-path-details"><p class="tw-text-gray-500 tw-text-center">No Life Path details available</p></div>';
     }
     
-    
     let html = `
         <div class="life-path-details tw-mt-4 tw-p-4 tw-bg-gray-50 tw-rounded-lg" 
              style="display: block !important; visibility: visible !important;">
             <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-3">Life Path Number ${lifePathNumber} Details</h3>
     `;
-    
-    /*
-    let html = `
-        <div class="life-path-details tw-mt-4 tw-p-4 tw-bg-gray-50 tw-rounded-lg">
-            <h3 class="tw-text-lg tw-font-bold tw-text-blue-800 tw-mb-3">Life Path Number ${lifePathNumber} Details</h3>
-    `;
-    */
     
     if (lifePathData.ShortDefinition) {
         html += `
@@ -265,54 +263,6 @@ function createLifePathDetailsHTML(lifePathNumber, lifePathData) {
     html += `</div>`;
     
     return html;
-}
-
-function convertNameToNumberStringFallback(name) {
-    console.log('🔤 DEBUG: Converting name to numbers (fallback):', name);
-    
-    const thaiToEnglishMap = {
-        'ก': 'K', 'ข': 'K', 'ค': 'K', 'ฆ': 'K', 'ง': 'N',
-        'จ': 'J', 'ฉ': 'C', 'ช': 'C', 'ซ': 'S', 'ฌ': 'J', 'ญ': 'Y',
-        'ฎ': 'D', 'ฏ': 'T', 'ฐ': 'T', 'ฑ': 'D', 'ฒ': 'T', 'ณ': 'N',
-        'ด': 'D', 'ต': 'T', 'ถ': 'T', 'ท': 'T', 'ธ': 'T', 'น': 'N',
-        'บ': 'B', 'ป': 'P', 'ผ': 'P', 'ฝ': 'F', 'พ': 'P', 'ฟ': 'F',
-        'ภ': 'P', 'ม': 'M', 'ย': 'Y', 'ร': 'R', 'ล': 'L', 'ว': 'W',
-        'ศ': 'S', 'ษ': 'S', 'ส': 'S', 'ห': 'H', 'ฬ': 'L', 'อ': 'O',
-        'ฮ': 'H',
-        'ะ': 'A', 'า': 'A', 'ำ': 'A', 'ิ': 'I', 'ี': 'I', 'ึ': 'U', 'ื': 'U',
-        'ุ': 'U', 'ู': 'U', 'เ': 'E', 'แ': 'A', 'โ': 'O', 'ใ': 'I', 'ไ': 'I'
-    };
-    
-    const letterToNumberMap = {
-        'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
-        'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'O': 6, 'P': 7, 'Q': 8, 'R': 9,
-        'S': 1, 'T': 2, 'U': 3, 'V': 4, 'W': 5, 'X': 6, 'Y': 7, 'Z': 8,
-        '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '0': 0
-    };
-    
-    function letterToNumber(letter) {
-        const upperLetter = letter.toUpperCase();
-        
-        if (thaiToEnglishMap[letter]) {
-            return letterToNumberMap[thaiToEnglishMap[letter]] || 0;
-        }
-        
-        return letterToNumberMap[upperLetter] || 0;
-    }
-    
-    let numberString = '';
-    const cleanedName = name.replace(/\s/g, '');
-    
-    for (let i = 0; i < cleanedName.length; i++) {
-        const char = cleanedName[i];
-        const number = letterToNumber(char);
-        if (number > 0) {
-            numberString += number.toString();
-        }
-    }
-    
-    console.log('🔤 DEBUG: Converted to:', numberString);
-    return numberString;
 }
 
 function createNumberButton(number, category, actualNumber) {
@@ -547,24 +497,25 @@ function createResultSection(result, index) {
     
     let buttonsHTML = '';
     
+    // ปรับปุ่ม Pythagorean Square ให้มีสองบรรทัด
     buttonsHTML += `
         <button onclick="window.pythagorean.showPythagoreanSquare(${index})" 
-                class="tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
-            Pythagorean Square
+                class="result-button tw-bg-blue-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-blue-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
+            <span class="button-line">Pythagorean Square</span>
         </button>
     `;
     
     if (type === 'birth-date' && pinnacleData) {
         buttonsHTML += `
             <button onclick="window.pinnacle.showPinnacleCycle(${index})" 
-                    class="tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
-                Pinnacle Cycle
+                    class="result-button tw-bg-green-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-green-600 tw-cursor-pointer tw-w-48 tw-inline-block tw-m-1">
+                <span class="button-line">Pinnacle Cycle</span>
             </button>
         `;
     }
     
     let showCombinedButton = false;
-    let combinedButtonText = '';
+    let buttonLines = [];
     
     switch(currentOption) {
         case 'BD':
@@ -576,20 +527,20 @@ function createResultSection(result, index) {
             
         case 'BD-IDC':
             showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย2ตาราง)';
-            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            buttonLines = ['Pythagorean Square', '(ค่าเฉลี่ย2ตาราง)'];
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${buttonLines.join(' ')}`);
             break;
             
         case 'BD-IDC-FullName':
             showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (ค่าเฉลี่ย3ตาราง)';
-            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            buttonLines = ['Pythagorean Square', '(ค่าเฉลี่ย3ตาราง)'];
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${buttonLines.join(' ')}`);
             break;
             
         case 'Num-Ard':
             showCombinedButton = true;
-            combinedButtonText = 'Pythagorean Square (รวมเลขสิ่งแวดล้อม)';
-            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${combinedButtonText}`);
+            buttonLines = ['Pythagorean Square', '(รวมเลขสิ่งแวดล้อม)'];
+            console.log(`🔧 DEBUG: Option ${currentOption} - Showing 3 buttons with: ${buttonLines.join(' ')}`);
             break;
             
         default:
@@ -600,11 +551,37 @@ function createResultSection(result, index) {
     if (showCombinedButton) {
         buttonsHTML += `
             <button onclick="window.pythagorean.showCombinedPythagoreanSquare(${index}, ${JSON.stringify(result).replace(/"/g, '&quot;')})" 
-                    class="tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
-                ${combinedButtonText}
+                    class="result-button tw-bg-purple-500 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-bg-purple-600 tw-cursor-pointer tw-w-64 tw-inline-block tw-m-1">
+                ${buttonLines.map(line => `<span class="button-line">${line}</span>`).join('')}
             </button>
         `;
     }
+    
+    // ========== เรียกใช้ฟังก์ชันจาก music module ==========
+    // เพิ่มปุ่มสร้างบทเพลง (Music Creation Functions)
+    buttonsHTML += `
+        <button onclick="openLifePathMusicCreator(${index})" 
+            class="result-button tw-bg-gradient-to-r tw-from-pink-500 tw-to-rose-600 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-from-pink-600 hover:tw-to-rose-700 tw-cursor-pointer tw-w-56 tw-inline-block tw-m-1">
+            <span class="button-line">สร้างบทเพลงที่ 1</span>
+            <span class="button-line">เส้นชีวิต</span>
+        </button>
+    
+        <button onclick="openPsychomatrixMusicCreator(${index})" 
+            class="result-button tw-bg-gradient-to-r tw-from-indigo-500 tw-to-purple-600 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-from-indigo-600 hover:tw-to-purple-700 tw-cursor-pointer tw-w-56 tw-inline-block tw-m-1">
+            <span class="button-line">สร้างบทเพลงที่ 2</span>
+            <span class="button-line">Psychomatrix</span>
+        </button>
+    `;
+    
+    
+    // เพิ่มปุ่มฟังเพลง Lo-Fi/Chill
+    buttonsHTML += `
+        <button onclick="window.musicModule.showMusicPlayer(${index})" 
+                class="result-button tw-bg-gradient-to-r tw-from-teal-500 tw-to-cyan-600 tw-text-white tw-py-3 tw-px-6 tw-rounded-full hover:tw-from-teal-600 hover:tw-to-cyan-700 tw-cursor-pointer tw-w-56 tw-inline-block tw-m-1">
+            <span class="button-line">ฟังเพลง</span>
+            <span class="button-line">Lo-Fi/Chill</span>
+        </button>
+    `;
     
     return `
         <div class="result-section tw-mb-8 tw-p-6 tw-bg-white tw-rounded-lg tw-shadow">
@@ -641,6 +618,9 @@ function createResultSection(result, index) {
                 <div class="tw-mx-auto tw-mt-8 tw-mb-4 tw-text-center">
                     ${buttonsHTML}
                 </div>
+                
+                <!-- Music Player Container (จะถูกเพิ่มโดย JavaScript) -->
+                <div id="musicPlayerContainer-${index}" class="music-player-container tw-hidden"></div>
             </div>
         </div>
     `;
@@ -809,15 +789,98 @@ function checkScriptsLoaded() {
     const status = {
         switchTab: typeof switchTab === 'function',
         pythagorean: !!window.pythagorean,
-        showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function'
+        showPythagoreanSquare: window.pythagorean && typeof window.pythagorean.showPythagoreanSquare === 'function',
+        musicModule: !!window.musicModule
     };
     
     console.log('  - switchTab:', status.switchTab ? '✅ Loaded' : '❌ Missing');
     console.log('  - pythagorean:', status.pythagorean ? '✅ Loaded' : '❌ Missing');
     console.log('  - showPythagoreanSquare:', status.showPythagoreanSquare ? '✅ Loaded' : '❌ Missing');
+    console.log('  - musicModule:', status.musicModule ? '✅ Loaded' : '❌ Missing');
     
     return status;
 }
+
+
+
+// ===== MUSIC CREATOR FUNCTIONS =====
+
+window.openLifePathMusicCreator = function(resultIndex) {
+    console.log('🎵 Opening Life Path Music Creator for result:', resultIndex);
+    
+    // 1. ดึงข้อมูลจาก analysisData
+    const result = window.analysisData?.results?.[resultIndex];
+    if (!result) {
+        alert('ไม่พบข้อมูลผลลัพธ์');
+        return;
+    }
+    
+    // 2. เตรียมข้อมูลสำหรับเพลง
+    const musicData = {
+        numbers: {
+            lifePath: result.data?.life_path_number || result.data?.lifePath,
+            destiny: result.data?.destiny_number || result.data?.destiny,
+            lifeLesson: result.data?.thirdAndFourth?.lifeLesson || result.data?.lifeLesson,
+            karmic: result.data?.thirdAndFourth?.karmic || result.data?.karmic
+        },
+        sourceData: {
+            birth_date: result.data?.birth_date || '',
+            birth_time: result.data?.birth_time || '',
+            full_name: result.data?.full_name || '',
+            id_card: result.data?.id_card || ''
+        },
+        timestamp: new Date().toISOString()
+    };
+    
+    // 3. บันทึกลง sessionStorage
+    sessionStorage.setItem('musicCreationData', JSON.stringify(musicData));
+    console.log('✅ Music data saved to sessionStorage:', musicData);
+    
+    // 4. เปิดหน้า music-creator.html
+    window.location.href = 'music-creator.html?type=lifePath';
+};
+
+window.openPsychomatrixMusicCreator = function(resultIndex) {
+    console.log('🎵 Opening Psychomatrix Music Creator for result:', resultIndex);
+    
+    // 1. ดึงข้อมูลจาก analysisData
+    const result = window.analysisData?.results?.[resultIndex];
+    if (!result) {
+        alert('ไม่พบข้อมูลผลลัพธ์');
+        return;
+    }
+    
+    // 2. เตรียมข้อมูลสำหรับ Psychomatrix music
+    const musicData = {
+        numbers: {
+            lifePath: result.data?.life_path_number || result.data?.lifePath,
+            destiny: result.data?.destiny_number || result.data?.destiny,
+            lifeLesson: result.data?.thirdAndFourth?.lifeLesson || result.data?.lifeLesson,
+            karmic: result.data?.thirdAndFourth?.karmic || result.data?.karmic
+        },
+        sourceData: {
+            birth_date: result.data?.birth_date || '',
+            birth_time: result.data?.birth_time || '',
+            full_name: result.data?.full_name || '',
+            id_card: result.data?.id_card || ''
+        },
+        // เพิ่มข้อมูล Psychomatrix เฉพาะ
+        psychomatrix: {
+            pythagorean: result.data?.pythagorean || {},
+            matrix: result.data?.matrix || {}
+        },
+        timestamp: new Date().toISOString(),
+        type: 'psychomatrix'
+    };
+    
+    // 3. บันทึกลง sessionStorage
+    sessionStorage.setItem('musicCreationData', JSON.stringify(musicData));
+    console.log('✅ Psychomatrix music data saved to sessionStorage:', musicData);
+    
+    // 4. เปิดหน้า music-creator.html
+    window.location.href = 'music-creator.html?type=psychomatrix';
+};
+
 
 // ===== EXPORT FUNCTIONS TO GLOBAL SCOPE =====
 window.switchTab = switchTab;
@@ -836,3 +899,4 @@ if (document.readyState === 'loading') {
 }
 
 console.log('✅ DEBUG: result.js loaded completely - Supabase Storage Ready');
+console.log('📦 DEBUG: Music functions moved to music-module.js');
